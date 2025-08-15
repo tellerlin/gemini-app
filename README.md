@@ -99,13 +99,50 @@ A modern, feature-rich chat interface for Google's Gemini AI models built with R
 
 #### Method 2: Environment Variables
 1. Copy `.env.example` to `.env`
-2. Add your API keys to the `.env` file:
+2. Add your API keys and proxy configuration to the `.env` file:
    ```env
    VITE_GEMINI_API_KEYS=your_first_api_key_here,your_second_api_key_here
+   VITE_PROXY_URL=http://192.168.1.3:7890
    ```
 3. Restart the development server
 
 **Note**: Environment variables are loaded automatically and merged with any keys stored in the browser. Multiple keys enable round-robin functionality for better reliability.
+
+## 🌐 Proxy Configuration
+
+### HTTP Proxy Support
+The application supports HTTP/HTTPS proxy configuration for users who need to route requests through a proxy server.
+
+#### Configuration Methods
+
+**Method 1: Environment Variables (.env file)**
+```env
+# HTTP proxy for Gemini API requests
+VITE_PROXY_URL=http://192.168.1.3:7890
+
+# Examples:
+# Local proxy: VITE_PROXY_URL=http://127.0.0.1:7890
+# Corporate proxy: VITE_PROXY_URL=http://proxy.company.com:8080
+# HTTPS proxy: VITE_PROXY_URL=https://secure-proxy.example.com:443
+```
+
+**Method 2: In-App Configuration**
+1. Click the settings icon in the application
+2. Navigate to the "Proxy Settings" section
+3. Enter your proxy URL (e.g., `http://192.168.1.3:7890`)
+4. Click "Save" to apply the settings
+
+#### Proxy URL Format
+- **HTTP**: `http://host:port`
+- **HTTPS**: `https://host:port`
+- **With Authentication**: `http://username:password@host:port`
+
+#### Common Proxy Scenarios
+- **Development with local proxy**: `http://127.0.0.1:7890`
+- **Corporate network**: `http://proxy.company.com:8080`
+- **VPN/Tunnel proxy**: `http://192.168.1.3:7890`
+
+**Security Note**: Proxy settings are stored locally and only used for Gemini API requests. No proxy credentials are transmitted to external servers.
 
 ## 🔐 Security Features
 
