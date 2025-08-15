@@ -1,48 +1,59 @@
 import React from 'react';
-import { ChevronDown } from 'lucide-react';
 import { cn } from '../../utils/cn';
+
+interface SelectOption {
+  value: string;
+  label: string;
+}
 
 interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
+  options: SelectOption[];
   error?: string;
-  options: { value: string; label: string }[];
 }
 
 export function Select({
-  className,
   label,
-  error,
   options,
+  error,
+  className,
   ...props
 }: SelectProps) {
   return (
-    <div className="space-y-1">
+    <div className="w-full">
       {label && (
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="block text-sm font-medium text-gray-700 mb-1">
           {label}
         </label>
       )}
-      <div className="relative">
-        <select
-          className={cn(
-            'w-full px-3 py-2 pr-8 border border-gray-300 rounded-lg shadow-sm appearance-none transition-colors duration-200',
-            'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
-            'disabled:bg-gray-50 disabled:cursor-not-allowed',
-            error && 'border-red-300 focus:ring-red-500',
-            className
-          )}
-          {...props}
-        >
-          {options.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-        <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-      </div>
+      <select
+        className={cn(
+          'w-full px-3 py-2 border border-gray-300 rounded-lg',
+          'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
+          'disabled:bg-gray-50 disabled:cursor-not-allowed',
+          'text-sm sm:text-base',
+          'transition-all duration-200',
+          'appearance-none bg-white',
+          error && 'border-red-300 focus:ring-red-500',
+          className
+        )}
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+          backgroundPosition: 'right 0.5rem center',
+          backgroundRepeat: 'no-repeat',
+          backgroundSize: '1.5em 1.5em',
+          paddingRight: '2.5rem',
+        }}
+        {...props}
+      >
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
       {error && (
-        <p className="text-sm text-red-600">{error}</p>
+        <p className="mt-1 text-sm text-red-600">{error}</p>
       )}
     </div>
   );

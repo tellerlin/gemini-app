@@ -9,9 +9,10 @@ interface ChatInputProps {
   onSendMessage: (content: string, files?: FileAttachment[]) => void;
   isLoading: boolean;
   disabled?: boolean;
+  isMobile?: boolean;
 }
 
-export function ChatInput({ onSendMessage, isLoading, disabled }: ChatInputProps) {
+export function ChatInput({ onSendMessage, isLoading, disabled, isMobile = false }: ChatInputProps) {
   const [message, setMessage] = useState('');
   const [files, setFiles] = useState<FileAttachment[]>([]);
   const [showFileUpload, setShowFileUpload] = useState(false);
@@ -39,18 +40,19 @@ export function ChatInput({ onSendMessage, isLoading, disabled }: ChatInputProps
     const textarea = textareaRef.current;
     if (textarea) {
       textarea.style.height = 'auto';
-      textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+      textarea.style.height = Math.min(textarea.scrollHeight, isMobile ? 100 : 120) + 'px';
     }
-  }, [message]);
+  }, [message, isMobile]);
 
   return (
-    <div className="border-t bg-white p-4">
+    <div className="border-t bg-white p-3 sm:p-4">
       {/* File Upload Section */}
       {showFileUpload && (
-        <div className="mb-4">
+        <div className="mb-3 sm:mb-4">
           <FileUpload
             files={files}
             onFilesChange={setFiles}
+            isMobile={isMobile}
           />
         </div>
       )}
@@ -68,12 +70,16 @@ export function ChatInput({ onSendMessage, isLoading, disabled }: ChatInputProps
               disabled={disabled}
               rows={1}
               className={cn(
-                'w-full px-4 py-3 pr-12 border border-gray-300 rounded-2xl resize-none',
+                'w-full px-3 sm:px-4 py-2 sm:py-3 pr-12 border border-gray-300 rounded-2xl resize-none',
                 'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
                 'disabled:bg-gray-50 disabled:cursor-not-allowed',
-                'placeholder-gray-500'
+                'placeholder-gray-500 text-sm sm:text-base',
+                'transition-all duration-200'
               )}
-              style={{ minHeight: '48px', maxHeight: '120px' }}
+              style={{ 
+                minHeight: isMobile ? '44px' : '48px', 
+                maxHeight: isMobile ? '100px' : '120px' 
+              }}
             />
             
             {/* File Upload Toggle */}
@@ -83,6 +89,7 @@ export function ChatInput({ onSendMessage, isLoading, disabled }: ChatInputProps
               className={cn(
                 'absolute right-2 top-1/2 transform -translate-y-1/2 p-2',
                 'text-gray-400 hover:text-gray-600 transition-colors',
+                'active:scale-95 touch-manipulation',
                 showFileUpload && 'text-blue-500'
               )}
               title="Attach files"
@@ -108,7 +115,10 @@ export function ChatInput({ onSendMessage, isLoading, disabled }: ChatInputProps
           type="submit"
           disabled={disabled || (!message.trim() && files.length === 0)}
           isLoading={isLoading}
-          className="rounded-2xl h-12 w-12 p-0"
+          className={cn(
+            "rounded-2xl p-0 transition-all duration-200 active:scale-95 touch-manipulation",
+            isMobile ? "h-11 w-11" : "h-12 w-12"
+          )}
         >
           <Send className="h-4 w-4" />
         </Button>

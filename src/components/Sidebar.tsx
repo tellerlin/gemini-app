@@ -17,6 +17,7 @@ interface SidebarProps {
   onOpenSettings: () => void;
   selectedModel: string;
   onModelChange: (model: string) => void;
+  isMobile?: boolean;
 }
 
 export function Sidebar({
@@ -30,6 +31,7 @@ export function Sidebar({
   onOpenSettings,
   selectedModel,
   onModelChange,
+  isMobile = false,
 }: SidebarProps) {
   const formatDate = (date: Date) => {
     const now = new Date();
@@ -56,25 +58,26 @@ export function Sidebar({
       {/* Sidebar */}
       <div
         className={cn(
-          'fixed top-0 left-0 h-full w-80 bg-white shadow-xl transform transition-transform duration-300 ease-in-out z-50',
+          'sidebar fixed top-0 left-0 h-full bg-white shadow-xl transform transition-transform duration-300 ease-in-out z-50',
           'lg:relative lg:translate-x-0 lg:shadow-none lg:border-r',
+          isMobile ? 'w-80 sm:w-96' : 'w-80',
           isOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
         <div className="flex flex-col h-full">
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b">
-            <h1 className="text-xl font-bold text-gray-900">Gemini Chat</h1>
+          <div className="flex items-center justify-between p-3 sm:p-4 border-b bg-white">
+            <h1 className="text-lg sm:text-xl font-bold text-gray-900">Gemini Chat</h1>
             <button
               onClick={onClose}
-              className="p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 lg:hidden"
+              className="p-2 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors lg:hidden"
             >
               <X className="h-5 w-5" />
             </button>
           </div>
 
           {/* Model Selection */}
-          <div className="p-4 border-b bg-gray-50">
+          <div className="p-3 sm:p-4 border-b bg-gray-50">
             <Select
               label="Model"
               value={selectedModel}
@@ -90,7 +93,7 @@ export function Sidebar({
           </div>
 
           {/* New Conversation Button */}
-          <div className="p-4">
+          <div className="p-3 sm:p-4">
             <Button
               onClick={onNewConversation}
               className="w-full justify-start"
@@ -102,45 +105,53 @@ export function Sidebar({
           </div>
 
           {/* Conversations List */}
-          <div className="flex-1 overflow-y-auto px-4">
+          <div className="flex-1 overflow-y-auto px-3 sm:px-4">
             <div className="space-y-2">
-              {conversations.map((conversation) => (
-                <div
-                  key={conversation.id}
-                  className={cn(
-                    'group flex items-center space-x-3 p-3 rounded-lg cursor-pointer transition-all duration-200',
-                    'hover:bg-gray-100',
-                    currentConversationId === conversation.id
-                      ? 'bg-blue-50 border border-blue-200'
-                      : 'border border-transparent'
-                  )}
-                  onClick={() => onSelectConversation(conversation.id)}
-                >
-                  <MessageCircle className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">
-                      {conversation.title}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {formatDate(conversation.updatedAt)}
-                    </p>
-                  </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDeleteConversation(conversation.id);
-                    }}
-                    className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-500 transition-all"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </button>
+              {conversations.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <MessageCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">No conversations yet</p>
+                  <p className="text-xs">Start a new conversation to begin</p>
                 </div>
-              ))}
+              ) : (
+                conversations.map((conversation) => (
+                  <div
+                    key={conversation.id}
+                    className={cn(
+                      'group flex items-center space-x-3 p-3 rounded-lg cursor-pointer transition-all duration-200',
+                      'hover:bg-gray-100 active:bg-gray-200',
+                      currentConversationId === conversation.id
+                        ? 'bg-blue-50 border border-blue-200'
+                        : 'border border-transparent'
+                    )}
+                    onClick={() => onSelectConversation(conversation.id)}
+                  >
+                    <MessageCircle className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {conversation.title}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {formatDate(conversation.updatedAt)}
+                      </p>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDeleteConversation(conversation.id);
+                      }}
+                      className="opacity-0 group-hover:opacity-100 p-1.5 text-gray-400 hover:text-red-500 transition-all rounded"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
           {/* Settings Button */}
-          <div className="p-4 border-t">
+          <div className="p-3 sm:p-4 border-t bg-white">
             <Button
               onClick={onOpenSettings}
               variant="ghost"

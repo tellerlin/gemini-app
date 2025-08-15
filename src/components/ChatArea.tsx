@@ -1,5 +1,5 @@
 import React, { useRef, useEffect } from 'react';
-import { MessageBubble } from './MessageBubble';
+import { EnhancedMessageBubble } from './EnhancedMessageBubble';
 import { ChatInput } from './ChatInput';
 import type { Message, FileAttachment } from '../types/chat';
 import { Bot, Sparkles } from 'lucide-react';
@@ -9,9 +9,10 @@ interface ChatAreaProps {
   onSendMessage: (content: string, files?: FileAttachment[]) => void;
   isLoading: boolean;
   hasApiKey: boolean;
+  isMobile?: boolean;
 }
 
-export function ChatArea({ messages, onSendMessage, isLoading, hasApiKey }: ChatAreaProps) {
+export function ChatArea({ messages, onSendMessage, isLoading, hasApiKey, isMobile = false }: ChatAreaProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -25,18 +26,18 @@ export function ChatArea({ messages, onSendMessage, isLoading, hasApiKey }: Chat
   if (!hasApiKey) {
     return (
       <div className="flex flex-col h-full">
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center max-w-md mx-auto p-8">
+        <div className="flex-1 flex items-center justify-center p-4">
+          <div className="text-center max-w-md mx-auto p-4 sm:p-8">
             <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Bot className="h-8 w-8 text-blue-600" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">
               Welcome to Gemini Chat
             </h2>
-            <p className="text-gray-600 mb-4">
+            <p className="text-sm sm:text-base text-gray-600 mb-4">
               To get started, please configure your Gemini API key using the settings in the sidebar.
             </p>
-            <div className="text-sm text-gray-500">
+            <div className="text-xs sm:text-sm text-gray-500">
               <p>Features available:</p>
               <ul className="list-disc list-inside mt-2 space-y-1">
                 <li>Real-time AI conversations</li>
@@ -54,18 +55,18 @@ export function ChatArea({ messages, onSendMessage, isLoading, hasApiKey }: Chat
   if (messages.length === 0) {
     return (
       <div className="flex flex-col h-full">
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center max-w-md mx-auto p-8">
+        <div className="flex-1 flex items-center justify-center p-4">
+          <div className="text-center max-w-md mx-auto p-4 sm:p-8">
             <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
               <Sparkles className="h-8 w-8 text-white" />
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">
               Start a new conversation
             </h2>
-            <p className="text-gray-600 mb-4">
+            <p className="text-sm sm:text-base text-gray-600 mb-4">
               Ask me anything! I can help with questions, analysis, creative tasks, and more.
             </p>
-            <div className="grid grid-cols-1 gap-2 text-sm">
+            <div className="grid grid-cols-1 gap-2 text-xs sm:text-sm">
               <div className="p-3 bg-gray-50 rounded-lg text-left">
                 <p className="font-medium text-gray-700">💡 Example prompts:</p>
                 <ul className="mt-1 text-gray-600 space-y-1">
@@ -80,6 +81,7 @@ export function ChatArea({ messages, onSendMessage, isLoading, hasApiKey }: Chat
         <ChatInput
           onSendMessage={onSendMessage}
           isLoading={isLoading}
+          isMobile={isMobile}
         />
       </div>
     );
@@ -88,9 +90,9 @@ export function ChatArea({ messages, onSendMessage, isLoading, hasApiKey }: Chat
   return (
     <div className="flex flex-col h-full">
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-2 sm:p-4 space-y-3 sm:space-y-4">
         {messages.map((message) => (
-          <MessageBubble key={message.id} message={message} />
+          <EnhancedMessageBubble key={message.id} message={message} isMobile={isMobile} />
         ))}
         
         {/* Loading Indicator */}
@@ -100,7 +102,7 @@ export function ChatArea({ messages, onSendMessage, isLoading, hasApiKey }: Chat
               <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center">
                 <Bot className="h-4 w-4 text-white" />
               </div>
-              <div className="bg-white border border-gray-200 rounded-2xl px-4 py-3">
+              <div className="bg-white border border-gray-200 rounded-2xl px-3 sm:px-4 py-3">
                 <div className="flex items-center space-x-1">
                   <div className="flex space-x-1">
                     <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
@@ -120,6 +122,7 @@ export function ChatArea({ messages, onSendMessage, isLoading, hasApiKey }: Chat
       <ChatInput
         onSendMessage={onSendMessage}
         isLoading={isLoading}
+        isMobile={isMobile}
       />
     </div>
   );

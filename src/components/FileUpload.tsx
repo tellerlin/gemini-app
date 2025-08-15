@@ -7,9 +7,10 @@ interface FileUploadProps {
   files: FileAttachment[];
   onFilesChange: (files: FileAttachment[]) => void;
   className?: string;
+  isMobile?: boolean;
 }
 
-export function FileUpload({ files, onFilesChange, className }: FileUploadProps) {
+export function FileUpload({ files, onFilesChange, className, isMobile = false }: FileUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
 
   const handleFileRead = (file: File): Promise<FileAttachment> => {
@@ -83,18 +84,19 @@ export function FileUpload({ files, onFilesChange, className }: FileUploadProps)
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         className={cn(
-          'border-2 border-dashed rounded-lg p-4 transition-colors duration-200',
+          'border-2 border-dashed rounded-lg transition-colors duration-200',
           isDragging
             ? 'border-blue-400 bg-blue-50'
-            : 'border-gray-300 hover:border-gray-400'
+            : 'border-gray-300 hover:border-gray-400',
+          isMobile ? 'p-3' : 'p-4'
         )}
       >
         <label className="flex flex-col items-center justify-center cursor-pointer">
-          <Upload className="h-8 w-8 text-gray-400 mb-2" />
-          <span className="text-sm text-gray-600">
+          <Upload className={cn("text-gray-400 mb-2", isMobile ? "h-6 w-6" : "h-8 w-8")} />
+          <span className={cn("text-gray-600 text-center", isMobile ? "text-xs" : "text-sm")}>
             Drop files here or click to upload
           </span>
-          <span className="text-xs text-gray-400 mt-1">
+          <span className={cn("text-gray-400 mt-1 text-center", isMobile ? "text-xs" : "text-xs")}>
             Images, documents (max 10MB each)
           </span>
           <input
@@ -113,26 +115,32 @@ export function FileUpload({ files, onFilesChange, className }: FileUploadProps)
           {files.map((file) => (
             <div
               key={file.id}
-              className="flex items-center space-x-3 p-2 bg-gray-50 rounded-lg"
+              className={cn(
+                "flex items-center space-x-2 sm:space-x-3 bg-gray-50 rounded-lg",
+                isMobile ? "p-2" : "p-3"
+              )}
             >
               {file.type.startsWith('image/') ? (
-                <Image className="h-4 w-4 text-blue-500" />
+                <Image className={cn("text-blue-500", isMobile ? "h-3 w-3" : "h-4 w-4")} />
               ) : (
-                <File className="h-4 w-4 text-gray-500" />
+                <File className={cn("text-gray-500", isMobile ? "h-3 w-3" : "h-4 w-4")} />
               )}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">
+                <p className={cn("font-medium text-gray-900 truncate", isMobile ? "text-xs" : "text-sm")}>
                   {file.name}
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className={cn("text-gray-500", isMobile ? "text-xs" : "text-xs")}>
                   {formatFileSize(file.size)}
                 </p>
               </div>
               <button
                 onClick={() => removeFile(file.id)}
-                className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+                className={cn(
+                  "text-gray-400 hover:text-red-500 transition-colors active:scale-95 touch-manipulation",
+                  isMobile ? "p-1" : "p-1"
+                )}
               >
-                <X className="h-4 w-4" />
+                <X className={cn(isMobile ? "h-3 w-3" : "h-4 w-4")} />
               </button>
             </div>
           ))}

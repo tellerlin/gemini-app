@@ -36,6 +36,7 @@ export function useChat() {
 
     geminiService.setApiKeys(apiKeys);
 
+    // 确保我们有当前对话
     let conversation = currentConversation;
     if (!conversation) {
       conversation = createNewConversation();
@@ -49,20 +50,27 @@ export function useChat() {
       files,
     };
 
-    // Update conversation with user message
+    // 更新对话，添加用户消息
     const updatedMessages = [...conversation.messages, userMessage];
-    setConversations(prev =>
-      prev.map(conv =>
-        conv.id === conversation!.id
-          ? {
-              ...conv,
-              messages: updatedMessages,
-              title: conv.messages.length === 0 ? content.slice(0, 50) : conv.title,
-              updatedAt: new Date(),
-            }
-          : conv
-      )
-    );
+    const updatedConversation = {
+      ...conversation,
+      messages: updatedMessages,
+      title: conversation.messages.length === 0 ? content.slice(0, 50) : conversation.title,
+      updatedAt: new Date(),
+    };
+
+    setConversations(prev => {
+      const existingIndex = prev.findIndex(conv => conv.id === conversation.id);
+      if (existingIndex >= 0) {
+        // 更新现有对话
+        const newConversations = [...prev];
+        newConversations[existingIndex] = updatedConversation;
+        return newConversations;
+      } else {
+        // 添加新对话
+        return [updatedConversation, ...prev];
+      }
+    });
 
     setIsLoading(true);
 
@@ -76,17 +84,24 @@ export function useChat() {
         timestamp: new Date(),
       };
 
-      setConversations(prev =>
-        prev.map(conv =>
-          conv.id === conversation!.id
-            ? {
-                ...conv,
-                messages: [...updatedMessages, assistantMessage],
-                updatedAt: new Date(),
-              }
-            : conv
-        )
-      );
+      // 更新对话，添加助手消息
+      const finalMessages = [...updatedMessages, assistantMessage];
+      const finalConversation = {
+        ...updatedConversation,
+        messages: finalMessages,
+        updatedAt: new Date(),
+      };
+
+      setConversations(prev => {
+        const existingIndex = prev.findIndex(conv => conv.id === conversation.id);
+        if (existingIndex >= 0) {
+          const newConversations = [...prev];
+          newConversations[existingIndex] = finalConversation;
+          return newConversations;
+        } else {
+          return [finalConversation, ...prev];
+        }
+      });
     } catch (error) {
       console.error('Error generating response:', error);
       toast.error('Failed to generate response. Please try again.');

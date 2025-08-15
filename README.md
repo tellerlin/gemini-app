@@ -12,6 +12,14 @@ A modern, feature-rich chat interface for Google's Gemini AI models built with R
 - **Real-time Chat**: Instant messaging with AI responses
 - **Persistent Storage**: Local storage for conversations and settings
 
+### Enhanced AI Response Support
+- **Interactive Flowcharts**: Mermaid diagram rendering with zoom and download capabilities
+- **Rich Data Tables**: Sortable, searchable, and paginated tables with CSV/JSON export
+- **Dynamic Charts**: Multiple chart types (line, bar, pie, area, radar, scatter) with interactive features
+- **Mathematical Expressions**: Support for inline and block math notation
+- **Advanced Code Highlighting**: Syntax highlighting with copy functionality
+- **Content Summary**: Visual indicators for different content types in AI responses
+
 ### Advanced Features
 - **Error Handling**: Comprehensive error categorization and recovery
 - **Retry Logic**: Automatic retry with exponential backoff
@@ -40,6 +48,12 @@ A modern, feature-rich chat interface for Google's Gemini AI models built with R
 - **@google/generative-ai 0.24.1** - Official Google AI SDK
 - **React Markdown 10.1.0** - Markdown rendering
 - **React Syntax Highlighter 15.6.1** - Code syntax highlighting
+
+### Enhanced Content Libraries
+- **Mermaid 10.6.1** - Flowchart and diagram rendering
+- **Recharts 2.8.0** - Interactive chart components
+- **ReactFlow 11.10.1** - Node-based flow diagrams
+- **KaTeX 0.16.9** - Mathematical expression rendering
 
 ### UI/UX
 - **React Hot Toast 2.5.2** - Toast notifications
@@ -80,6 +94,59 @@ A modern, feature-rich chat interface for Google's Gemini AI models built with R
 3. Open the application and click the settings icon
 4. Add your API keys (supports multiple keys for redundancy)
 
+## 📊 Enhanced AI Response Features
+
+### Flowcharts and Diagrams
+The application supports Mermaid diagrams in AI responses:
+
+```mermaid
+graph TD
+    A[Start] --> B{Decision?}
+    B -->|Yes| C[Action 1]
+    B -->|No| D[Action 2]
+    C --> E[End]
+    D --> E
+```
+
+**Usage**: Include ````mermaid` blocks in your AI responses for automatic diagram rendering.
+
+### Interactive Data Tables
+Rich table support with sorting, searching, and export capabilities:
+
+**Usage**: Use ````table` blocks with JSON data:
+```json
+{
+  "headers": ["Name", "Age", "City"],
+  "data": [
+    ["John", 30, "NYC"],
+    ["Jane", 25, "LA"]
+  ]
+}
+```
+
+### Dynamic Charts
+Multiple chart types supported: line, bar, pie, area, radar, scatter, and composed charts.
+
+**Usage**: Use ````chart` blocks with chart configuration:
+```json
+{
+  "type": "line",
+  "data": [...],
+  "config": {
+    "xAxis": "month",
+    "series": [...],
+    "title": "Chart Title"
+  }
+}
+```
+
+### Mathematical Expressions
+Support for both inline (`$formula$`) and block (`$$formula$$`) mathematical notation.
+
+**Examples**:
+- Inline: The quadratic formula is $x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$
+- Block: $$\int_{-\infty}^{\infty} e^{-x^2} dx = \sqrt{\pi}$$
+
 ### Available Models
 - **Gemini 2.5 Pro**: Enhanced thinking, reasoning, and multimodal understanding
 - **Gemini 2.5 Flash**: Adaptive thinking with cost efficiency
@@ -95,8 +162,13 @@ src/
 │   ├── ApiKeyModal.tsx # API key management modal
 │   ├── ChatArea.tsx    # Main chat interface
 │   ├── ChatInput.tsx   # Message input component
+│   ├── EnhancedMessageBubble.tsx # Enhanced message display with rich content
+│   ├── MermaidDiagram.tsx # Flowchart and diagram rendering
+│   ├── EnhancedTable.tsx # Interactive data tables
+│   ├── ChartComponent.tsx # Dynamic chart components
+│   ├── DemoContent.tsx # Feature showcase component
 │   ├── FileUpload.tsx  # File upload functionality
-│   ├── MessageBubble.tsx # Individual message display
+│   ├── MessageBubble.tsx # Legacy message display
 │   └── Sidebar.tsx     # Conversation sidebar
 ├── hooks/              # Custom React hooks
 │   ├── useChat.ts      # Chat state management
@@ -106,7 +178,8 @@ src/
 ├── types/              # TypeScript type definitions
 │   └── chat.ts         # Chat-related interfaces
 ├── utils/              # Utility functions
-│   └── cn.ts           # Class name utilities
+│   ├── cn.ts           # Class name utilities
+│   └── contentParser.ts # AI response content parsing
 ├── App.tsx             # Main application component
 └── main.tsx            # Application entry point
 ```
@@ -135,8 +208,14 @@ The core service layer provides:
 - **ChatArea**: Main conversation interface with message display
 - **ChatInput**: Message composition with file upload
 - **Sidebar**: Conversation management and settings
-- **MessageBubble**: Individual message rendering with markdown
+- **EnhancedMessageBubble**: Advanced message rendering with rich content support
 - **ApiKeyModal**: API key configuration interface
+
+### Enhanced Content Components
+- **MermaidDiagram**: Interactive flowchart and diagram rendering
+- **EnhancedTable**: Sortable, searchable data tables with export functionality
+- **ChartComponent**: Dynamic charts with multiple visualization types
+- **ContentParser**: AI response content parsing and categorization
 
 ### UI Features
 - **Responsive Design**: Mobile-first approach
