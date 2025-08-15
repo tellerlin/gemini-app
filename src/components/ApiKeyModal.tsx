@@ -20,26 +20,62 @@ export function ApiKeyModal({
   const [apiKeysText, setApiKeysText] = useState('');
   const [showKeys, setShowKeys] = useState(false);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
+  const [actualApiKeys, setActualApiKeys] = useState<string[]>([]); // Store the actual keys separately
 
   // Initialize with comma-separated keys when modal opens
   useEffect(() => {
     if (isOpen) {
-      setApiKeysText(currentApiKeys.join(', '));
+      setActualApiKeys(currentApiKeys);
+      const keysToDisplay = showKeys 
+        ? currentApiKeys.join(', ')
+        : currentApiKeys.map(maskApiKey).join(', ');
+      setApiKeysText(keysToDisplay);
     }
-  }, [isOpen, currentApiKeys]);
+  }, [isOpen, currentApiKeys, showKeys]);
 
   const handleSave = () => {
-    const keys = parseApiKeys(apiKeysText);
+    // If showing masked keys, use the actual keys; otherwise parse the text
+    const keys = showKeys ? parseApiKeys(apiKeysText) : actualApiKeys;
     onSave(keys);
     onClose();
   };
 
+  const handleToggleShowKeys = () => {
+    const newShowKeys = !showKeys;
+    setShowKeys(newShowKeys);
+    
+    if (newShowKeys) {
+      // Switch to showing actual keys
+      setApiKeysText(actualApiKeys.join(', '));
+    } else {
+      // Switch to showing masked keys
+      setApiKeysText(actualApiKeys.map(maskApiKey).join(', '));
+    }
+  };
+
+  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newText = e.target.value;
+    setApiKeysText(newText);
+    
+    // If we're showing actual keys, update the actual keys array
+    if (showKeys) {
+      setActualApiKeys(parseApiKeys(newText));
+    }
+  };
+
   const handleAddKey = () => {
-    setApiKeysText(prev => prev + ', ');
+    if (showKeys) {
+      setApiKeysText(prev => prev + ', ');
+    } else {
+      // Show a message or automatically switch to show mode for editing
+      setShowKeys(true);
+      setApiKeysText(actualApiKeys.join(', ') + ', ');
+    }
   };
 
   const handleClearKeys = () => {
     setApiKeysText('');
+    setActualApiKeys([]);
   };
 
   const handleCopyKey = async (key: string, index: number) => {
@@ -52,7 +88,7 @@ export function ApiKeyModal({
     }
   };
 
-  const validKeys = parseApiKeys(apiKeysText);
+  const validKeys = showKeys ? parseApiKeys(apiKeysText) : actualApiKeys;
 
   const displayKeys = showKeys ? validKeys : validKeys.map(maskApiKey);
 
@@ -99,7 +135,7 @@ export function ApiKeyModal({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => setShowKeys(!showKeys)}
+                  onClick={handleToggleShowKeys}
                   className="text-xs"
                 >
                   {showKeys ? <EyeOff className="h-3 w-3 mr-1" /> : <Eye className="h-3 w-3 mr-1" />}
@@ -128,9 +164,11 @@ export function ApiKeyModal({
             
             <textarea
               value={apiKeysText}
-              onChange={(e) => setApiKeysText(e.target.value)}
+              onChange={handleTextChange}
               placeholder="Enter your Gemini API keys (comma-separated)..."
               className="w-full h-24 p-3 border border-gray-300 rounded-lg font-mono text-sm resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              style={!showKeys ? {userSelect: 'none', WebkitUserSelect: 'none', MozUserSelect: 'none', msUserSelect: 'none'} : {}}
+              readOnly={!showKeys}
             />
             
             <div className="flex items-center justify-between text-xs text-gray-500">
@@ -152,22 +190,24 @@ export function ApiKeyModal({
               <div className="space-y-2 max-h-32 overflow-y-auto">
                 {displayKeys.map((displayKey, index) => (
                   <div key={index} className="flex items-center space-x-2 p-2 bg-gray-50 rounded border">
-                    <code className="flex-1 font-mono text-sm select-none">
+                    <code className="flex-1 font-mono text-sm select-none user-select-none" style={{userSelect: 'none', WebkitUserSelect: 'none', MozUserSelect: 'none', msUserSelect: 'none'}}>
                       {displayKey}
                     </code>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleCopyKey(validKeys[index], index)}
-                      className="text-xs"
-                      disabled={!showKeys}
-                    >
-                      {copiedIndex === index ? (
-                        <Check className="h-3 w-3 text-green-600" />
-                      ) : (
-                        <Copy className="h-3 w-3" />
-                      )}
-                    </Button>
+                    {showKeys && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleCopyKey(validKeys[index], index)}
+                        className="text-xs"
+                        title="Copy API key"
+                      >
+                        {copiedIndex === index ? (
+                          <Check className="h-3 w-3 text-green-600" />
+                        ) : (
+                          <Copy className="h-3 w-3" />
+                        )}
+                      </Button>
+                    )}
                   </div>
                 ))}
               </div>

@@ -1165,11 +1165,12 @@ export class GeminiService {
 
   /**
    * Get masked version of API key for display
+   * Shows only the last 6 characters with asterisks for the rest
    * @private
    */
   private maskApiKey(key: string): string {
-    if (key.length <= 8) return '*'.repeat(key.length);
-    return key.slice(0, 4) + '*'.repeat(key.length - 8) + key.slice(-4);
+    if (key.length <= 6) return '*'.repeat(key.length);
+    return '*'.repeat(key.length - 6) + key.slice(-6);
   }
 
   /**

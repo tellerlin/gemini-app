@@ -1,6 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import { Download, ChevronUp, ChevronDown, Search } from 'lucide-react';
+import { Download, ChevronUp, ChevronDown, Search, FileDown } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 interface EnhancedTableProps {
   data: any[][];
@@ -72,6 +74,7 @@ export function EnhancedTable({ data, headers, title }: EnhancedTableProps) {
   };
 
   const exportToCSV = () => {
+    const filename = encodeURIComponent(title || 'table-data');
     const csvContent = [
       headers.join(','),
       ...data.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
@@ -81,13 +84,14 @@ export function EnhancedTable({ data, headers, title }: EnhancedTableProps) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${title || 'table-data'}.csv`;
+    a.download = `${filename}.csv`;
     a.click();
     URL.revokeObjectURL(url);
     toast.success('Table exported to CSV');
   };
 
   const exportToJSON = () => {
+    const filename = encodeURIComponent(title || 'table-data');
     const jsonData = {
       headers,
       data: data.map(row => {
@@ -103,14 +107,54 @@ export function EnhancedTable({ data, headers, title }: EnhancedTableProps) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${title || 'table-data'}.json`;
+    a.download = `${filename}.json`;
     a.click();
     URL.revokeObjectURL(url);
     toast.success('Table exported to JSON');
   };
 
+  const exportToPDF = () => {
+    const filename = encodeURIComponent(title || 'table-data');
+    const tableElement = document.querySelector('.enhanced-table-container') as HTMLElement;
+    if (!tableElement) {
+      toast.error('Table not found');
+      return;
+    }
+
+    html2canvas(tableElement, {
+      backgroundColor: '#ffffff',
+      scale: 2,
+      useCORS: true
+    }).then(canvas => {
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('landscape');
+      const imgWidth = 280;
+      const pageHeight = 200;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      let heightLeft = imgHeight;
+
+      let position = 10;
+
+      pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+      }
+
+      pdf.save(`${filename}.pdf`);
+      toast.success('Table exported to PDF');
+    }).catch(error => {
+      console.error('Error generating PDF:', error);
+      toast.error('Failed to generate PDF');
+    });
+  };
+
   return (
-    <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+    <div className="enhanced-table-container bg-white border border-gray-200 rounded-lg overflow-hidden">
       {/* Header */}
       <div className="flex justify-between items-center p-4 border-b border-gray-200 bg-gray-50">
         <div>
@@ -135,6 +179,13 @@ export function EnhancedTable({ data, headers, title }: EnhancedTableProps) {
           >
             <Download className="h-4 w-4" />
             <span>JSON</span>
+          </button>
+          <button
+            onClick={exportToPDF}
+            className="flex items-center space-x-2 px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+          >
+            <FileDown className="h-4 w-4" />
+            <span>PDF</span>
           </button>
         </div>
       </div>

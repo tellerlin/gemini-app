@@ -4,8 +4,10 @@ import {
   BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area, RadarChart, Radar, PolarGrid, 
   PolarAngleAxis, PolarRadiusAxis, ComposedChart, ScatterChart, Scatter
 } from 'recharts';
-import { Download, BarChart3, PieChart as PieChartIcon, TrendingUp, Activity } from 'lucide-react';
+import { Download, BarChart3, PieChart as PieChartIcon, TrendingUp, Activity, FileDown } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 interface ChartComponentProps {
   type: 'line' | 'bar' | 'pie' | 'area' | 'radar' | 'composed' | 'scatter';
@@ -33,26 +35,67 @@ const COLORS = [
 export function ChartComponent({ type, data, config }: ChartComponentProps) {
   const [chartType, setChartType] = useState(type);
 
-  const downloadChart = () => {
-    const svgElement = document.querySelector('.recharts-wrapper svg') as SVGElement;
-    if (!svgElement) {
-      toast.error('Chart not found');
-      return;
-    }
+  const downloadChart = (format: 'svg' | 'pdf' = 'svg') => {
+    const filename = encodeURIComponent(config.title || 'chart');
+    
+    if (format === 'svg') {
+      const svgElement = document.querySelector('.recharts-wrapper svg') as SVGElement;
+      if (!svgElement) {
+        toast.error('Chart not found');
+        return;
+      }
 
-    const svgData = new XMLSerializer().serializeToString(svgElement);
-    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-    const svgUrl = URL.createObjectURL(svgBlob);
-    
-    const downloadLink = document.createElement('a');
-    downloadLink.href = svgUrl;
-    downloadLink.download = `${config.title || 'chart'}.svg`;
-    document.body.appendChild(downloadLink);
-    downloadLink.click();
-    document.body.removeChild(downloadLink);
-    URL.revokeObjectURL(svgUrl);
-    
-    toast.success('Chart downloaded as SVG');
+      const svgData = new XMLSerializer().serializeToString(svgElement);
+      const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+      const svgUrl = URL.createObjectURL(svgBlob);
+      
+      const downloadLink = document.createElement('a');
+      downloadLink.href = svgUrl;
+      downloadLink.download = `${filename}.svg`;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+      URL.revokeObjectURL(svgUrl);
+      
+      toast.success('Chart downloaded as SVG');
+    } else if (format === 'pdf') {
+      const chartContainer = document.querySelector('.recharts-wrapper')?.parentElement as HTMLElement;
+      if (!chartContainer) {
+        toast.error('Chart container not found');
+        return;
+      }
+
+      html2canvas(chartContainer, {
+        backgroundColor: '#ffffff',
+        scale: 2,
+        useCORS: true
+      }).then(canvas => {
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('landscape');
+        const imgWidth = 280;
+        const pageHeight = 200;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        let heightLeft = imgHeight;
+
+        let position = 10;
+
+        pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+
+        while (heightLeft >= 0) {
+          position = heightLeft - imgHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+          heightLeft -= pageHeight;
+        }
+
+        pdf.save(`${filename}.pdf`);
+        toast.success('Chart downloaded as PDF');
+      }).catch(error => {
+        console.error('Error generating PDF:', error);
+        toast.error('Failed to generate PDF');
+      });
+    }
   };
 
   const renderChart = () => {
@@ -279,13 +322,22 @@ export function ChartComponent({ type, data, config }: ChartComponentProps) {
               </button>
             ))}
           </div>
-          <button
-            onClick={downloadChart}
-            className="flex items-center space-x-2 px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
-          >
-            <Download className="h-4 w-4" />
-            <span>Download</span>
-          </button>
+          <div className="flex items-center space-x-1">
+            <button
+              onClick={() => downloadChart('svg')}
+              className="flex items-center space-x-2 px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+            >
+              <Download className="h-4 w-4" />
+              <span>SVG</span>
+            </button>
+            <button
+              onClick={() => downloadChart('pdf')}
+              className="flex items-center space-x-2 px-3 py-1.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+            >
+              <FileDown className="h-4 w-4" />
+              <span>PDF</span>
+            </button>
+          </div>
         </div>
       </div>
 

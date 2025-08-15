@@ -13,6 +13,8 @@
     "@google/genai": "^1.14.0",
     "@tanstack/react-table": "^8.21.3",
     "clsx": "^2.1.1",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^3.0.1",
     "katex": "^0.16.22",
     "lucide-react": "^0.539.0",
     "mermaid": "^11.9.0",

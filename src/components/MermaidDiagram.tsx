@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import mermaid from 'mermaid';
-import { Download, ZoomIn, ZoomOut } from 'lucide-react';
+import { Download, ZoomIn, ZoomOut, FileDown } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 interface MermaidDiagramProps {
   code: string;
@@ -36,17 +38,57 @@ export function MermaidDiagram({ code, title }: MermaidDiagramProps) {
     renderDiagram();
   }, [code]);
 
-  const downloadSVG = () => {
+  const downloadDiagram = (format: 'svg' | 'pdf' = 'svg') => {
     if (!svg) return;
     
-    const blob = new Blob([svg], { type: 'image/svg+xml' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${title || 'diagram'}.svg`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success('Diagram downloaded as SVG');
+    const filename = encodeURIComponent(title || 'diagram');
+    
+    if (format === 'svg') {
+      const blob = new Blob([svg], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${filename}.svg`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success('Diagram downloaded as SVG');
+    } else if (format === 'pdf') {
+      if (!containerRef.current) {
+        toast.error('Diagram container not found');
+        return;
+      }
+
+      html2canvas(containerRef.current, {
+        backgroundColor: '#ffffff',
+        scale: 2,
+        useCORS: true
+      }).then(canvas => {
+        const imgData = canvas.toDataURL('image/png');
+        const pdf = new jsPDF('landscape');
+        const imgWidth = 280;
+        const pageHeight = 200;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        let heightLeft = imgHeight;
+
+        let position = 10;
+
+        pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+
+        while (heightLeft >= 0) {
+          position = heightLeft - imgHeight;
+          pdf.addPage();
+          pdf.addImage(imgData, 'PNG', 10, position, imgWidth, imgHeight);
+          heightLeft -= pageHeight;
+        }
+
+        pdf.save(`${filename}.pdf`);
+        toast.success('Diagram downloaded as PDF');
+      }).catch(error => {
+        console.error('Error generating PDF:', error);
+        toast.error('Failed to generate PDF');
+      });
+    }
   };
 
   const zoomIn = () => setScale(prev => Math.min(prev + 0.2, 3));
@@ -96,13 +138,22 @@ export function MermaidDiagram({ code, title }: MermaidDiagramProps) {
           >
             <ZoomIn className="h-4 w-4" />
           </button>
-          <button
-            onClick={downloadSVG}
-            className="p-1 text-gray-500 hover:text-gray-700"
-            title="Download SVG"
-          >
-            <Download className="h-4 w-4" />
-          </button>
+          <div className="flex items-center space-x-1">
+            <button
+              onClick={() => downloadDiagram('svg')}
+              className="p-1 text-gray-500 hover:text-gray-700"
+              title="Download SVG"
+            >
+              <Download className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => downloadDiagram('pdf')}
+              className="p-1 text-gray-500 hover:text-gray-700"
+              title="Download PDF"
+            >
+              <FileDown className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       </div>
 

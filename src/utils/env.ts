@@ -10,13 +10,14 @@ export interface EnvConfig {
 
 /**
  * Parse API keys from environment variable or comma-separated string
+ * Automatically removes all whitespace (including spaces, tabs, newlines)
  */
 export function parseApiKeys(keysString: string): string[] {
   if (!keysString) return [];
   
   return keysString
     .split(',')
-    .map(key => key.trim())
+    .map(key => key.replace(/\s+/g, '')) // Remove ALL whitespace characters
     .filter(key => key !== '');
 }
 
@@ -114,6 +115,7 @@ export function validateProxyUrl(url: string): boolean {
 
 /**
  * Get masked version of API key for display
+ * Shows only the last 6 characters with asterisks for the rest
  */
 export function maskApiKey(key: string): string {
   if (key.length <= 6) return '*'.repeat(key.length);
