@@ -55,7 +55,7 @@ A modern, feature-rich chat interface for Google's Gemini AI models built with R
 ### Setup
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/tellerlin/gemini-app.git
    cd gemini-app
    ```
 
@@ -199,9 +199,17 @@ npm run lint     # Run ESLint
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
+### Repository Information
+- **GitHub**: [https://github.com/tellerlin/gemini-app](https://github.com/tellerlin/gemini-app)
+- **License**: MIT License
+- **Language**: TypeScript (97.5%), JavaScript (1.7%), Other (0.8%)
+- **Stars**: 0 | **Forks**: 0 | **Watchers**: 0
+
 ## 📝 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+**Repository**: [https://github.com/tellerlin/gemini-app](https://github.com/tellerlin/gemini-app)
 
 ```
 MIT License
@@ -239,6 +247,7 @@ SOFTWARE.
 - Check the [Google AI Studio documentation](https://ai.google.dev/)
 - Review the console for detailed error messages
 - Ensure you're using the latest version of the application
+- Visit the [GitHub repository](https://github.com/tellerlin/gemini-app) for issues and discussions
 
 ## 🔄 Changelog
 
@@ -251,4 +260,6 @@ SOFTWARE.
 
 ---
 
-**Built with ❤️ using React, TypeScript, and Google's Gemini AI** 
+**Built with ❤️ using React, TypeScript, and Google's Gemini AI**
+
+**GitHub**: [https://github.com/tellerlin/gemini-app](https://github.com/tellerlin/gemini-app) 
