@@ -12,6 +12,38 @@ interface MessageBubbleProps {
   message: Message;
 }
 
+// 代码块复制组件
+function CodeBlockCopy({ code, language }: { code: string; language: string }) {
+  const [copied, setCopied] = useState(false);
+
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(code);
+      setCopied(true);
+      toast.success(`Copied ${language} code to clipboard`);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      toast.error('Failed to copy code');
+    }
+  };
+
+  return (
+    <div className="relative group">
+      <button
+        onClick={copyToClipboard}
+        className="absolute top-2 right-2 p-1.5 bg-gray-800 hover:bg-gray-700 rounded text-gray-300 hover:text-white transition-all opacity-0 group-hover:opacity-100 z-10"
+        title={`Copy ${language} code`}
+      >
+        {copied ? (
+          <Check className="h-4 w-4 text-green-400" />
+        ) : (
+          <Copy className="h-4 w-4" />
+        )}
+      </button>
+    </div>
+  );
+}
+
 export function MessageBubble({ message }: MessageBubbleProps) {
   const [copied, setCopied] = useState(false);
 
@@ -19,10 +51,10 @@ export function MessageBubble({ message }: MessageBubbleProps) {
     try {
       await navigator.clipboard.writeText(message.content);
       setCopied(true);
-      toast.success('Copied to clipboard');
+      toast.success('Copied message to clipboard');
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
-      toast.error('Failed to copy');
+      toast.error('Failed to copy message');
     }
   };
 
@@ -104,15 +136,24 @@ export function MessageBubble({ message }: MessageBubbleProps) {
                   components={{
                     code({ node, inline, className, children, ...props }) {
                       const match = /language-(\w+)/.exec(className || '');
+                      const codeString = String(children).replace(/\n$/, '');
+                      
                       return !inline && match ? (
-                        <SyntaxHighlighter
-                          style={oneDark}
-                          language={match[1]}
-                          PreTag="div"
-                          {...props}
-                        >
-                          {String(children).replace(/\n$/, '')}
-                        </SyntaxHighlighter>
+                        <div className="relative">
+                          <CodeBlockCopy code={codeString} language={match[1]} />
+                          <SyntaxHighlighter
+                            style={oneDark}
+                            language={match[1]}
+                            PreTag="div"
+                            customStyle={{
+                              margin: 0,
+                              borderRadius: '0.5rem',
+                            }}
+                            {...props}
+                          >
+                            {codeString}
+                          </SyntaxHighlighter>
+                        </div>
                       ) : (
                         <code className={className} {...props}>
                           {children}
@@ -136,7 +177,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
               <button
                 onClick={copyToClipboard}
                 className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
-                title="Copy message"
+                title="Copy entire message"
               >
                 {copied ? (
                   <Check className="h-3 w-3 text-green-500" />
