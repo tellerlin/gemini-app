@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { X, Key, ExternalLink, Plus, Trash2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Key, ExternalLink, Plus, Trash2, Eye, EyeOff, Copy, Check } from 'lucide-react';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
+import { parseApiKeys, maskApiKey } from '../utils/env';
 
 interface ApiKeyModalProps {
   isOpen: boolean;
@@ -16,31 +17,46 @@ export function ApiKeyModal({
   currentApiKeys,
   onSave,
 }: ApiKeyModalProps) {
-  const [apiKeysText, setApiKeysText] = useState(currentApiKeys.join('\n'));
+  const [apiKeysText, setApiKeysText] = useState('');
+  const [showKeys, setShowKeys] = useState(false);
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
-  if (!isOpen) return null;
+  // Initialize with comma-separated keys when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setApiKeysText(currentApiKeys.join(', '));
+    }
+  }, [isOpen, currentApiKeys]);
 
   const handleSave = () => {
-    const keys = apiKeysText
-      .split('\n')
-      .map(key => key.trim())
-      .filter(key => key !== '');
+    const keys = parseApiKeys(apiKeysText);
     onSave(keys);
     onClose();
   };
 
   const handleAddKey = () => {
-    setApiKeysText(prev => prev + '\n');
+    setApiKeysText(prev => prev + ', ');
   };
 
   const handleClearKeys = () => {
     setApiKeysText('');
   };
 
-  const validKeys = apiKeysText
-    .split('\n')
-    .map(key => key.trim())
-    .filter(key => key !== '');
+  const handleCopyKey = async (key: string, index: number) => {
+    try {
+      await navigator.clipboard.writeText(key);
+      setCopiedIndex(index);
+      setTimeout(() => setCopiedIndex(null), 2000);
+    } catch (err) {
+      console.error('Failed to copy key:', err);
+    }
+  };
+
+  const validKeys = parseApiKeys(apiKeysText);
+
+  const displayKeys = showKeys ? validKeys : validKeys.map(maskApiKey);
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -77,9 +93,18 @@ export function ApiKeyModal({
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <label className="text-sm font-medium text-gray-700">
-                Gemini API Keys (one per line)
+                Gemini API Keys (comma-separated)
               </label>
               <div className="flex space-x-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowKeys(!showKeys)}
+                  className="text-xs"
+                >
+                  {showKeys ? <EyeOff className="h-3 w-3 mr-1" /> : <Eye className="h-3 w-3 mr-1" />}
+                  {showKeys ? 'Hide' : 'Show'}
+                </Button>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -87,7 +112,7 @@ export function ApiKeyModal({
                   className="text-xs"
                 >
                   <Plus className="h-3 w-3 mr-1" />
-                  Add Line
+                  Add Key
                 </Button>
                 <Button
                   variant="ghost"
@@ -104,8 +129,8 @@ export function ApiKeyModal({
             <textarea
               value={apiKeysText}
               onChange={(e) => setApiKeysText(e.target.value)}
-              placeholder="Enter your Gemini API keys (one per line)..."
-              className="w-full h-32 p-3 border border-gray-300 rounded-lg font-mono text-sm resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="Enter your Gemini API keys (comma-separated)..."
+              className="w-full h-24 p-3 border border-gray-300 rounded-lg font-mono text-sm resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
             
             <div className="flex items-center justify-between text-xs text-gray-500">
@@ -117,6 +142,37 @@ export function ApiKeyModal({
               </span>
             </div>
           </div>
+
+          {/* Display masked keys */}
+          {validKeys.length > 0 && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">
+                Current API Keys:
+              </label>
+              <div className="space-y-2 max-h-32 overflow-y-auto">
+                {displayKeys.map((displayKey, index) => (
+                  <div key={index} className="flex items-center space-x-2 p-2 bg-gray-50 rounded border">
+                    <code className="flex-1 font-mono text-sm select-none">
+                      {displayKey}
+                    </code>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleCopyKey(validKeys[index], index)}
+                      className="text-xs"
+                      disabled={!showKeys}
+                    >
+                      {copiedIndex === index ? (
+                        <Check className="h-3 w-3 text-green-600" />
+                      ) : (
+                        <Copy className="h-3 w-3" />
+                      )}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
             <p className="text-sm text-yellow-800">

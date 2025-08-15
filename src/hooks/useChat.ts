@@ -1,8 +1,9 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import type { Message, Conversation, FileAttachment } from '../types/chat';
 import { geminiService } from '../services/gemini';
 import { useLocalStorage } from './useLocalStorage';
+import { loadApiKeysFromEnv } from '../utils/env';
 
 export function useChat() {
   const [conversations, setConversations] = useLocalStorage<Conversation[]>('gemini-conversations', []);
@@ -10,6 +11,19 @@ export function useChat() {
   const [isLoading, setIsLoading] = useState(false);
   const [apiKeys, setApiKeys] = useLocalStorage<string[]>('gemini-api-keys', []);
   const [selectedModel, setSelectedModel] = useLocalStorage('selected-model', 'gemini-2.5-flash');
+
+  // Load API keys from environment variables on initialization
+  useEffect(() => {
+    const envApiKeys = loadApiKeysFromEnv();
+    if (envApiKeys.length > 0) {
+      // Merge environment keys with stored keys, avoiding duplicates
+      const allKeys = [...new Set([...envApiKeys, ...apiKeys])];
+      if (allKeys.length !== apiKeys.length) {
+        setApiKeys(allKeys);
+        toast.success(`Loaded ${envApiKeys.length} API key(s) from environment variables`);
+      }
+    }
+  }, []); // Only run once on mount
 
   const currentConversation = conversations.find(conv => conv.id === currentConversationId);
 
@@ -121,6 +135,36 @@ export function useChat() {
     setCurrentConversationId(conversationId);
   }, [setCurrentConversationId]);
 
+  const exportConversation = useCallback((conversationId: string) => {
+    const conversation = conversations.find(conv => conv.id === conversationId);
+    if (!conversation) {
+      toast.error('Conversation not found');
+      return;
+    }
+
+    // Create formatted export content
+    const exportContent = conversation.messages.map(message => {
+      const timestamp = new Date(message.timestamp).toLocaleString();
+      const role = message.role === 'user' ? 'User' : 'Assistant';
+      return `[${timestamp}] ${role}:\n${message.content}\n`;
+    }).join('\n---\n\n');
+
+    const fullContent = `Conversation: ${conversation.title}\nCreated: ${new Date(conversation.createdAt).toLocaleString()}\nUpdated: ${new Date(conversation.updatedAt).toLocaleString()}\nModel: ${conversation.model}\n\n${exportContent}`;
+
+    // Create and download file
+    const blob = new Blob([fullContent], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${conversation.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    toast.success('Conversation exported successfully');
+  }, [conversations]);
+
   return {
     conversations,
     currentConversation,
@@ -133,5 +177,6 @@ export function useChat() {
     createNewConversation,
     deleteConversation,
     selectConversation,
+    exportConversation,
   };
 }

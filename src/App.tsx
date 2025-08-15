@@ -26,6 +26,7 @@ function App() {
     createNewConversation,
     deleteConversation,
     selectConversation,
+    exportConversation,
   } = useChat();
 
   // Handle responsive behavior
@@ -85,6 +86,7 @@ function App() {
         onSelectConversation={handleConversationSelect}
         onNewConversation={createNewConversation}
         onDeleteConversation={deleteConversation}
+        onExportConversation={exportConversation}
         onOpenSettings={() => setApiKeyModalOpen(true)}
         selectedModel={selectedModel}
         onModelChange={setSelectedModel}

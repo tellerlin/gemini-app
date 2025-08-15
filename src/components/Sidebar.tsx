@@ -1,5 +1,5 @@
 import React from 'react';
-import { MessageCircle, Plus, Trash2, Settings, X, Zap } from 'lucide-react';
+import { MessageCircle, Plus, Trash2, Settings, X, Zap, Download } from 'lucide-react';
 import { Button } from './ui/Button';
 import { Select } from './ui/Select';
 import type { Conversation } from '../types/chat';
@@ -14,6 +14,7 @@ interface SidebarProps {
   onSelectConversation: (id: string) => void;
   onNewConversation: () => void;
   onDeleteConversation: (id: string) => void;
+  onExportConversation: (id: string) => void;
   onOpenSettings: () => void;
   selectedModel: string;
   onModelChange: (model: string) => void;
@@ -28,6 +29,7 @@ export function Sidebar({
   onSelectConversation,
   onNewConversation,
   onDeleteConversation,
+  onExportConversation,
   onOpenSettings,
   selectedModel,
   onModelChange,
@@ -135,15 +137,28 @@ export function Sidebar({
                         {formatDate(conversation.updatedAt)}
                       </p>
                     </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDeleteConversation(conversation.id);
-                      }}
-                      className="opacity-0 group-hover:opacity-100 p-1.5 text-gray-400 hover:text-red-500 transition-all rounded"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </button>
+                    <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-all">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onExportConversation(conversation.id);
+                        }}
+                        className="p-1.5 text-gray-400 hover:text-blue-500 transition-all rounded"
+                        title="Export conversation"
+                      >
+                        <Download className="h-3 w-3" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDeleteConversation(conversation.id);
+                        }}
+                        className="p-1.5 text-gray-400 hover:text-red-500 transition-all rounded"
+                        title="Delete conversation"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    </div>
                   </div>
                 ))
               )}

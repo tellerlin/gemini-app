@@ -8,6 +8,7 @@ A modern, feature-rich chat interface for Google's Gemini AI models built with R
 - **Multi-Model Support**: Chat with different Gemini models (2.5 Pro, 2.5 Flash, 2.5 Flash-Lite, Live 2.5 Flash)
 - **Multi-API Key Management**: Round-robin API key rotation for improved reliability and rate limit handling
 - **Conversation Management**: Create, save, and manage multiple conversations
+- **Conversation Export**: Export individual conversations as formatted text files
 - **File Upload Support**: Upload images for multimodal conversations
 - **Real-time Chat**: Instant messaging with AI responses
 - **Persistent Storage**: Local storage for conversations and settings
@@ -89,10 +90,36 @@ A modern, feature-rich chat interface for Google's Gemini AI models built with R
 ## 🔧 Configuration
 
 ### API Key Setup
+
+#### Method 1: In-App Configuration
 1. Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
 2. Create one or more API keys
 3. Open the application and click the settings icon
 4. Add your API keys (supports multiple keys for redundancy)
+
+#### Method 2: Environment Variables
+1. Copy `.env.example` to `.env`
+2. Add your API keys to the `.env` file:
+   ```env
+   VITE_GEMINI_API_KEYS=your_first_api_key_here,your_second_api_key_here
+   ```
+3. Restart the development server
+
+**Note**: Environment variables are loaded automatically and merged with any keys stored in the browser. Multiple keys enable round-robin functionality for better reliability.
+
+## 🔐 Security Features
+
+### API Key Protection
+- **Masked Display**: API keys are displayed with only the last 6 characters visible
+- **Copy Protection**: Masked keys cannot be copied to clipboard
+- **Show/Hide Toggle**: Users can temporarily reveal keys for verification
+- **Secure Storage**: Keys are stored locally in browser storage
+
+### Conversation Export
+- **Formatted Export**: Conversations are exported with timestamps and role indicators
+- **Metadata Included**: Export includes conversation title, creation date, and model used
+- **File Naming**: Automatic file naming with conversation title and date
+- **Text Format**: Plain text format for easy sharing and archiving
 
 ## 📊 Enhanced AI Response Features
 
@@ -179,7 +206,8 @@ src/
 │   └── chat.ts         # Chat-related interfaces
 ├── utils/              # Utility functions
 │   ├── cn.ts           # Class name utilities
-│   └── contentParser.ts # AI response content parsing
+│   ├── contentParser.ts # AI response content parsing
+│   └── env.ts          # Environment variable utilities
 ├── App.tsx             # Main application component
 └── main.tsx            # Application entry point
 ```
