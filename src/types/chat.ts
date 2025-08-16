@@ -12,7 +12,7 @@ export interface FileAttachment {
   type: string;
   size: number;
   url: string;
-  data?: string; // base64 for images
+  data?: string; // base64 for images, videos, and PDFs
 }
 
 export interface Conversation {

@@ -253,6 +253,40 @@ export class GeminiService {
             data: base64Data,
           },
         });
+      } else if (file.type.startsWith('video/')) {
+        console.log(`🎥 Processing video for streaming: ${file.name} (${file.type})`);
+        
+        if (!file.data) {
+          throw new Error(`Video data missing for file: ${file.name}`);
+        }
+
+        const base64Data = file.data.includes(',') 
+          ? file.data.split(',')[1] 
+          : file.data;
+
+        parts.push({
+          inlineData: {
+            mimeType: file.type,
+            data: base64Data,
+          },
+        });
+      } else if (file.type === 'application/pdf') {
+        console.log(`📄 Processing PDF for streaming: ${file.name} (${file.type})`);
+        
+        if (!file.data) {
+          throw new Error(`PDF data missing for file: ${file.name}`);
+        }
+
+        const base64Data = file.data.includes(',') 
+          ? file.data.split(',')[1] 
+          : file.data;
+
+        parts.push({
+          inlineData: {
+            mimeType: file.type,
+            data: base64Data,
+          },
+        });
       }
     }
 
@@ -528,8 +562,42 @@ export class GeminiService {
             data: base64Data,
           },
         });
+      } else if (file.type.startsWith('video/')) {
+        console.log(`🎥 Processing video: ${file.name} (${file.type})`);
+        
+        if (!file.data) {
+          throw new Error(`Video data missing for file: ${file.name}`);
+        }
+
+        const base64Data = file.data.includes(',') 
+          ? file.data.split(',')[1] 
+          : file.data;
+
+        parts.push({
+          inlineData: {
+            mimeType: file.type,
+            data: base64Data,
+          },
+        });
+      } else if (file.type === 'application/pdf') {
+        console.log(`📄 Processing PDF: ${file.name} (${file.type})`);
+        
+        if (!file.data) {
+          throw new Error(`PDF data missing for file: ${file.name}`);
+        }
+
+        const base64Data = file.data.includes(',') 
+          ? file.data.split(',')[1] 
+          : file.data;
+
+        parts.push({
+          inlineData: {
+            mimeType: file.type,
+            data: base64Data,
+          },
+        });
       } else {
-        console.log(`📄 Skipping non-image file: ${file.name} (${file.type})`);
+        console.log(`📄 Skipping unsupported file: ${file.name} (${file.type})`);
       }
     }
 

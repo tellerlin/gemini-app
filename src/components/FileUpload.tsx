@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { Upload, X, File, Image } from 'lucide-react';
+import { Upload, X, File, Image, Video, FileText } from 'lucide-react';
 import type { FileAttachment } from '../types/chat';
 import { cn } from '../utils/cn';
 
@@ -97,14 +97,14 @@ export function FileUpload({ files, onFilesChange, className, isMobile = false }
             Drop files here or click to upload
           </span>
           <span className={cn("text-gray-400 mt-1 text-center", isMobile ? "text-xs" : "text-xs")}>
-            Images, documents (max 10MB each)
+            Images, videos, PDFs, documents (max 10MB each)
           </span>
           <input
             type="file"
             multiple
             onChange={(e) => e.target.files && handleFiles(e.target.files)}
             className="hidden"
-            accept="image/*,.pdf,.doc,.docx,.txt"
+            accept="image/*,video/*,.pdf,.doc,.docx,.txt"
           />
         </label>
       </div>
@@ -122,6 +122,10 @@ export function FileUpload({ files, onFilesChange, className, isMobile = false }
             >
               {file.type.startsWith('image/') ? (
                 <Image className={cn("text-blue-500", isMobile ? "h-3 w-3" : "h-4 w-4")} />
+              ) : file.type.startsWith('video/') ? (
+                <Video className={cn("text-purple-500", isMobile ? "h-3 w-3" : "h-4 w-4")} />
+              ) : file.type === 'application/pdf' ? (
+                <FileText className={cn("text-red-500", isMobile ? "h-3 w-3" : "h-4 w-4")} />
               ) : (
                 <File className={cn("text-gray-500", isMobile ? "h-3 w-3" : "h-4 w-4")} />
               )}
