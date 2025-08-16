@@ -1,4 +1,4 @@
-import { GoogleGenAI } from '@google/genai';
+import { GoogleGenAI, Modality } from '@google/genai';
 import type { Message, FileAttachment } from '../types/chat';
 import { loadEnvConfig } from '../utils/env';
 
@@ -1262,6 +1262,183 @@ export class GeminiService {
       console.debug(`Key validation failed:`, error);
       return false;
     }
+  }
+
+  /**
+   * Generate images using Gemini with multimodal support
+   * Supports text-to-image and image-to-image generation
+   * @param messages - Array of conversation messages
+   * @param model - Image generation model (defaults to gemini-2.0-flash-preview-image-generation)
+   * @returns Promise<{ text?: string; images?: string[] }> - Text response and generated images as base64
+   */
+  async generateImageContent(
+    messages: Message[],
+    model: string = 'gemini-2.0-flash-preview-image-generation'
+  ): Promise<{ text?: string; images?: string[] }> {
+    // Validate prerequisites
+    if (this.apiKeys.length === 0) {
+      const error = new Error('No API keys available. Please set API keys first.');
+      console.error('❌ API Key Error:', error.message);
+      throw error;
+    }
+
+    if (!messages || messages.length === 0) {
+      const error = new Error('No messages provided for image generation');
+      console.error('❌ Input Validation Error:', error.message);
+      throw error;
+    }
+
+    console.log(`🎨 Starting image generation with model: ${model}`);
+    console.log(`📝 Processing ${messages.length} messages`);
+
+    let lastError: Error | null = null;
+    const initialKeyIndex = this.currentKeyIndex;
+
+    // Try each API key until one succeeds
+    do {
+      try {
+        console.log(`🔄 Attempting image generation with API key ${this.currentKeyIndex + 1}/${this.apiKeys.length}`);
+        this.totalRequests++;
+        
+        const result = await this.executeImageGeneration(messages, model);
+        
+        // Track success
+        this.trackKeySuccess(this.currentKeyIndex);
+        console.log('✅ Image generation successful');
+        return result;
+      } catch (error) {
+        lastError = error as Error;
+        this.totalErrors++;
+        
+        // Track error for current key
+        this.trackKeyError(this.currentKeyIndex, (error as Error).message);
+        
+        console.error(`❌ Image generation API key ${this.currentKeyIndex + 1} failed:`, {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          type: error instanceof Error ? error.constructor.name : 'Unknown'
+        });
+
+        // Move to next key
+        this.moveToNextKey();
+
+        // If we've tried all keys, break
+        if (this.currentKeyIndex === initialKeyIndex) {
+          console.log('💥 All API keys failed for image generation');
+          break;
+        }
+      }
+    } while (this.currentKeyIndex !== initialKeyIndex);
+
+    // All API keys exhausted
+    console.error('💥 All API keys failed for image generation');
+    throw lastError || new Error('Failed to generate images with any API key');
+  }
+
+  /**
+   * Execute image generation with timeout handling
+   * @private
+   */
+  private async executeImageGeneration(
+    messages: Message[], 
+    model: string
+  ): Promise<{ text?: string; images?: string[] }> {
+    const ai = this.createGenAI();
+    const lastMessage = messages[messages.length - 1];
+    
+    // Create timeout promise
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => {
+        reject(new Error(`Image generation timeout after ${this.DEFAULT_TIMEOUT}ms`));
+      }, this.DEFAULT_TIMEOUT);
+    });
+
+    try {
+      const result = await Promise.race([
+        this.handleImageGeneration(ai, lastMessage, model),
+        timeoutPromise
+      ]);
+      return result;
+    } catch (error) {
+      this.categorizeAndLogError(error as Error);
+      throw error;
+    }
+  }
+
+  /**
+   * Handle image generation (text-to-image or image-to-image)
+   * @private
+   */
+  private async handleImageGeneration(
+    ai: GoogleGenAI,
+    message: Message,
+    model: string
+  ): Promise<{ text?: string; images?: string[] }> {
+    const parts: any[] = [{ text: message.content }];
+    
+    // Add any input images for image-to-image generation
+    if (message.files && message.files.length > 0) {
+      for (const file of message.files) {
+        if (file.type.startsWith('image/')) {
+          console.log(`🖼️ Adding input image for editing: ${file.name} (${file.type})`);
+          
+          if (!file.data) {
+            throw new Error(`Image data missing for file: ${file.name}`);
+          }
+
+          const base64Data = file.data.includes(',') 
+            ? file.data.split(',')[1] 
+            : file.data;
+
+          parts.push({
+            inlineData: {
+              mimeType: file.type,
+              data: base64Data,
+            },
+          });
+        }
+      }
+    }
+
+    console.log(`🎨 Generating images with ${parts.length} parts`);
+    
+    // Use image generation model with response modalities
+    const response = await ai.models.generateContent({
+      model,
+      contents: [{ role: 'user', parts }],
+      config: {
+        responseModalities: [Modality.TEXT, Modality.IMAGE],
+      },
+      generationConfig: {
+        temperature: 0.7,
+        maxOutputTokens: 8192,
+      }
+    });
+
+    // Extract text and images from response
+    const result: { text?: string; images?: string[] } = {};
+    const images: string[] = [];
+    
+    if (response.candidates && response.candidates[0] && response.candidates[0].content.parts) {
+      for (const part of response.candidates[0].content.parts) {
+        if (part.text) {
+          result.text = part.text;
+        } else if (part.inlineData) {
+          // Generated image data
+          console.log('🖼️ Image generated successfully');
+          images.push(part.inlineData.data);
+        }
+      }
+    }
+    
+    if (images.length > 0) {
+      result.images = images;
+    }
+
+    if (!result.text && (!result.images || result.images.length === 0)) {
+      throw new Error('Empty response received from Gemini image generation API');
+    }
+
+    return result;
   }
 
   /**

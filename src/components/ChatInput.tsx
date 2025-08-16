@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Paperclip, X } from 'lucide-react';
+import { Send, Paperclip, X, Image } from 'lucide-react';
 import { Button } from './ui/Button';
 import { FileUpload } from './FileUpload';
 import type { FileAttachment } from '../types/chat';
@@ -7,12 +7,13 @@ import { cn } from '../utils/cn';
 
 interface ChatInputProps {
   onSendMessage: (content: string, files?: FileAttachment[]) => void;
+  onGenerateImage?: (content: string, files?: FileAttachment[]) => void;
   isLoading: boolean;
   disabled?: boolean;
   isMobile?: boolean;
 }
 
-export function ChatInput({ onSendMessage, isLoading, disabled, isMobile = false }: ChatInputProps) {
+export function ChatInput({ onSendMessage, onGenerateImage, isLoading, disabled, isMobile = false }: ChatInputProps) {
   const [message, setMessage] = useState('');
   const [files, setFiles] = useState<FileAttachment[]>([]);
   const [showFileUpload, setShowFileUpload] = useState(false);
@@ -23,6 +24,17 @@ export function ChatInput({ onSendMessage, isLoading, disabled, isMobile = false
     if (!message.trim() && files.length === 0) return;
 
     onSendMessage(message, files);
+    setMessage('');
+    setFiles([]);
+    setShowFileUpload(false);
+  };
+
+  const handleGenerateImage = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!message.trim() && files.length === 0) return;
+    if (!onGenerateImage) return;
+
+    onGenerateImage(message, files);
     setMessage('');
     setFiles([]);
     setShowFileUpload(false);
@@ -110,18 +122,39 @@ export function ChatInput({ onSendMessage, isLoading, disabled, isMobile = false
           )}
         </div>
 
-        {/* Send Button */}
-        <Button
-          type="submit"
-          disabled={disabled || (!message.trim() && files.length === 0)}
-          isLoading={isLoading}
-          className={cn(
-            "rounded-2xl p-0 transition-all duration-200 active:scale-95 touch-manipulation",
-            isMobile ? "h-11 w-11" : "h-12 w-12"
+        {/* Send and Generate Image Buttons */}
+        <div className="flex space-x-2">
+          {/* Generate Image Button */}
+          {onGenerateImage && (
+            <Button
+              type="button"
+              onClick={handleGenerateImage}
+              disabled={disabled || (!message.trim() && files.length === 0)}
+              isLoading={isLoading}
+              variant="outline"
+              className={cn(
+                "rounded-2xl p-0 transition-all duration-200 active:scale-95 touch-manipulation",
+                isMobile ? "h-11 w-11" : "h-12 w-12"
+              )}
+              title="Generate Image"
+            >
+              <Image className="h-4 w-4" />
+            </Button>
           )}
-        >
-          <Send className="h-4 w-4" />
-        </Button>
+
+          {/* Send Button */}
+          <Button
+            type="submit"
+            disabled={disabled || (!message.trim() && files.length === 0)}
+            isLoading={isLoading}
+            className={cn(
+              "rounded-2xl p-0 transition-all duration-200 active:scale-95 touch-manipulation",
+              isMobile ? "h-11 w-11" : "h-12 w-12"
+            )}
+          >
+            <Send className="h-4 w-4" />
+          </Button>
+        </div>
       </form>
     </div>
   );

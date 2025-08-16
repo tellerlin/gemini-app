@@ -124,6 +124,114 @@ export function useChat() {
     }
   }, [apiKeys, currentConversation, createNewConversation, selectedModel, setConversations]);
 
+  const generateImage = useCallback(async (content: string, files?: FileAttachment[]) => {
+    if (!apiKeys || apiKeys.length === 0) {
+      toast.error('Please set your Gemini API keys first');
+      return;
+    }
+
+    geminiService.setApiKeys(apiKeys);
+
+    // 确保我们有当前对话
+    let conversation = currentConversation;
+    if (!conversation) {
+      conversation = createNewConversation();
+    }
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content,
+      timestamp: new Date(),
+      files,
+    };
+
+    // 更新对话，添加用户消息
+    const updatedMessages = [...conversation.messages, userMessage];
+    const updatedConversation = {
+      ...conversation,
+      messages: updatedMessages,
+      title: conversation.messages.length === 0 ? content.slice(0, 50) : conversation.title,
+      updatedAt: new Date(),
+    };
+
+    setConversations(prev => {
+      const existingIndex = prev.findIndex(conv => conv.id === conversation.id);
+      if (existingIndex >= 0) {
+        // 更新现有对话
+        const newConversations = [...prev];
+        newConversations[existingIndex] = updatedConversation;
+        return newConversations;
+      } else {
+        // 添加新对话
+        return [updatedConversation, ...prev];
+      }
+    });
+
+    setIsLoading(true);
+
+    try {
+      const response = await geminiService.generateImageContent(updatedMessages, 'gemini-2.0-flash-preview-image-generation');
+
+      // Create assistant message with text and images
+      let responseContent = response.text || '';
+      const generatedImages: FileAttachment[] = [];
+      
+      if (response.images && response.images.length > 0) {
+        // Convert generated images to FileAttachment format
+        response.images.forEach((imageData, index) => {
+          const imageFile: FileAttachment = {
+            id: `generated-${Date.now()}-${index}`,
+            name: `generated_image_${index + 1}.png`,
+            type: 'image/png',
+            size: Math.round(imageData.length * 0.75), // Estimate size from base64
+            url: `data:image/png;base64,${imageData}`,
+            data: `data:image/png;base64,${imageData}`,
+          };
+          generatedImages.push(imageFile);
+        });
+        
+        if (!responseContent) {
+          responseContent = `Generated ${response.images.length} image${response.images.length > 1 ? 's' : ''}`;
+        }
+      }
+
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: responseContent,
+        timestamp: new Date(),
+        files: generatedImages.length > 0 ? generatedImages : undefined,
+      };
+
+      // 更新对话，添加助手消息
+      const finalMessages = [...updatedMessages, assistantMessage];
+      const finalConversation = {
+        ...updatedConversation,
+        messages: finalMessages,
+        updatedAt: new Date(),
+      };
+
+      setConversations(prev => {
+        const existingIndex = prev.findIndex(conv => conv.id === conversation.id);
+        if (existingIndex >= 0) {
+          const newConversations = [...prev];
+          newConversations[existingIndex] = finalConversation;
+          return newConversations;
+        } else {
+          return [finalConversation, ...prev];
+        }
+      });
+
+      toast.success(`Generated ${generatedImages.length} image${generatedImages.length > 1 ? 's' : ''} successfully!`);
+    } catch (error) {
+      console.error('Error generating images:', error);
+      toast.error('Failed to generate images. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [apiKeys, currentConversation, createNewConversation, setConversations]);
+
   const deleteConversation = useCallback((conversationId: string) => {
     setConversations(prev => prev.filter(conv => conv.id !== conversationId));
     if (currentConversationId === conversationId) {
@@ -174,6 +282,7 @@ export function useChat() {
     selectedModel,
     setSelectedModel,
     sendMessage,
+    generateImage,
     createNewConversation,
     deleteConversation,
     selectConversation,

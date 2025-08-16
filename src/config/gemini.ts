@@ -8,6 +8,7 @@ export const GEMINI_MODELS: Array<{
   supportsVideo?: boolean;
   supportsPdf?: boolean;
   supportsLive?: boolean;
+  supportsImageGeneration?: boolean;
   costTier?: 'free' | 'low' | 'medium' | 'high';
 }> = [
   {
@@ -61,6 +62,17 @@ export const GEMINI_MODELS: Array<{
     supportsLive: true,
     maxTokens: 8192,
     costTier: 'high',
+  },
+  {
+    id: 'gemini-2.0-flash-preview-image-generation',
+    name: 'Gemini 2.0 Flash (Image Generation)',
+    description: 'Image generation and editing capabilities with text-to-image and image-to-image support',
+    supportsVision: true,
+    supportsAudio: false,
+    supportsVideo: false,
+    supportsImageGeneration: true,
+    maxTokens: 1000000,
+    costTier: 'medium',
   },
 ];
 

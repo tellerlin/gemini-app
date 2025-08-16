@@ -7,12 +7,13 @@ import { Bot, Sparkles } from 'lucide-react';
 interface ChatAreaProps {
   messages: Message[];
   onSendMessage: (content: string, files?: FileAttachment[]) => void;
+  onGenerateImage?: (content: string, files?: FileAttachment[]) => void;
   isLoading: boolean;
   hasApiKey: boolean;
   isMobile?: boolean;
 }
 
-export function ChatArea({ messages, onSendMessage, isLoading, hasApiKey, isMobile = false }: ChatAreaProps) {
+export function ChatArea({ messages, onSendMessage, onGenerateImage, isLoading, hasApiKey, isMobile = false }: ChatAreaProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -73,6 +74,7 @@ export function ChatArea({ messages, onSendMessage, isLoading, hasApiKey, isMobi
                   <li>• "Explain quantum computing"</li>
                   <li>• "Write a Python function to..."</li>
                   <li>• "Analyze this image" (with upload)</li>
+                  <li>• "Generate an image of..." (image generation)</li>
                 </ul>
               </div>
             </div>
@@ -80,6 +82,7 @@ export function ChatArea({ messages, onSendMessage, isLoading, hasApiKey, isMobi
         </div>
         <ChatInput
           onSendMessage={onSendMessage}
+          onGenerateImage={onGenerateImage}
           isLoading={isLoading}
           isMobile={isMobile}
         />
@@ -121,6 +124,7 @@ export function ChatArea({ messages, onSendMessage, isLoading, hasApiKey, isMobi
       {/* Input Area */}
       <ChatInput
         onSendMessage={onSendMessage}
+        onGenerateImage={onGenerateImage}
         isLoading={isLoading}
         isMobile={isMobile}
       />

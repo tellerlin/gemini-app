@@ -23,6 +23,7 @@ function App() {
     selectedModel,
     setSelectedModel,
     sendMessage,
+    generateImage,
     createNewConversation,
     deleteConversation,
     selectConversation,
@@ -116,6 +117,7 @@ function App() {
           <ChatArea
             messages={currentConversation?.messages || []}
             onSendMessage={sendMessage}
+            onGenerateImage={generateImage}
             isLoading={isLoading}
             hasApiKey={apiKeys && apiKeys.length > 0}
             isMobile={isMobile}

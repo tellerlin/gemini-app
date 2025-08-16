@@ -32,5 +32,6 @@ export interface GeminiModel {
   supportsAudio?: boolean;
   supportsVideo?: boolean;
   supportsPdf?: boolean;
+  supportsImageGeneration?: boolean;
   maxTokens: number;
 }
