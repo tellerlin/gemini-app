@@ -1,16 +1,72 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { toast } from 'react-hot-toast';
-import type { Message, Conversation, FileAttachment } from '../types/chat';
+import type { 
+  Message, 
+  Conversation, 
+  FileAttachment, 
+  ConversationConfig, 
+  ImageGenerationConfig
+} from '../types/chat';
 import { geminiService } from '../services/gemini';
 import { useLocalStorage } from './useLocalStorage';
 import { loadApiKeysFromEnv } from '../utils/env';
+import { ContextManager, type ContextConfig } from '../utils/contextManager';
+import { getOptimalThinkingConfig, getModelCapabilities } from '../config/gemini';
 
 export function useChat() {
   const [conversations, setConversations] = useLocalStorage<Conversation[]>('gemini-conversations', []);
   const [currentConversationId, setCurrentConversationId] = useLocalStorage<string | null>('current-conversation', null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [streamingMessage, setStreamingMessage] = useState('');
   const [apiKeys, setApiKeys] = useLocalStorage<string[]>('gemini-api-keys', []);
   const [selectedModel, setSelectedModel] = useLocalStorage('selected-model', 'gemini-2.5-flash');
+  
+  // Enhanced default configurations with grounding and URL context
+  const [defaultConversationConfig, setDefaultConversationConfig] = useLocalStorage<ConversationConfig>('default-conversation-config', {
+    thinkingConfig: {
+      enabled: true,
+      budget: 15000, // Will be auto-adjusted based on content
+      showThinkingProcess: false,
+    },
+    generationConfig: {
+      temperature: 0.7,
+      topK: 40,
+      topP: 0.95,
+      maxOutputTokens: 1000000,
+    },
+    groundingConfig: {
+      enabled: false, // User can enable when needed
+      useGoogleSearch: true,
+      maxResults: 5,
+    },
+    urlContextConfig: {
+      enabled: false, // User can enable when needed
+      maxUrls: 3,
+    },
+  });
+  
+  const [defaultImageConfig, setDefaultImageConfig] = useLocalStorage<ImageGenerationConfig>('default-image-config', {
+    numberOfImages: 1,
+    sampleImageSize: '1K',
+    aspectRatio: '1:1',
+    personGeneration: 'allow_adult',
+  });
+
+  // Enhanced context management configuration
+  const [contextConfig, setContextConfig] = useLocalStorage<ContextConfig>('context-config', {
+    maxHistoryLength: 20,
+    maxTokens: 100000, // Increased for enhanced context management
+    prioritizeRecent: true,
+    preserveSystemMessages: true,
+    summaryEnabled: true,
+    intelligentSummarization: true,
+    adaptiveTokenManagement: true,
+    preserveFileAttachments: true,
+  });
+
+  // Create context manager instance
+  const contextManager = useMemo(() => new ContextManager(contextConfig), [contextConfig]);
 
   // Load API keys from environment variables on initialization
   useEffect(() => {
@@ -23,7 +79,7 @@ export function useChat() {
         toast.success(`Loaded ${envApiKeys.length} API key(s) from environment variables`);
       }
     }
-  }, []); // Only run once on mount
+  }, [apiKeys, setApiKeys]); // Only run once on mount
 
   const currentConversation = conversations.find(conv => conv.id === currentConversationId);
 
@@ -35,12 +91,13 @@ export function useChat() {
       createdAt: new Date(),
       updatedAt: new Date(),
       model: selectedModel,
+      config: defaultConversationConfig,
     };
 
     setConversations(prev => [newConversation, ...prev]);
     setCurrentConversationId(newConversation.id);
     return newConversation;
-  }, [selectedModel, setConversations, setCurrentConversationId]);
+  }, [selectedModel, defaultConversationConfig, setConversations, setCurrentConversationId]);
 
   const sendMessage = useCallback(async (content: string, files?: FileAttachment[]) => {
     if (!apiKeys || apiKeys.length === 0) {
@@ -66,40 +123,198 @@ export function useChat() {
 
     // 更新对话，添加用户消息
     const updatedMessages = [...conversation.messages, userMessage];
+    
+    // Get model capabilities and optimize configuration
+    const modelCapabilities = getModelCapabilities(selectedModel);
+    
+    // Auto-adjust thinking configuration based on content
+    const optimalThinking = getOptimalThinkingConfig(content, selectedModel);
+    
+    // Enhanced conversation config with intelligent defaults
+    const enhancedConfig = {
+      ...conversation.config,
+      thinkingConfig: {
+        ...conversation.config?.thinkingConfig,
+        ...optimalThinking,
+      },
+      // Enable grounding for information-seeking queries
+      groundingConfig: {
+        ...conversation.config?.groundingConfig,
+        enabled: conversation.config?.groundingConfig?.enabled || 
+          (content.toLowerCase().includes('latest') || 
+           content.toLowerCase().includes('recent') || 
+           content.toLowerCase().includes('current') ||
+           content.toLowerCase().includes('news') ||
+           content.toLowerCase().includes('today') ||
+           content.toLowerCase().includes('2024') ||
+           content.toLowerCase().includes('2025')),
+      }
+    };
+
     const updatedConversation = {
       ...conversation,
       messages: updatedMessages,
       title: conversation.messages.length === 0 ? content.slice(0, 50) : conversation.title,
       updatedAt: new Date(),
+      config: enhancedConfig,
     };
 
     setConversations(prev => {
       const existingIndex = prev.findIndex(conv => conv.id === conversation.id);
       if (existingIndex >= 0) {
-        // 更新现有对话
         const newConversations = [...prev];
         newConversations[existingIndex] = updatedConversation;
         return newConversations;
       } else {
-        // 添加新对话
         return [updatedConversation, ...prev];
       }
     });
 
     setIsLoading(true);
+    setIsStreaming(true);
+    setStreamingMessage('');
 
     try {
-      const response = await geminiService.generateResponse(updatedMessages, selectedModel);
-
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
+      const assistantMessageId = (Date.now() + 1).toString();
+      let fullResponse = '';
+      let groundingMetadata = null;
+      let urlContextMetadata = null;
+      
+      // Create placeholder assistant message
+      const placeholderMessage: Message = {
+        id: assistantMessageId,
         role: 'assistant',
-        content: response,
+        content: '',
         timestamp: new Date(),
       };
 
-      // 更新对话，添加助手消息
-      const finalMessages = [...updatedMessages, assistantMessage];
+      // Add placeholder message immediately for streaming display
+      const tempMessages = [...updatedMessages, placeholderMessage];
+      const tempConversation = {
+        ...updatedConversation,
+        messages: tempMessages,
+        updatedAt: new Date(),
+      };
+
+      setConversations(prev => {
+        const existingIndex = prev.findIndex(conv => conv.id === conversation.id);
+        if (existingIndex >= 0) {
+          const newConversations = [...prev];
+          newConversations[existingIndex] = tempConversation;
+          return newConversations;
+        } else {
+          return [tempConversation, ...prev];
+        }
+      });
+
+      // Use enhanced streaming response with grounding support
+      let optimizedMessages = updatedMessages;
+      
+      // Apply enhanced context optimization with model awareness
+      if (contextManager.needsOptimization(updatedMessages)) {
+        console.log('🧠 Applying enhanced context optimization...');
+        optimizedMessages = contextManager.optimizeContext(updatedMessages, selectedModel);
+        
+        const summary = contextManager.createIntelligentSummary(
+          updatedMessages.slice(0, updatedMessages.length - optimizedMessages.length)
+        );
+        
+        if (summary) {
+          console.log('📋 Enhanced context summary created:', summary.content.substring(0, 100) + '...');
+        }
+      }
+
+      // Use grounding-enabled streaming if available and enabled
+      const useGrounding = enhancedConfig.groundingConfig?.enabled && modelCapabilities.supportsGrounding;
+      
+      if (useGrounding) {
+        console.log('🔍 Using grounding-enabled generation');
+        const stream = geminiService.generateStreamingResponseWithGrounding(
+          optimizedMessages, 
+          selectedModel,
+          enhancedConfig
+        );
+
+        for await (const chunk of stream) {
+          if (chunk.text) {
+            fullResponse += chunk.text;
+            setStreamingMessage(fullResponse);
+            
+            // Update the message in real-time
+            setConversations(prev => {
+              return prev.map(conv => {
+                if (conv.id === conversation.id) {
+                  return {
+                    ...conv,
+                    messages: conv.messages.map(msg => 
+                      msg.id === assistantMessageId 
+                        ? { ...msg, content: fullResponse }
+                        : msg
+                    ),
+                    updatedAt: new Date(),
+                  };
+                }
+                return conv;
+              });
+            });
+          }
+          
+          // Capture grounding metadata
+          if (chunk.groundingMetadata) {
+            groundingMetadata = chunk.groundingMetadata;
+          }
+          
+          if (chunk.urlContextMetadata) {
+            urlContextMetadata = chunk.urlContextMetadata;
+          }
+        }
+      } else {
+        // Use standard streaming
+        const stream = geminiService.generateStreamingResponse(
+          optimizedMessages, 
+          selectedModel,
+          enhancedConfig
+        );
+
+        for await (const chunk of stream) {
+          fullResponse += chunk;
+          setStreamingMessage(fullResponse);
+          
+          // Update the message in real-time
+          setConversations(prev => {
+            return prev.map(conv => {
+              if (conv.id === conversation.id) {
+                return {
+                  ...conv,
+                  messages: conv.messages.map(msg => 
+                    msg.id === assistantMessageId 
+                      ? { ...msg, content: fullResponse }
+                      : msg
+                  ),
+                  updatedAt: new Date(),
+                };
+              }
+              return conv;
+            });
+          });
+        }
+      }
+
+      // Final update with complete message and metadata
+      const finalMessage: Message = {
+        id: assistantMessageId,
+        role: 'assistant',
+        content: fullResponse,
+        timestamp: new Date(),
+        metadata: {
+          modelUsed: selectedModel,
+          thinkingEnabled: optimalThinking.enabled,
+          ...(groundingMetadata && { groundingMetadata }),
+          ...(urlContextMetadata && { urlContextMetadata }),
+        },
+      };
+
+      const finalMessages = [...updatedMessages, finalMessage];
       const finalConversation = {
         ...updatedConversation,
         messages: finalMessages,
@@ -116,15 +331,44 @@ export function useChat() {
           return [finalConversation, ...prev];
         }
       });
+
+      // Show grounding info if available
+      if (groundingMetadata?.webSearchQueries?.length > 0) {
+        toast.success(`🔍 Found information from ${groundingMetadata.groundingChunks?.length || 0} sources`);
+      }
     } catch (error) {
       console.error('Error generating response:', error);
       toast.error('Failed to generate response. Please try again.');
+      
+      // Remove placeholder message on error
+      setConversations(prev => {
+        return prev.map(conv => {
+          if (conv.id === conversation.id) {
+            return {
+              ...conv,
+              messages: conv.messages.filter(msg => msg.content !== ''),
+            };
+          }
+          return conv;
+        });
+      });
     } finally {
       setIsLoading(false);
+      setIsStreaming(false);
+      setStreamingMessage('');
     }
-  }, [apiKeys, currentConversation, createNewConversation, selectedModel, setConversations]);
+  }, [apiKeys, currentConversation, createNewConversation, selectedModel, setConversations, contextManager]);
 
-  const generateImage = useCallback(async (content: string, files?: FileAttachment[]) => {
+  const generateImage = useCallback(async (
+    content: string, 
+    files?: FileAttachment[], 
+    imageRequirements?: {
+      quality?: 'fast' | 'standard' | 'ultra';
+      artistic?: boolean;
+      conversational?: boolean;
+      speed?: 'fast' | 'normal';
+    }
+  ) => {
     if (!apiKeys || apiKeys.length === 0) {
       toast.error('Please set your Gemini API keys first');
       return;
@@ -171,7 +415,31 @@ export function useChat() {
     setIsLoading(true);
 
     try {
-      const response = await geminiService.generateImageContent(updatedMessages, 'gemini-2.0-flash-preview-image-generation');
+      let response;
+      
+      // Determine if user wants conversational or dedicated image generation
+      const useConversationalGeneration = imageRequirements?.conversational || 
+        (files && files.length > 0); // Use conversational for image editing
+      
+      if (useConversationalGeneration) {
+        console.log('🎨 Using conversational image generation');
+        response = await geminiService.generateImageContent(
+          updatedMessages, 
+          'gemini-2.0-flash-preview-image-generation'
+        );
+      } else {
+        console.log('🎨 Using intelligent image model selection');
+        // Use intelligent selection with enhanced requirements
+        const enhancedRequirements = {
+          ...defaultImageConfig,
+          ...imageRequirements,
+        };
+        
+        response = await geminiService.generateImageWithIntelligentSelection(
+          updatedMessages,
+          enhancedRequirements
+        );
+      }
 
       // Create assistant message with text and images
       let responseContent = response.text || '';
@@ -192,7 +460,8 @@ export function useChat() {
         });
         
         if (!responseContent) {
-          responseContent = `Generated ${response.images.length} image${response.images.length > 1 ? 's' : ''}`;
+          const modelType = useConversationalGeneration ? 'Gemini conversational' : 'intelligent selection';
+          responseContent = `Generated ${response.images.length} image${response.images.length > 1 ? 's' : ''} using ${modelType}`;
         }
       }
 
@@ -202,6 +471,9 @@ export function useChat() {
         content: responseContent,
         timestamp: new Date(),
         files: generatedImages.length > 0 ? generatedImages : undefined,
+        metadata: {
+          modelUsed: useConversationalGeneration ? 'gemini-2.0-flash-preview-image-generation' : 'intelligent-selection',
+        },
       };
 
       // 更新对话，添加助手消息
@@ -223,14 +495,14 @@ export function useChat() {
         }
       });
 
-      toast.success(`Generated ${generatedImages.length} image${generatedImages.length > 1 ? 's' : ''} successfully!`);
+      toast.success(`✨ Generated ${generatedImages.length} image${generatedImages.length > 1 ? 's' : ''} successfully!`);
     } catch (error) {
       console.error('Error generating images:', error);
       toast.error('Failed to generate images. Please try again.');
     } finally {
       setIsLoading(false);
     }
-  }, [apiKeys, currentConversation, createNewConversation, setConversations]);
+  }, [apiKeys, currentConversation, createNewConversation, defaultImageConfig, setConversations]);
 
   const deleteConversation = useCallback((conversationId: string) => {
     setConversations(prev => prev.filter(conv => conv.id !== conversationId));
@@ -273,19 +545,77 @@ export function useChat() {
     toast.success('Conversation exported successfully');
   }, [conversations]);
 
+  const updateConversationConfig = useCallback((conversationId: string, config: ConversationConfig) => {
+    setConversations(prev => prev.map(conv => 
+      conv.id === conversationId 
+        ? { ...conv, config, updatedAt: new Date() }
+        : conv
+    ));
+  }, [setConversations]);
+
+  const stopGeneration = useCallback(() => {
+    geminiService.stopGeneration();
+    setIsStreaming(false);
+    setIsLoading(false);
+    toast.info('Generation stopped');
+  }, []);
+
+  const updateContextConfig = useCallback((newConfig: Partial<ContextConfig>) => {
+    const updatedConfig = { ...contextConfig, ...newConfig };
+    setContextConfig(updatedConfig);
+    contextManager.updateConfig(newConfig);
+    toast.success('Context management settings updated');
+  }, [contextConfig, contextManager, setContextConfig]);
+
+  const getContextInfo = useCallback(() => {
+    if (!currentConversation) {
+      return null;
+    }
+    
+    const messages = currentConversation.messages;
+    const estimatedTokens = contextManager.estimateTokens(messages);
+    const needsOptimization = contextManager.needsOptimization(messages);
+    
+    return {
+      messageCount: messages.length,
+      estimatedTokens,
+      needsOptimization,
+      maxHistoryLength: contextConfig.maxHistoryLength,
+      maxTokens: contextConfig.maxTokens,
+    };
+  }, [currentConversation, contextManager, contextConfig]);
+
+  const getPerformanceMetrics = useCallback(() => {
+    return geminiService.getStats();
+  }, []);
+
   return {
     conversations,
     currentConversation,
     isLoading,
+    isStreaming,
+    streamingMessage,
     apiKeys,
     setApiKeys,
     selectedModel,
     setSelectedModel,
     sendMessage,
     generateImage,
+    stopGeneration,
     createNewConversation,
     deleteConversation,
     selectConversation,
     exportConversation,
+    // New configuration functions
+    defaultConversationConfig,
+    setDefaultConversationConfig,
+    defaultImageConfig,
+    setDefaultImageConfig,
+    updateConversationConfig,
+    getPerformanceMetrics,
+    // Context management
+    contextConfig,
+    updateContextConfig,
+    getContextInfo,
   };
 }

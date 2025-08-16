@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mermaid 图表测试</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11.9.0/dist/mermaid.min.js"></script>
+    <style>
+        body {
+            font-family: "Noto Sans CJK SC", "Microsoft YaHei", "SimHei", Inter, system-ui, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .test-section {
+            background: white;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .test-title {
+            color: #333;
+            border-bottom: 2px solid #007acc;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .error {
+            background-color: #fff5f5;
+            border: 1px solid #fed7d7;
+            color: #c53030;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        
+        .success {
+            background-color: #f0fff4;
+            border: 1px solid #9ae6b4;
+            color: #38a169;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        
+        .mermaid {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        pre {
+            background: #f8f8f8;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Mermaid 图表功能测试</h1>
+    
+    <!-- 测试1：修复前的错误语法 -->
+    <div class="test-section">
+        <h2 class="test-title">测试1：原始错误语法（应该失败）</h2>
+        <div id="result1" class="error">正在测试...</div>
+        <pre>graph TD
+    A[开始] -->|> B{选择操作};
+    B| C{操作1};
+    B -->|> D{操作2};</pre>
+        <div class="mermaid" id="mermaid1">
+graph TD
+    A[开始] -->|> B{选择操作};
+    B| C{操作1};
+    B -->|> D{操作2};
+        </div>
+    </div>
+
+    <!-- 测试2：修复后的正确语法 -->
+    <div class="test-section">
+        <h2 class="test-title">测试2：修复后的正确语法（应该成功）</h2>
+        <div id="result2" class="success">正在测试...</div>
+        <pre>graph TD
+    A[开始] --> B{选择操作}
+    B --> C[操作1]
+    B --> D[操作2]
+    C --> E[处理操作1]
+    D --> F[处理操作2]
+    E --> G[结束]
+    F --> G</pre>
+        <div class="mermaid" id="mermaid2">
+graph TD
+    A[开始] --> B{选择操作}
+    B --> C[操作1]
+    B --> D[操作2]
+    C --> E[处理操作1]
+    D --> F[处理操作2]
+    E --> G[结束]
+    F --> G
+        </div>
+    </div>
+
+    <!-- 测试3：带标签的正确语法 -->
+    <div class="test-section">
+        <h2 class="test-title">测试3：带标签的正确语法</h2>
+        <div id="result3" class="success">正在测试...</div>
+        <pre>graph TD
+    A[输入凭据] --> B{验证凭据?}
+    B -->|是| C[登录成功]
+    B -->|否| D[显示错误信息]
+    C --> E[进入系统]
+    D --> A</pre>
+        <div class="mermaid" id="mermaid3">
+graph TD
+    A[输入凭据] --> B{验证凭据?}
+    B -->|是| C[登录成功]
+    B -->|否| D[显示错误信息]
+    C --> E[进入系统]
+    D --> A
+        </div>
+    </div>
+
+    <!-- 测试4：复杂子图 -->
+    <div class="test-section">
+        <h2 class="test-title">测试4：复杂子图</h2>
+        <div id="result4" class="success">正在测试...</div>
+        <pre>graph TD
+    subgraph 用户认证
+        A[输入凭据] --> B{验证凭据?}
+        B -->|是| C[登录成功]
+        B -->|否| D[显示错误信息]
+    end
+
+    subgraph 购物流程
+        E[浏览商品] --> F[添加到购物车]
+        F --> G{确认订单?}
+        G -->|是| H[支付]
+        G -->|否| E
+    end
+
+    C --> E
+    H --> I[订单完成]</pre>
+        <div class="mermaid" id="mermaid4">
+graph TD
+    subgraph 用户认证
+        A[输入凭据] --> B{验证凭据?}
+        B -->|是| C[登录成功]
+        B -->|否| D[显示错误信息]
+    end
+
+    subgraph 购物流程
+        E[浏览商品] --> F[添加到购物车]
+        F --> G{确认订单?}
+        G -->|是| H[支付]
+        G -->|否| E
+    end
+
+    C --> E
+    H --> I[订单完成]
+        </div>
+    </div>
+
+    <!-- 测试5：时序图 -->
+    <div class="test-section">
+        <h2 class="test-title">测试5：时序图</h2>
+        <div id="result5" class="success">正在测试...</div>
+        <pre>sequenceDiagram
+    participant 用户
+    participant 前端
+    participant 后端
+    participant 数据库
+
+    用户->>前端: 登录请求
+    前端->>后端: 验证凭据
+    后端->>数据库: 查询用户
+    数据库-->>后端: 返回用户信息
+    后端-->>前端: 验证结果
+    前端-->>用户: 显示结果</pre>
+        <div class="mermaid" id="mermaid5">
+sequenceDiagram
+    participant 用户
+    participant 前端
+    participant 后端
+    participant 数据库
+
+    用户->>前端: 登录请求
+    前端->>后端: 验证凭据
+    后端->>数据库: 查询用户
+    数据库-->>后端: 返回用户信息
+    后端-->>前端: 验证结果
+    前端-->>用户: 显示结果
+        </div>
+    </div>
+
+    <script>
+        // 配置 Mermaid
+        mermaid.initialize({
+            startOnLoad: false,
+            theme: 'default',
+            securityLevel: 'loose',
+            fontFamily: '"Noto Sans CJK SC", "Microsoft YaHei", "SimHei", Inter, system-ui, sans-serif',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            },
+            sequence: {
+                diagramMarginX: 50,
+                diagramMarginY: 10,
+                actorMargin: 50,
+                width: 150,
+                height: 65,
+                boxMargin: 10,
+                boxTextMargin: 5,
+                noteMargin: 10,
+                messageMargin: 35
+            }
+        });
+
+        // 测试函数
+        async function testMermaidDiagram(id, resultId) {
+            const element = document.getElementById(id);
+            const resultElement = document.getElementById(resultId);
+            
+            try {
+                await mermaid.run({
+                    nodes: [element]
+                });
+                resultElement.textContent = '✅ 渲染成功';
+                resultElement.className = 'success';
+            } catch (error) {
+                console.error(`${id} 渲染失败:`, error);
+                resultElement.textContent = `❌ 渲染失败: ${error.message}`;
+                resultElement.className = 'error';
+            }
+        }
+
+        // 依次测试所有图表
+        async function runAllTests() {
+            const tests = [
+                { id: 'mermaid1', resultId: 'result1' },
+                { id: 'mermaid2', resultId: 'result2' },
+                { id: 'mermaid3', resultId: 'result3' },
+                { id: 'mermaid4', resultId: 'result4' },
+                { id: 'mermaid5', resultId: 'result5' }
+            ];
+
+            for (const test of tests) {
+                await testMermaidDiagram(test.id, test.resultId);
+                await new Promise(resolve => setTimeout(resolve, 500)); // 延迟500ms
+            }
+
+            // 显示测试汇总
+            const results = tests.map(test => {
+                const resultElement = document.getElementById(test.resultId);
+                return resultElement.className === 'success';
+            });
+
+            const passed = results.filter(r => r).length;
+            const total = results.length;
+
+            console.log(`测试完成: ${passed}/${total} 通过`);
+            
+            // 在页面底部添加测试汇总
+            const summary = document.createElement('div');
+            summary.className = 'test-section';
+            summary.innerHTML = `
+                <h2 class="test-title">📊 测试汇总</h2>
+                <div class="${passed === total ? 'success' : 'error'}">
+                    总测试数: ${total}<br>
+                    通过: ${passed}<br>
+                    失败: ${total - passed}<br>
+                    成功率: ${Math.round(passed / total * 100)}%
+                </div>
+            `;
+            document.body.appendChild(summary);
+        }
+
+        // 页面加载完成后运行测试
+        document.addEventListener('DOMContentLoaded', runAllTests);
+    </script>
+</body>
+</html>

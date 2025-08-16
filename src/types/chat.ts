@@ -4,6 +4,20 @@ export interface Message {
   content: string;
   timestamp: Date;
   files?: FileAttachment[];
+  metadata?: MessageMetadata;
+}
+
+export interface MessageMetadata {
+  tokenUsage?: {
+    input: number;
+    output: number;
+    thinking?: number;
+  };
+  responseTime?: number;
+  modelUsed?: string;
+  thinkingEnabled?: boolean;
+  groundingMetadata?: GroundingMetadata;
+  urlContextMetadata?: UrlContextMetadata;
 }
 
 export interface FileAttachment {
@@ -22,6 +36,77 @@ export interface Conversation {
   createdAt: Date;
   updatedAt: Date;
   model: string;
+  config?: ConversationConfig;
+}
+
+export interface ConversationConfig {
+  systemInstruction?: string;
+  thinkingConfig?: ThinkingConfig;
+  generationConfig?: GenerationConfig;
+  groundingConfig?: GroundingConfig;
+  urlContextConfig?: UrlContextConfig;
+}
+
+export interface GroundingConfig {
+  enabled: boolean;
+  useGoogleSearch: boolean;
+  searchQueries?: string[];
+  maxResults?: number;
+}
+
+export interface UrlContextConfig {
+  enabled: boolean;
+  urls?: string[];
+  maxUrls?: number;
+}
+
+export interface GroundingMetadata {
+  webSearchQueries?: string[];
+  searchEntryPoint?: {
+    renderedContent: string;
+  };
+  groundingChunks?: Array<{
+    web?: {
+      uri: string;
+      title: string;
+    };
+  }>;
+  groundingSupports?: Array<{
+    segment?: {
+      startIndex: number;
+      endIndex: number;
+      text: string;
+    };
+    groundingChunkIndices?: number[];
+  }>;
+}
+
+export interface UrlContextMetadata {
+  urlMetadata?: Array<{
+    retrievedUrl: string;
+    urlRetrievalStatus: string;
+  }>;
+}
+
+export interface ThinkingConfig {
+  enabled: boolean;
+  budget: number;
+  showThinkingProcess?: boolean;
+}
+
+export interface GenerationConfig {
+  temperature: number;
+  topK: number;
+  topP: number;
+  maxOutputTokens: number;
+  responseMimeType?: string;
+}
+
+export interface ImageGenerationConfig {
+  numberOfImages: number;
+  sampleImageSize: '1K' | '2K';
+  aspectRatio: '1:1' | '3:4' | '4:3' | '9:16' | '16:9';
+  personGeneration: 'dont_allow' | 'allow_adult' | 'allow_all';
 }
 
 export interface GeminiModel {
@@ -33,5 +118,32 @@ export interface GeminiModel {
   supportsVideo?: boolean;
   supportsPdf?: boolean;
   supportsImageGeneration?: boolean;
+  supportsLive?: boolean;
+  supportsThinking?: boolean;
   maxTokens: number;
+  costTier?: 'free' | 'low' | 'medium' | 'high';
+}
+
+export interface PerformanceMetrics {
+  totalRequests: number;
+  totalErrors: number;
+  averageResponseTime: number;
+  successRate: string;
+  uptime: number;
+  currentKeyIndex: number;
+  totalKeys: number;
+  healthyKeys: number;
+  timestamp: string;
+  keyStats: KeyHealthStats[];
+}
+
+export interface KeyHealthStats {
+  keyIndex: number;
+  successCount: number;
+  errorCount: number;
+  successRate: string;
+  lastUsed: string | Date;
+  lastError?: string;
+  consecutiveErrors: number;
+  isHealthy: boolean;
 }

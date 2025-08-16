@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Key, ExternalLink, Plus, Trash2, Eye, EyeOff, Copy, Check } from 'lucide-react';
 import { Button } from './ui/Button';
-import { Input } from './ui/Input';
 import { parseApiKeys, maskApiKey } from '../utils/env';
 
 interface ApiKeyModalProps {

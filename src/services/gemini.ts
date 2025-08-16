@@ -1,6 +1,75 @@
 import { GoogleGenAI, Modality } from '@google/genai';
-import type { Message, FileAttachment } from '../types/chat';
+import type { Message, GroundingMetadata, UrlContextMetadata } from '../types/chat';
 import { loadEnvConfig } from '../utils/env';
+
+// Enhanced type definitions for Gemini service
+export interface GeminiGenerationConfig {
+  generationConfig?: {
+    temperature?: number;
+    topK?: number;
+    topP?: number;
+    maxOutputTokens?: number;
+    responseMimeType?: string;
+  };
+  groundingConfig?: {
+    enabled: boolean;
+  };
+  urlContextConfig?: {
+    enabled: boolean;
+  };
+  systemInstruction?: string;
+  thinkingConfig?: {
+    enabled?: boolean;
+    budget?: number;
+  };
+}
+
+export interface GeminiTool {
+  googleSearch?: Record<string, unknown>;
+  urlContext?: Record<string, unknown>;
+}
+
+export interface GeminiContentPart {
+  text?: string;
+  inlineData?: {
+    mimeType: string;
+    data: string;
+  };
+}
+
+export interface GeminiRequestConfig {
+  temperature?: number;
+  topK?: number;
+  topP?: number;
+  maxOutputTokens?: number;
+  responseMimeType?: string;
+  tools?: GeminiTool[];
+  systemInstruction?: string;
+  thinkingConfig?: {
+    thinkingBudget: number;
+  };
+}
+
+export interface ModelCapabilities {
+  supportsThinking: boolean;
+  supportsGrounding: boolean;
+  supportsUrlContext: boolean;
+  maxContextTokens: number;
+}
+
+export interface ImagenConfig {
+  numberOfImages?: number;
+  aspectRatio?: '1:1' | '3:4' | '4:3' | '9:16' | '16:9';
+  personGeneration?: string;
+  sampleImageSize?: '1K' | '2K';
+}
+
+export interface ImagenRequestConfig {
+  numberOfImages: number;
+  aspectRatio?: string;
+  personGeneration?: string;
+  sampleImageSize?: string;
+}
 
 /**
  * Enhanced Gemini Service with comprehensive error handling and timeout management
@@ -29,6 +98,9 @@ export class GeminiService {
   
   // Proxy configuration support
   private proxyUrl?: string;
+  
+  // AbortController for stopping generation
+  private currentAbortController?: AbortController;
 
   constructor(apiKeys?: string[], proxyUrl?: string) {
     if (apiKeys && apiKeys.length > 0) {
@@ -124,15 +196,104 @@ export class GeminiService {
   }
 
   /**
-   * Generate streaming response from Gemini AI with comprehensive error handling
-   * Enhanced for 2025 with true streaming capabilities using new SDK
+   * Stop current generation process
+   */
+  stopGeneration(): void {
+    if (this.currentAbortController) {
+      this.currentAbortController.abort();
+      this.currentAbortController = undefined;
+      console.log('🛑 Generation stopped by user');
+    }
+  }
+
+  /**
+   * Generate streaming response with Google Search Grounding support
+   * Enhanced for 2025 with grounding and URL context capabilities
    * @param messages - Array of conversation messages
    * @param model - Model to use (defaults to gemini-2.5-flash)
-   * @returns AsyncGenerator<string> - Stream of response chunks
+   * @param config - Optional conversation configuration
+   * @returns AsyncGenerator yielding chunks and final grounding metadata
    */
+  async* generateStreamingResponseWithGrounding(
+    messages: Message[],
+    model: string = 'gemini-2.5-flash',
+    config?: GeminiGenerationConfig
+  ): AsyncGenerator<{ text?: string; groundingMetadata?: GroundingMetadata; urlContextMetadata?: UrlContextMetadata }, void, unknown> {
+    // Validate prerequisites
+    if (this.apiKeys.length === 0) {
+      const error = new Error('No API keys available. Please set API keys first.');
+      console.error('❌ API Key Error:', error.message);
+      throw error;
+    }
+
+    if (!messages || messages.length === 0) {
+      const error = new Error('No messages provided for generation');
+      console.error('❌ Input Validation Error:', error.message);
+      throw error;
+    }
+
+    console.log(`🚀 Starting grounding-enabled streaming with model: ${model}`);
+    console.log(`📝 Processing ${messages.length} messages`);
+    console.log(`🔍 Grounding enabled: ${config?.groundingConfig?.enabled || false}`);
+    console.log(`🌐 URL Context enabled: ${config?.urlContextConfig?.enabled || false}`);
+
+    // Create abort controller for this generation
+    this.currentAbortController = new AbortController();
+
+    let lastError: Error | null = null;
+    const initialKeyIndex = this.currentKeyIndex;
+
+    // Try each API key until one succeeds
+    do {
+      try {
+        console.log(`🔄 Attempting grounding streaming with API key ${this.currentKeyIndex + 1}/${this.apiKeys.length}`);
+        this.totalRequests++;
+        
+        yield* this.executeGroundingStreamingGeneration(messages, model, config);
+        
+        // Track success
+        this.trackKeySuccess(this.currentKeyIndex);
+        console.log('✅ Grounding streaming generation successful');
+        this.currentAbortController = undefined;
+        return;
+      } catch (error) {
+        // Check if this is an abort error
+        if ((error as Error).name === 'AbortError') {
+          console.log('🛑 Grounding streaming generation aborted by user');
+          this.currentAbortController = undefined;
+          return;
+        }
+
+        lastError = error as Error;
+        this.totalErrors++;
+        
+        // Track error for current key
+        this.trackKeyError(this.currentKeyIndex, (error as Error).message);
+        
+        console.error(`❌ Grounding API key ${this.currentKeyIndex + 1} failed:`, {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          type: error instanceof Error ? error.constructor.name : 'Unknown'
+        });
+
+        // Move to next key
+        this.moveToNextKey();
+
+        // If we've tried all keys, break
+        if (this.currentKeyIndex === initialKeyIndex) {
+          console.log('💥 All API keys failed for grounding streaming');
+          break;
+        }
+      }
+    } while (this.currentKeyIndex !== initialKeyIndex);
+
+    // All API keys exhausted
+    console.error('💥 All API keys failed for grounding streaming');
+    throw lastError || new Error('Failed to generate grounding streaming response with any API key');
+  }
   async* generateStreamingResponse(
     messages: Message[],
-    model: string = 'gemini-2.5-flash'
+    model: string = 'gemini-2.5-flash',
+    config?: GeminiGenerationConfig
   ): AsyncGenerator<string, void, unknown> {
     // Validate prerequisites
     if (this.apiKeys.length === 0) {
@@ -151,6 +312,9 @@ export class GeminiService {
     console.log(`📝 Processing ${messages.length} messages`);
     console.log(`🔑 Using ${this.apiKeys.length} API keys in round-robin mode`);
 
+    // Create abort controller for this generation
+    this.currentAbortController = new AbortController();
+
     let lastError: Error | null = null;
     const initialKeyIndex = this.currentKeyIndex;
 
@@ -160,13 +324,21 @@ export class GeminiService {
         console.log(`🔄 Attempting streaming with API key ${this.currentKeyIndex + 1}/${this.apiKeys.length}`);
         this.totalRequests++;
         
-        yield* this.executeStreamingGeneration(messages, model);
+        yield* this.executeStreamingGeneration(messages, model, config);
         
         // Track success
         this.trackKeySuccess(this.currentKeyIndex);
         console.log('✅ Streaming content generation successful');
+        this.currentAbortController = undefined;
         return;
       } catch (error) {
+        // Check if this is an abort error
+        if ((error as Error).name === 'AbortError') {
+          console.log('🛑 Streaming generation aborted by user');
+          this.currentAbortController = undefined;
+          return;
+        }
+
         lastError = error as Error;
         this.totalErrors++;
         
@@ -200,12 +372,269 @@ export class GeminiService {
   }
 
   /**
-   * Execute streaming generation with timeout handling
+   * Execute grounding streaming generation with tools support
    * @private
    */
+  private async* executeGroundingStreamingGeneration(
+    messages: Message[], 
+    model: string,
+    config?: GeminiGenerationConfig
+  ): AsyncGenerator<{ text?: string; groundingMetadata?: GroundingMetadata; urlContextMetadata?: UrlContextMetadata }, void, unknown> {
+    const ai = this.createGenAI();
+    const lastMessage = messages[messages.length - 1];
+
+    try {
+      if (lastMessage.files && lastMessage.files.length > 0) {
+        console.log(`📎 Processing ${lastMessage.files.length} file attachments for grounding streaming`);
+        yield* this.handleGroundingStreamingMultimodalGeneration(ai, lastMessage, model, config);
+      } else {
+        console.log('💬 Processing text-only grounding streaming conversation');
+        yield* this.handleGroundingStreamingTextGeneration(ai, messages, model, config);
+      }
+    } catch (error) {
+      this.categorizeAndLogError(error as Error);
+      throw error;
+    }
+  }
+
+  /**
+   * Handle grounding streaming text generation with tools
+   * @private
+   */
+  private async* handleGroundingStreamingTextGeneration(
+    ai: GoogleGenAI,
+    messages: Message[],
+    model: string,
+    config?: GeminiGenerationConfig
+  ): AsyncGenerator<{ text?: string; groundingMetadata?: GroundingMetadata; urlContextMetadata?: UrlContextMetadata }, void, unknown> {
+    const lastMessage = messages[messages.length - 1];
+    
+    // Build tools array based on configuration
+    const tools: GeminiTool[] = [];
+    
+    if (config?.groundingConfig?.enabled) {
+      console.log('🔍 Adding Google Search grounding tool');
+      tools.push({ googleSearch: {} });
+    }
+    
+    if (config?.urlContextConfig?.enabled) {
+      console.log('🌐 Adding URL Context tool');
+      tools.push({ urlContext: {} });
+    }
+
+    // Merge config with defaults and include tools
+    const generationConfig = {
+      temperature: config?.generationConfig?.temperature ?? 0.7,
+      topK: config?.generationConfig?.topK ?? 40,
+      topP: config?.generationConfig?.topP ?? 0.95,
+      maxOutputTokens: config?.generationConfig?.maxOutputTokens ?? 1000000,
+    };
+
+    const requestConfig: GeminiRequestConfig = {
+      ...generationConfig,
+      ...(tools.length > 0 && { tools }),
+      ...(config?.systemInstruction && {
+        systemInstruction: config.systemInstruction
+      }),
+      ...(model.includes('2.5') && {
+        thinkingConfig: {
+          thinkingBudget: config?.thinkingConfig?.enabled === false ? 0 : (config?.thinkingConfig?.budget ?? 10000),
+        }
+      }),
+    };
+    
+    if (messages.length === 1) {
+      // Single message with tools
+      console.log('📝 Single message grounding streaming generation');
+      
+      const response = await ai.models.generateContentStream({
+        model,
+        contents: [{ role: 'user', parts: [{ text: lastMessage.content }] }],
+        config: requestConfig
+      });
+
+      let accumulatedText = '';
+      for await (const chunk of response) {
+        // Check if generation was aborted
+        if (this.currentAbortController?.signal.aborted) {
+          break;
+        }
+        
+        if (chunk.text) {
+          accumulatedText += chunk.text;
+          yield { text: chunk.text };
+        }
+      }
+
+      // Extract grounding metadata from final response
+      if (response.candidates?.[0]?.groundingMetadata) {
+        yield { 
+          groundingMetadata: response.candidates[0].groundingMetadata as GroundingMetadata 
+        };
+      }
+
+      if (response.candidates?.[0]?.urlContextMetadata) {
+        yield { 
+          urlContextMetadata: response.candidates[0].urlContextMetadata as UrlContextMetadata 
+        };
+      }
+    } else {
+      // Multi-turn conversation with tools
+      const history = messages.slice(0, -1).map((msg) => ({
+        role: msg.role === 'assistant' ? 'model' as const : 'user' as const,
+        parts: [{ text: msg.content || '' }],
+      })).filter(msg => msg.parts[0].text.trim() !== '');
+
+      console.log(`📚 Chat history with grounding: ${history.length} messages`);
+      
+      const chat = ai.chats.create({
+        model,
+        history,
+        config: requestConfig
+      });
+
+      if (!lastMessage.content || lastMessage.content.trim() === '') {
+        throw new Error('Message content cannot be empty');
+      }
+      
+      const response = await chat.sendMessageStream({
+        message: lastMessage.content.trim()
+      });
+      
+      let accumulatedText = '';
+      for await (const chunk of response) {
+        // Check if generation was aborted
+        if (this.currentAbortController?.signal.aborted) {
+          break;
+        }
+        
+        if (chunk.text) {
+          accumulatedText += chunk.text;
+          yield { text: chunk.text };
+        }
+      }
+
+      // Extract grounding metadata from final response
+      if (response.candidates?.[0]?.groundingMetadata) {
+        yield { 
+          groundingMetadata: response.candidates[0].groundingMetadata as GroundingMetadata 
+        };
+      }
+
+      if (response.candidates?.[0]?.urlContextMetadata) {
+        yield { 
+          urlContextMetadata: response.candidates[0].urlContextMetadata as UrlContextMetadata 
+        };
+      }
+    }
+  }
+
+  /**
+   * Handle grounding streaming multimodal generation
+   * @private
+   */
+  private async* handleGroundingStreamingMultimodalGeneration(
+    ai: GoogleGenAI,
+    message: Message,
+    model: string,
+    config?: GeminiGenerationConfig
+  ): AsyncGenerator<{ text?: string; groundingMetadata?: GroundingMetadata; urlContextMetadata?: UrlContextMetadata }, void, unknown> {
+    const parts: GeminiContentPart[] = [{ text: message.content }];
+    
+    // Process files (same logic as before)
+    for (const file of message.files!) {
+      if (file.type.startsWith('image/') || file.type.startsWith('video/') || file.type === 'application/pdf') {
+        console.log(`📎 Processing ${file.type} for grounding: ${file.name}`);
+        
+        if (!file.data) {
+          throw new Error(`File data missing for file: ${file.name}`);
+        }
+
+        const base64Data = file.data.includes(',') 
+          ? file.data.split(',')[1] 
+          : file.data;
+
+        parts.push({
+          inlineData: {
+            mimeType: file.type,
+            data: base64Data,
+          },
+        });
+      }
+    }
+
+    // Build tools array
+    const tools: GeminiTool[] = [];
+    
+    if (config?.groundingConfig?.enabled) {
+      console.log('🔍 Adding Google Search grounding tool for multimodal');
+      tools.push({ googleSearch: {} });
+    }
+    
+    if (config?.urlContextConfig?.enabled) {
+      console.log('🌐 Adding URL Context tool for multimodal');
+      tools.push({ urlContext: {} });
+    }
+
+    console.log(`🔧 Generating grounding multimodal content with ${parts.length} parts and ${tools.length} tools`);
+    
+    const generationConfig = {
+      temperature: config?.generationConfig?.temperature ?? 0.7,
+      topK: config?.generationConfig?.topK ?? 40,
+      topP: config?.generationConfig?.topP ?? 0.95,
+      maxOutputTokens: config?.generationConfig?.maxOutputTokens ?? 2000000,
+      responseMimeType: config?.generationConfig?.responseMimeType ?? "text/plain",
+    };
+
+    const requestConfig: GeminiRequestConfig = {
+      ...generationConfig,
+      ...(tools.length > 0 && { tools }),
+      ...(config?.systemInstruction && {
+        systemInstruction: config.systemInstruction
+      }),
+      ...(model.includes('2.5') && {
+        thinkingConfig: {
+          thinkingBudget: config?.thinkingConfig?.enabled === false ? 0 : (config?.thinkingConfig?.budget ?? 10000),
+        }
+      }),
+    };
+    
+    const response = await ai.models.generateContentStream({
+      model,
+      contents: [{ role: 'user', parts }],
+      config: requestConfig
+    });
+
+    let accumulatedText = '';
+    for await (const chunk of response) {
+      // Check if generation was aborted
+      if (this.currentAbortController?.signal.aborted) {
+        break;
+      }
+      
+      if (chunk.text) {
+        accumulatedText += chunk.text;
+        yield { text: chunk.text };
+      }
+    }
+
+    // Extract grounding metadata from final response
+    if (response.candidates?.[0]?.groundingMetadata) {
+      yield { 
+        groundingMetadata: response.candidates[0].groundingMetadata as GroundingMetadata 
+      };
+    }
+
+    if (response.candidates?.[0]?.urlContextMetadata) {
+      yield { 
+        urlContextMetadata: response.candidates[0].urlContextMetadata as UrlContextMetadata 
+      };
+    }
+  }
   private async* executeStreamingGeneration(
     messages: Message[], 
-    model: string
+    model: string,
+    config?: GeminiGenerationConfig
   ): AsyncGenerator<string, void, unknown> {
     const ai = this.createGenAI();
     const lastMessage = messages[messages.length - 1];
@@ -213,10 +642,10 @@ export class GeminiService {
     try {
       if (lastMessage.files && lastMessage.files.length > 0) {
         console.log(`📎 Processing ${lastMessage.files.length} file attachments for streaming`);
-        yield* this.handleStreamingMultimodalGeneration(ai, lastMessage, model);
+        yield* this.handleStreamingMultimodalGeneration(ai, lastMessage, model, config);
       } else {
         console.log('💬 Processing text-only streaming conversation');
-        yield* this.handleStreamingTextGeneration(ai, messages, model);
+        yield* this.handleStreamingTextGeneration(ai, messages, model, config);
       }
     } catch (error) {
       this.categorizeAndLogError(error as Error);
@@ -231,9 +660,10 @@ export class GeminiService {
   private async* handleStreamingMultimodalGeneration(
     ai: GoogleGenAI,
     message: Message,
-    model: string
+    model: string,
+    config?: GeminiGenerationConfig
   ): AsyncGenerator<string, void, unknown> {
-    const parts: any[] = [{ text: message.content }];
+    const parts: GeminiContentPart[] = [{ text: message.content }];
     
     for (const file of message.files!) {
       if (file.type.startsWith('image/')) {
@@ -287,25 +717,89 @@ export class GeminiService {
             data: base64Data,
           },
         });
+      } else if (file.type === 'text/plain' || 
+                 file.name.endsWith('.txt') ||
+                 file.name.endsWith('.js') ||
+                 file.name.endsWith('.ts') ||
+                 file.name.endsWith('.jsx') ||
+                 file.name.endsWith('.tsx') ||
+                 file.name.endsWith('.py') ||
+                 file.name.endsWith('.java') ||
+                 file.name.endsWith('.cpp') ||
+                 file.name.endsWith('.c') ||
+                 file.name.endsWith('.h') ||
+                 file.name.endsWith('.css') ||
+                 file.name.endsWith('.html') ||
+                 file.name.endsWith('.xml') ||
+                 file.name.endsWith('.json') ||
+                 file.name.endsWith('.md') ||
+                 file.name.endsWith('.yaml') ||
+                 file.name.endsWith('.yml') ||
+                 file.name.endsWith('.sql') ||
+                 file.name.endsWith('.sh') ||
+                 file.name.endsWith('.php') ||
+                 file.name.endsWith('.rb') ||
+                 file.name.endsWith('.go') ||
+                 file.name.endsWith('.rs') ||
+                 file.name.endsWith('.swift') ||
+                 file.name.endsWith('.kt') ||
+                 file.name.endsWith('.scala')) {
+        console.log(`📄 Processing text/code file for streaming: ${file.name} (${file.type})`);
+        
+        if (!file.data) {
+          throw new Error(`Text file data missing for file: ${file.name}`);
+        }
+
+        const base64Data = file.data.includes(',') 
+          ? file.data.split(',')[1] 
+          : file.data;
+
+        parts.push({
+          inlineData: {
+            mimeType: 'text/plain',
+            data: base64Data,
+          },
+        });
       }
     }
 
     console.log(`🔧 Generating streaming content with ${parts.length} parts`);
     
+    // Merge config with defaults
+    const generationConfig = {
+      temperature: config?.generationConfig?.temperature ?? 0.7,
+      topK: config?.generationConfig?.topK ?? 40,
+      topP: config?.generationConfig?.topP ?? 0.95,
+      maxOutputTokens: config?.generationConfig?.maxOutputTokens ?? 2000000,
+      responseMimeType: config?.generationConfig?.responseMimeType ?? "text/plain",
+    };
+
+    const requestConfig: GeminiRequestConfig = {
+      ...generationConfig,
+      // System instruction
+      ...(config?.systemInstruction && {
+        systemInstruction: config.systemInstruction
+      }),
+      // Thinking configuration for 2.5 models
+      ...(model.includes('2.5') && {
+        thinkingConfig: {
+          thinkingBudget: config?.thinkingConfig?.enabled === false ? 0 : (config?.thinkingConfig?.budget ?? 10000),
+        }
+      }),
+    };
+    
     const response = await ai.models.generateContentStream({
       model,
       contents: [{ role: 'user', parts }],
-      generationConfig: {
-        temperature: 0.7,
-        topK: 40,
-        topP: 0.95,
-        maxOutputTokens: 8192,
-        // Enhanced response format for 2025
-        responseMimeType: "text/plain",
-      }
+      config: requestConfig
     });
 
     for await (const chunk of response) {
+      // Check if generation was aborted
+      if (this.currentAbortController?.signal.aborted) {
+        break;
+      }
+      
       if (chunk.text) {
         yield chunk.text;
       }
@@ -319,25 +813,47 @@ export class GeminiService {
   private async* handleStreamingTextGeneration(
     ai: GoogleGenAI,
     messages: Message[],
-    model: string
+    model: string,
+    config?: GeminiGenerationConfig
   ): AsyncGenerator<string, void, unknown> {
     const lastMessage = messages[messages.length - 1];
     
     if (messages.length === 1) {
       // Single message - use generateContentStream
       console.log('📝 Single message streaming generation');
+      
+      // Merge config with defaults
+      const generationConfig = {
+        temperature: config?.generationConfig?.temperature ?? 0.7,
+        topK: config?.generationConfig?.topK ?? 40,
+        topP: config?.generationConfig?.topP ?? 0.95,
+        maxOutputTokens: config?.generationConfig?.maxOutputTokens ?? 1000000,
+      };
+
+      const requestConfig: GeminiRequestConfig = {
+        ...generationConfig,
+        ...(config?.systemInstruction && {
+          systemInstruction: config.systemInstruction
+        }),
+        ...(model.includes('2.5') && {
+          thinkingConfig: {
+            thinkingBudget: config?.thinkingConfig?.enabled === false ? 0 : (config?.thinkingConfig?.budget ?? 10000),
+          }
+        }),
+      };
+      
       const response = await ai.models.generateContentStream({
         model,
         contents: [{ role: 'user', parts: [{ text: lastMessage.content }] }],
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 8192,
-        }
+        config: requestConfig
       });
 
       for await (const chunk of response) {
+        // Check if generation was aborted
+        if (this.currentAbortController?.signal.aborted) {
+          break;
+        }
+        
         if (chunk.text) {
           yield chunk.text;
         }
@@ -351,15 +867,30 @@ export class GeminiService {
 
       console.log(`📚 Chat history: ${history.length} messages`);
       
+      // Merge config with defaults
+      const generationConfig = {
+        temperature: config?.generationConfig?.temperature ?? 0.7,
+        topK: config?.generationConfig?.topK ?? 40,
+        topP: config?.generationConfig?.topP ?? 0.95,
+        maxOutputTokens: config?.generationConfig?.maxOutputTokens ?? 1000000,
+      };
+
+      const requestConfig: GeminiRequestConfig = {
+        ...generationConfig,
+        ...(config?.systemInstruction && {
+          systemInstruction: config.systemInstruction
+        }),
+        ...(model.includes('2.5') && {
+          thinkingConfig: {
+            thinkingBudget: config?.thinkingConfig?.enabled === false ? 0 : (config?.thinkingConfig?.budget ?? 10000),
+          }
+        }),
+      };
+      
       const chat = ai.chats.create({
         model,
         history,
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 8192,
-        }
+        config: requestConfig
       });
 
       // Updated for @google/genai v1.14.0 - use object with message property and validation
@@ -372,6 +903,11 @@ export class GeminiService {
       });
       
       for await (const chunk of response) {
+        // Check if generation was aborted
+        if (this.currentAbortController?.signal.aborted) {
+          break;
+        }
+        
         if (chunk.text) {
           yield chunk.text;
         }
@@ -541,7 +1077,7 @@ export class GeminiService {
     message: Message,
     model: string
   ): Promise<string> {
-    const parts: any[] = [{ text: message.content }];
+    const parts: GeminiContentPart[] = [{ text: message.content }];
     
     for (const file of message.files!) {
       if (file.type.startsWith('image/')) {
@@ -596,6 +1132,49 @@ export class GeminiService {
             data: base64Data,
           },
         });
+      } else if (file.type === 'text/plain' || 
+                 file.name.endsWith('.txt') ||
+                 file.name.endsWith('.js') ||
+                 file.name.endsWith('.ts') ||
+                 file.name.endsWith('.jsx') ||
+                 file.name.endsWith('.tsx') ||
+                 file.name.endsWith('.py') ||
+                 file.name.endsWith('.java') ||
+                 file.name.endsWith('.cpp') ||
+                 file.name.endsWith('.c') ||
+                 file.name.endsWith('.h') ||
+                 file.name.endsWith('.css') ||
+                 file.name.endsWith('.html') ||
+                 file.name.endsWith('.xml') ||
+                 file.name.endsWith('.json') ||
+                 file.name.endsWith('.md') ||
+                 file.name.endsWith('.yaml') ||
+                 file.name.endsWith('.yml') ||
+                 file.name.endsWith('.sql') ||
+                 file.name.endsWith('.sh') ||
+                 file.name.endsWith('.php') ||
+                 file.name.endsWith('.rb') ||
+                 file.name.endsWith('.go') ||
+                 file.name.endsWith('.rs') ||
+                 file.name.endsWith('.swift') ||
+                 file.name.endsWith('.kt') ||
+                 file.name.endsWith('.scala')) {
+        console.log(`📄 Processing text/code file: ${file.name} (${file.type})`);
+        
+        if (!file.data) {
+          throw new Error(`Text file data missing for file: ${file.name}`);
+        }
+
+        const base64Data = file.data.includes(',') 
+          ? file.data.split(',')[1] 
+          : file.data;
+
+        parts.push({
+          inlineData: {
+            mimeType: 'text/plain',
+            data: base64Data,
+          },
+        });
       } else {
         console.log(`📄 Skipping unsupported file: ${file.name} (${file.type})`);
       }
@@ -605,11 +1184,19 @@ export class GeminiService {
     const response = await ai.models.generateContent({
       model,
       contents: [{ role: 'user', parts }],
-      generationConfig: {
+      config: {
         temperature: 0.7,
         topK: 40,
         topP: 0.95,
-        maxOutputTokens: 8192,
+        maxOutputTokens: 1000000,
+        // 新的2.5模型思考功能配置
+        ...(model.includes('2.5') && {
+          thinkingConfig: {
+            thinkingBudget: 10000, // 默认启用思考，可配置
+          }
+        }),
+        // 系统指令支持
+        systemInstruction: "You are a helpful assistant. Please provide accurate and detailed responses.",
       }
     });
     
@@ -638,11 +1225,18 @@ export class GeminiService {
       const response = await ai.models.generateContent({
         model,
         contents: [{ role: 'user', parts: [{ text: lastMessage.content }] }],
-        generationConfig: {
+        config: {
           temperature: 0.7,
           topK: 40,
           topP: 0.95,
-          maxOutputTokens: 8192,
+          maxOutputTokens: 1000000,
+          // 新的2.5模型思考功能配置
+          ...(model.includes('2.5') && {
+            thinkingConfig: {
+              thinkingBudget: 10000,
+            }
+          }),
+          systemInstruction: "You are a helpful assistant. Please provide accurate and detailed responses.",
         }
       });
       return response.text;
@@ -658,11 +1252,18 @@ export class GeminiService {
       const chat = ai.chats.create({
         model,
         history,
-        generationConfig: {
+        config: {
           temperature: 0.7,
           topK: 40,
           topP: 0.95,
-          maxOutputTokens: 8192,
+          maxOutputTokens: 1000000,
+          // 新的2.5模型思考功能配置
+          ...(model.includes('2.5') && {
+            thinkingConfig: {
+              thinkingBudget: 10000,
+            }
+          }),
+          systemInstruction: "You are a helpful assistant. Please provide accurate and detailed responses.",
         }
       });
       // Updated for @google/genai v1.14.0 - use object with message property and validation
@@ -898,65 +1499,240 @@ export class GeminiService {
   }
 
   /**
-   * Get available models with their capabilities
-   * Updated for 2025 with latest Gemini models
-   * @returns Array of model information
+   * Get enhanced available models with capabilities detection
+   * Updated for 2025 with real-time capability detection
+   * @returns Array of model information with detected capabilities
    */
-  getAvailableModels() {
-    return [
-      {
-        id: 'gemini-2.5-pro',
-        name: 'Gemini 2.5 Pro (GA)',
-        description: 'Enhanced thinking and reasoning, multimodal understanding, advanced coding, and more - now in General Availability with thinking capability',
-        supportsVision: true,
-        supportsAudio: true,
-        supportsVideo: true,
-        supportsPdf: true,
-        maxTokens: 2000000, // Updated context window for 2025
-        costTier: 'high'
-      },
-      {
-        id: 'gemini-2.5-flash',
-        name: 'Gemini 2.5 Flash (GA)',
-        description: 'Adaptive thinking with cost efficiency - General Availability version with thinking budgets',
-        supportsVision: true,
-        supportsAudio: true,
-        supportsVideo: true,
-        maxTokens: 1000000, // Updated context window for 2025
-        costTier: 'medium'
-      },
-      {
-        id: 'gemini-2.5-flash-lite',
-        name: 'Gemini 2.5 Flash-Lite',
-        description: 'Most cost-efficient model supporting high throughput and faster processing',
-        supportsVision: true,
-        supportsAudio: true,
-        supportsVideo: true,
-        maxTokens: 8192,
-        costTier: 'low'
-      },
-      {
-        id: 'gemini-2.0-flash',
-        name: 'Gemini 2.0 Flash',
-        description: 'Next-gen features with superior speed, native tool use, and 1M token context window',
-        supportsVision: true,
-        supportsAudio: true,
-        supportsVideo: true,
-        maxTokens: 1000000,
-        costTier: 'medium'
-      },
-      {
-        id: 'gemini-2.5-flash-live',
-        name: 'Gemini 2.5 Flash Live',
-        description: 'Low-latency bidirectional voice and video interactions with real-time processing',
-        supportsVision: true,
-        supportsAudio: true,
-        supportsVideo: true,
-        supportsLive: true,
-        maxTokens: 8192,
-        costTier: 'high'
+  async getAvailableModelsWithCapabilities() {
+    // Import model definitions
+    const { GEMINI_MODELS, getModelCapabilities } = await import('../config/gemini');
+    
+    const modelsWithCapabilities = GEMINI_MODELS.map(model => {
+      const capabilities = getModelCapabilities(model.id);
+      
+      return {
+        ...model,
+        capabilities: {
+          supportsThinking: capabilities.supportsThinking,
+          supportsGrounding: capabilities.supportsGrounding,
+          supportsUrlContext: capabilities.supportsUrlContext,
+          supportsImageGeneration: model.supportsImageGeneration || false,
+          supportsVision: model.supportsVision,
+          supportsAudio: model.supportsAudio || false,
+          supportsVideo: model.supportsVideo || false,
+          supportsPdf: model.supportsPdf || false,
+          supportsLive: model.supportsLive || false,
+          maxContextTokens: capabilities.maxContextTokens,
+        },
+        // Add performance recommendations based on capabilities
+        recommendations: this.getModelRecommendations(model.id, capabilities),
+      };
+    });
+
+    console.log(`📊 Model capabilities detected for ${modelsWithCapabilities.length} models`);
+    return modelsWithCapabilities;
+  }
+
+  /**
+   * Get model performance recommendations based on capabilities
+   * @private
+   */
+  private getModelRecommendations(modelId: string, capabilities: ModelCapabilities) {
+    const recommendations: string[] = [];
+
+    if (capabilities.supportsThinking) {
+      recommendations.push('Best for complex reasoning and analysis');
+    }
+
+    if (capabilities.supportsGrounding) {
+      recommendations.push('Can access real-time information via Google Search');
+    }
+
+    if (capabilities.supportsUrlContext) {
+      recommendations.push('Can analyze web page content directly');
+    }
+
+    if (modelId.includes('flash')) {
+      recommendations.push('Optimized for speed and cost efficiency');
+    }
+
+    if (modelId.includes('pro')) {
+      recommendations.push('Premium model for highest quality outputs');
+    }
+
+    if (modelId.includes('lite')) {
+      recommendations.push('Most cost-effective option');
+    }
+
+    if (modelId.includes('imagen')) {
+      recommendations.push('Specialized for high-quality image generation');
+    }
+
+    if (capabilities.maxContextTokens > 500000) {
+      recommendations.push('Supports very long conversations and documents');
+    }
+
+    return recommendations;
+  }
+
+  /**
+   * Auto-detect optimal model for a given task
+   * Uses content analysis and requirements to recommend best model
+   * @param content - Task content to analyze
+   * @param requirements - Specific requirements for the task
+   * @returns Recommended model ID with reasoning
+   */
+  async getOptimalModelForTask(
+    content: string,
+    requirements?: {
+      speed?: 'fast' | 'balanced' | 'quality';
+      needsGrounding?: boolean;
+      needsUrlContext?: boolean;
+      needsThinking?: boolean;
+      needsVision?: boolean;
+      needsImageGeneration?: boolean;
+      maxCost?: 'low' | 'medium' | 'high';
+      contextLength?: 'short' | 'medium' | 'long' | 'very_long';
+    }
+  ): Promise<{
+    recommendedModel: string;
+    reasoning: string[];
+    alternatives: Array<{ model: string; reason: string }>;
+  }> {
+    const { GEMINI_MODELS, getModelCapabilities, getOptimalThinkingConfig } = await import('../config/gemini');
+    const reqs = requirements || {};
+    const reasoning: string[] = [];
+    const alternatives: Array<{ model: string; reason: string }> = [];
+
+    // Analyze content to understand task type
+    const contentLower = content.toLowerCase();
+    const isComplexTask = contentLower.includes('analyze') || contentLower.includes('compare') || contentLower.includes('reasoning');
+    const needsRecentInfo = contentLower.includes('latest') || contentLower.includes('recent') || contentLower.includes('today');
+    const isCreativeTask = contentLower.includes('creative') || contentLower.includes('story') || contentLower.includes('poem');
+    const isCodingTask = contentLower.includes('code') || contentLower.includes('program') || contentLower.includes('function');
+
+    // Filter models based on hard requirements
+    let candidateModels = GEMINI_MODELS.filter(model => {
+      const caps = getModelCapabilities(model.id);
+      
+      // Check essential requirements
+      if (reqs.needsGrounding && !caps.supportsGrounding) return false;
+      if (reqs.needsUrlContext && !caps.supportsUrlContext) return false;
+      if (reqs.needsThinking && !caps.supportsThinking) return false;
+      if (reqs.needsVision && !model.supportsVision) return false;
+      if (reqs.needsImageGeneration && !model.supportsImageGeneration) return false;
+      if (reqs.maxCost && model.costTier && this.compareCostTier(model.costTier, reqs.maxCost) > 0) return false;
+      
+      return true;
+    });
+
+    if (candidateModels.length === 0) {
+      reasoning.push('No models meet all requirements, using fallback selection');
+      candidateModels = GEMINI_MODELS.filter(m => !m.id.startsWith('imagen-')); // At least exclude pure image models
+    }
+
+    // Score models based on task and preferences
+    const scoredModels = candidateModels.map(model => {
+      let score = 0;
+      const caps = getModelCapabilities(model.id);
+      const modelReasoning: string[] = [];
+
+      // Base quality scoring
+      if (model.id.includes('2.5-pro')) {
+        score += 10;
+        modelReasoning.push('Highest quality model');
+      } else if (model.id.includes('2.5-flash')) {
+        score += 8;
+        modelReasoning.push('Best balance of quality and speed');
+      } else if (model.id.includes('2.0-flash')) {
+        score += 6;
+        modelReasoning.push('Good performance with latest features');
       }
-    ];
+
+      // Task-specific scoring
+      if (isComplexTask && caps.supportsThinking) {
+        score += 5;
+        modelReasoning.push('Excellent for complex reasoning with thinking capability');
+      }
+
+      if (needsRecentInfo && caps.supportsGrounding) {
+        score += 4;
+        modelReasoning.push('Can access real-time information');
+      }
+
+      if (isCodingTask && model.id.includes('pro')) {
+        score += 3;
+        modelReasoning.push('Optimal for advanced coding tasks');
+      }
+
+      if (isCreativeTask && !model.id.includes('lite')) {
+        score += 2;
+        modelReasoning.push('Good for creative content generation');
+      }
+
+      // Speed preference scoring
+      if (reqs.speed === 'fast') {
+        if (model.id.includes('lite')) score += 4;
+        else if (model.id.includes('flash')) score += 2;
+        modelReasoning.push('Optimized for fast responses');
+      } else if (reqs.speed === 'quality') {
+        if (model.id.includes('pro')) score += 4;
+        modelReasoning.push('Prioritizes output quality');
+      }
+
+      // Cost preference scoring
+      if (reqs.maxCost === 'low' && model.costTier === 'low') {
+        score += 3;
+        modelReasoning.push('Cost-efficient option');
+      } else if (reqs.maxCost === 'high' && model.costTier === 'high') {
+        score += 2;
+        modelReasoning.push('Premium option with best capabilities');
+      }
+
+      // Context length scoring
+      if (reqs.contextLength === 'very_long' && caps.maxContextTokens > 1000000) {
+        score += 3;
+        modelReasoning.push('Supports very long contexts');
+      }
+
+      return {
+        model: model.id,
+        score,
+        reasoning: modelReasoning,
+        costTier: model.costTier || 'medium'
+      };
+    });
+
+    // Sort by score and select best
+    scoredModels.sort((a, b) => b.score - a.score);
+    
+    const winner = scoredModels[0];
+    const runnerUps = scoredModels.slice(1, 4); // Top 3 alternatives
+
+    reasoning.push(`Selected ${winner.model} (Score: ${winner.score})`);
+    reasoning.push(...winner.reasoning);
+
+    alternatives.push(...runnerUps.map(alt => ({
+      model: alt.model,
+      reason: `Alternative choice (Score: ${alt.score}) - ${alt.reasoning.join(', ')}`
+    })));
+
+    console.log(`🎯 Optimal model selection: ${winner.model} with score ${winner.score}`);
+
+    return {
+      recommendedModel: winner.model,
+      reasoning,
+      alternatives
+    };
+  }
+
+  /**
+   * Compare cost tiers for filtering
+   * @private
+   */
+  private compareCostTier(tier1: string, tier2: string): number {
+    const tierOrder = { 'low': 1, 'medium': 2, 'high': 3 };
+    return (tierOrder[tier1 as keyof typeof tierOrder] || 2) - (tierOrder[tier2 as keyof typeof tierOrder] || 2);
   }
 
   /**
@@ -1265,12 +2041,264 @@ export class GeminiService {
   }
 
   /**
-   * Generate images using Gemini with multimodal support
-   * Supports text-to-image and image-to-image generation
+   * Generate images using Imagen with advanced configuration
+   * Supports Imagen 4.0 and enhanced parameters
    * @param messages - Array of conversation messages
-   * @param model - Image generation model (defaults to gemini-2.0-flash-preview-image-generation)
+   * @param model - Image generation model (defaults to imagen-4.0-generate-001)
+   * @param imageConfig - Image generation configuration
    * @returns Promise<{ text?: string; images?: string[] }> - Text response and generated images as base64
    */
+  async generateImageWithImagen(
+    messages: Message[],
+    model: string = 'imagen-4.0-generate-001',
+    imageConfig?: ImagenConfig
+  ): Promise<{ text?: string; images?: string[] }> {
+    // Validate prerequisites
+    if (this.apiKeys.length === 0) {
+      const error = new Error('No API keys available. Please set API keys first.');
+      console.error('❌ API Key Error:', error.message);
+      throw error;
+    }
+
+    if (!messages || messages.length === 0) {
+      const error = new Error('No messages provided for image generation');
+      console.error('❌ Input Validation Error:', error.message);
+      throw error;
+    }
+
+    console.log(`🎨 Starting Imagen generation with model: ${model}`);
+    console.log(`📝 Processing ${messages.length} messages`);
+
+    let lastError: Error | null = null;
+    const initialKeyIndex = this.currentKeyIndex;
+
+    // Try each API key until one succeeds
+    do {
+      try {
+        console.log(`🔄 Attempting Imagen generation with API key ${this.currentKeyIndex + 1}/${this.apiKeys.length}`);
+        this.totalRequests++;
+        
+        const result = await this.executeImagenGeneration(messages, model, imageConfig);
+        
+        // Track success
+        this.trackKeySuccess(this.currentKeyIndex);
+        console.log('✅ Imagen generation successful');
+        return result;
+      } catch (error) {
+        lastError = error as Error;
+        this.totalErrors++;
+        
+        // Track error for current key
+        this.trackKeyError(this.currentKeyIndex, (error as Error).message);
+        
+        console.error(`❌ Imagen generation API key ${this.currentKeyIndex + 1} failed:`, {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          type: error instanceof Error ? error.constructor.name : 'Unknown'
+        });
+
+        // Move to next key
+        this.moveToNextKey();
+
+        // If we've tried all keys, break
+        if (this.currentKeyIndex === initialKeyIndex) {
+          console.log('💥 All API keys failed for Imagen generation');
+          break;
+        }
+      }
+    } while (this.currentKeyIndex !== initialKeyIndex);
+
+    // All API keys exhausted
+    console.error('💥 All API keys failed for Imagen generation');
+    throw lastError || new Error('Failed to generate images with Imagen using any API key');
+  }
+
+  /**
+   * Execute Imagen generation with timeout handling
+   * @private
+   */
+  private async executeImagenGeneration(
+    messages: Message[], 
+    model: string,
+    imageConfig?: ImagenConfig
+  ): Promise<{ text?: string; images?: string[] }> {
+    const ai = this.createGenAI();
+    const lastMessage = messages[messages.length - 1];
+    
+    // Create timeout promise
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => {
+        reject(new Error(`Imagen generation timeout after ${this.DEFAULT_TIMEOUT}ms`));
+      }, this.DEFAULT_TIMEOUT);
+    });
+
+    try {
+      const result = await Promise.race([
+        this.handleImagenGeneration(ai, lastMessage, model, imageConfig),
+        timeoutPromise
+      ]);
+      return result;
+    } catch (error) {
+      this.categorizeAndLogError(error as Error);
+      throw error;
+    }
+  }
+
+  /**
+   * Handle Imagen generation with advanced configuration
+   * @private
+   */
+  private async handleImagenGeneration(
+    ai: GoogleGenAI,
+    message: Message,
+    model: string,
+    imageConfig?: ImagenConfig
+  ): Promise<{ text?: string; images?: string[] }> {
+    console.log(`🎨 Using Imagen model: ${model}`);
+    
+    // Build Imagen request config
+    const imagenConfig: ImagenRequestConfig = {
+      numberOfImages: imageConfig?.numberOfImages || 1,
+      ...(imageConfig?.aspectRatio && { aspectRatio: imageConfig.aspectRatio }),
+      ...(imageConfig?.personGeneration && { personGeneration: imageConfig.personGeneration }),
+    };
+
+    // Add sampleImageSize for models that support it
+    if (model.includes('imagen-4.0') && !model.includes('fast')) {
+      imagenConfig.sampleImageSize = imageConfig?.sampleImageSize || '1K';
+    }
+
+    console.log(`🔧 Imagen config:`, imagenConfig);
+    
+    const response = await ai.models.generateImages({
+      model,
+      prompt: message.content,
+      config: imagenConfig
+    });
+
+    // Extract images from response
+    const images: string[] = [];
+    if (response.generatedImages && response.generatedImages.length > 0) {
+      for (const generatedImage of response.generatedImages) {
+        if (generatedImage.image && generatedImage.image.imageBytes) {
+          images.push(generatedImage.image.imageBytes);
+          console.log('🖼️ Imagen image generated successfully');
+        }
+      }
+    }
+
+    if (images.length === 0) {
+      throw new Error('No images generated by Imagen');
+    }
+
+    return {
+      text: `Generated ${images.length} image${images.length > 1 ? 's' : ''} using ${model}`,
+      images
+    };
+  }
+
+  /**
+   * Generate images with intelligent model selection
+   * Enhanced for 2025 with automatic model optimization based on requirements
+   * @param messages - Array of conversation messages
+   * @param imageRequirements - Image generation requirements
+   * @returns Promise<{ text?: string; images?: string[] }> - Text response and generated images as base64
+   */
+  async generateImageWithIntelligentSelection(
+    messages: Message[],
+    imageRequirements?: {
+      quality?: 'fast' | 'standard' | 'ultra';
+      artistic?: boolean;
+      conversational?: boolean;
+      speed?: 'fast' | 'normal';
+      numberOfImages?: number;
+      aspectRatio?: '1:1' | '3:4' | '4:3' | '9:16' | '16:9';
+    }
+  ): Promise<{ text?: string; images?: string[] }> {
+    // Validate prerequisites
+    if (this.apiKeys.length === 0) {
+      const error = new Error('No API keys available. Please set API keys first.');
+      console.error('❌ API Key Error:', error.message);
+      throw error;
+    }
+
+    if (!messages || messages.length === 0) {
+      const error = new Error('No messages provided for image generation');
+      console.error('❌ Input Validation Error:', error.message);
+      throw error;
+    }
+
+    const lastMessage = messages[messages.length - 1];
+    const requirements = imageRequirements || {};
+    
+    // Import helper functions
+    const { getOptimalImageModel } = await import('../config/gemini');
+    
+    // Determine optimal model based on requirements and prompt content
+    const selectedModel = getOptimalImageModel(lastMessage.content, requirements);
+    
+    console.log(`🎨 Starting intelligent image generation with model: ${selectedModel}`);
+    console.log(`📝 Requirements:`, requirements);
+    console.log(`🎯 Selected model based on: quality=${requirements.quality}, speed=${requirements.speed}, conversational=${requirements.conversational}`);
+
+    let lastError: Error | null = null;
+    const initialKeyIndex = this.currentKeyIndex;
+
+    // Try each API key until one succeeds
+    do {
+      try {
+        console.log(`🔄 Attempting image generation with API key ${this.currentKeyIndex + 1}/${this.apiKeys.length}`);
+        this.totalRequests++;
+        
+        let result;
+        
+        // Use appropriate generation method based on model type
+        if (selectedModel.startsWith('imagen-')) {
+          // Use Imagen API with enhanced configuration
+          const imagenConfig = {
+            numberOfImages: requirements.numberOfImages || 1,
+            ...(requirements.aspectRatio && { aspectRatio: requirements.aspectRatio }),
+            ...(selectedModel.includes('4.0') && !selectedModel.includes('fast') && {
+              sampleImageSize: requirements.quality === 'ultra' ? '2K' : '1K'
+            }),
+          };
+          
+          result = await this.executeImagenGeneration(messages, selectedModel, imagenConfig);
+        } else {
+          // Use Gemini native image generation
+          result = await this.executeImageGeneration(messages, selectedModel);
+        }
+        
+        // Track success
+        this.trackKeySuccess(this.currentKeyIndex);
+        console.log('✅ Intelligent image generation successful');
+        return result;
+      } catch (error) {
+        lastError = error as Error;
+        this.totalErrors++;
+        
+        // Track error for current key
+        this.trackKeyError(this.currentKeyIndex, (error as Error).message);
+        
+        console.error(`❌ Image generation API key ${this.currentKeyIndex + 1} failed:`, {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          type: error instanceof Error ? error.constructor.name : 'Unknown'
+        });
+
+        // Move to next key
+        this.moveToNextKey();
+
+        // If we've tried all keys, break
+        if (this.currentKeyIndex === initialKeyIndex) {
+          console.log('💥 All API keys failed for image generation');
+          break;
+        }
+      }
+    } while (this.currentKeyIndex !== initialKeyIndex);
+
+    // All API keys exhausted
+    console.error('💥 All API keys failed for image generation');
+    throw lastError || new Error('Failed to generate images with any API key');
+  }
   async generateImageContent(
     messages: Message[],
     model: string = 'gemini-2.0-flash-preview-image-generation'
@@ -1373,7 +2401,7 @@ export class GeminiService {
     message: Message,
     model: string
   ): Promise<{ text?: string; images?: string[] }> {
-    const parts: any[] = [{ text: message.content }];
+    const parts: GeminiContentPart[] = [{ text: message.content }];
     
     // Add any input images for image-to-image generation
     if (message.files && message.files.length > 0) {
@@ -1410,7 +2438,7 @@ export class GeminiService {
       },
       generationConfig: {
         temperature: 0.7,
-        maxOutputTokens: 8192,
+        maxOutputTokens: 1000000,
       }
     });
 
@@ -1442,10 +2470,174 @@ export class GeminiService {
   }
 
   /**
-   * Test the API connection and configuration
-   * Updated for new @google/genai SDK
-   * @returns Promise<boolean> - True if connection is successful
+   * Analyze URLs with context understanding
+   * Uses experimental URL Context tool for deep web content analysis
+   * @param urls - Array of URLs to analyze
+   * @param query - Analysis query or question about the URLs
+   * @param model - Model to use (defaults to gemini-2.5-flash)
+   * @returns Promise<{ text: string; urlContextMetadata?: UrlContextMetadata }>
    */
+  async analyzeUrls(
+    urls: string[],
+    query: string,
+    model: string = 'gemini-2.5-flash'
+  ): Promise<{ text: string; urlContextMetadata?: UrlContextMetadata }> {
+    // Validate prerequisites
+    if (this.apiKeys.length === 0) {
+      const error = new Error('No API keys available. Please set API keys first.');
+      console.error('❌ API Key Error:', error.message);
+      throw error;
+    }
+
+    if (!urls || urls.length === 0) {
+      const error = new Error('No URLs provided for analysis');
+      console.error('❌ Input Validation Error:', error.message);
+      throw error;
+    }
+
+    if (urls.length > 20) {
+      const error = new Error('Maximum 20 URLs allowed per request');
+      console.error('❌ URL Limit Error:', error.message);
+      throw error;
+    }
+
+    console.log(`🌐 Starting URL analysis with model: ${model}`);
+    console.log(`📝 Analyzing ${urls.length} URLs`);
+    console.log(`❓ Query: ${query}`);
+
+    let lastError: Error | null = null;
+    const initialKeyIndex = this.currentKeyIndex;
+
+    // Try each API key until one succeeds
+    do {
+      try {
+        console.log(`🔄 Attempting URL analysis with API key ${this.currentKeyIndex + 1}/${this.apiKeys.length}`);
+        this.totalRequests++;
+        
+        const result = await this.executeUrlAnalysis(urls, query, model);
+        
+        // Track success
+        this.trackKeySuccess(this.currentKeyIndex);
+        console.log('✅ URL analysis successful');
+        return result;
+      } catch (error) {
+        lastError = error as Error;
+        this.totalErrors++;
+        
+        // Track error for current key
+        this.trackKeyError(this.currentKeyIndex, (error as Error).message);
+        
+        console.error(`❌ URL analysis API key ${this.currentKeyIndex + 1} failed:`, {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          type: error instanceof Error ? error.constructor.name : 'Unknown'
+        });
+
+        // Move to next key
+        this.moveToNextKey();
+
+        // If we've tried all keys, break
+        if (this.currentKeyIndex === initialKeyIndex) {
+          console.log('💥 All API keys failed for URL analysis');
+          break;
+        }
+      }
+    } while (this.currentKeyIndex !== initialKeyIndex);
+
+    // All API keys exhausted
+    console.error('💥 All API keys failed for URL analysis');
+    throw lastError || new Error('Failed to analyze URLs with any API key');
+  }
+
+  /**
+   * Execute URL analysis with timeout handling
+   * @private
+   */
+  private async executeUrlAnalysis(
+    urls: string[],
+    query: string,
+    model: string
+  ): Promise<{ text: string; urlContextMetadata?: UrlContextMetadata }> {
+    const ai = this.createGenAI();
+    
+    // Create timeout promise
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => {
+        reject(new Error(`URL analysis timeout after ${this.DEFAULT_TIMEOUT}ms`));
+      }, this.DEFAULT_TIMEOUT);
+    });
+
+    try {
+      const result = await Promise.race([
+        this.handleUrlAnalysis(ai, urls, query, model),
+        timeoutPromise
+      ]);
+      return result;
+    } catch (error) {
+      this.categorizeAndLogError(error as Error);
+      throw error;
+    }
+  }
+
+  /**
+   * Handle URL analysis with URL Context tool
+   * @private
+   */
+  private async handleUrlAnalysis(
+    ai: GoogleGenAI,
+    urls: string[],
+    query: string,
+    model: string
+  ): Promise<{ text: string; urlContextMetadata?: UrlContextMetadata }> {
+    console.log(`🌐 Analyzing URLs: ${urls.join(', ')}`);
+    
+    // Build the analysis prompt
+    const analysisPrompt = `${query}
+
+URLs to analyze:
+${urls.map((url, index) => `${index + 1}. ${url}`).join('\n')}
+
+Please provide a comprehensive analysis based on the content of these URLs.`;
+
+    // Configure URL Context tool
+    const tools = [{ urlContext: {} }];
+    
+    const requestConfig = {
+      tools,
+      temperature: 0.7,
+      topK: 40,
+      topP: 0.95,
+      maxOutputTokens: 1000000,
+      ...(model.includes('2.5') && {
+        thinkingConfig: {
+          thinkingBudget: 30000, // Higher budget for analysis tasks
+        }
+      }),
+    };
+    
+    console.log(`🔧 Executing URL analysis with URL Context tool`);
+    
+    const response = await ai.models.generateContent({
+      model,
+      contents: [{ role: 'user', parts: [{ text: analysisPrompt }] }],
+      config: requestConfig
+    });
+    
+    if (!response.text) {
+      throw new Error('Empty response received from URL analysis');
+    }
+
+    const result: { text: string; urlContextMetadata?: UrlContextMetadata } = {
+      text: response.text
+    };
+
+    // Extract URL context metadata if available
+    if (response.candidates?.[0]?.urlContextMetadata) {
+      result.urlContextMetadata = response.candidates[0].urlContextMetadata as UrlContextMetadata;
+      console.log(`📊 URL analysis completed with ${result.urlContextMetadata.urlMetadata?.length || 0} processed URLs`);
+    }
+
+    return result;
+  }
   async testConnection(): Promise<boolean> {
     try {
       console.log('🔍 Testing Gemini API connection...');

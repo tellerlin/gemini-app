@@ -1,28 +1,90 @@
+export function fixMermaidSyntax(mermaidCode: string): string {
+  // Fix common Chinese syntax issues in Mermaid diagrams
+  let fixed = mermaidCode;
+  
+  // Fix invalid |>|> syntax - replace with proper arrow syntax
+  fixed = fixed.replace(/\|\>\|\>/g, '-->');
+  
+  // Fix standalone pipe symbols that should be arrows
+  fixed = fixed.replace(/\s+\|\s+/g, ' --> ');
+  fixed = fixed.replace(/\|\s+([A-Z])/g, '--> $1');
+  fixed = fixed.replace(/([A-Z])\s+\|/g, '$1 -->');
+  
+  // Fix malformed edge labels with angle brackets
+  fixed = fixed.replace(/-->\|([^|]*?)>\|>/g, '-->|$1|');
+  fixed = fixed.replace(/-->\|>\s+/g, '--> ');
+  
+  // Replace "-- text -->" with "-->|text|" format for Chinese labels
+  fixed = fixed.replace(/--\s*([^-]+?)\s*-->/g, '-->|$1|');
+  
+  // Remove extra parentheses from decision node labels that cause parsing issues
+  fixed = fixed.replace(/\{([^{}]*?)\s*\([^)]*?\)\s*\}/g, '{$1}');
+  
+  // Clean up malformed arrow syntax
+  fixed = fixed.replace(/-->\|\>\|/g, '-->');
+  fixed = fixed.replace(/-->\|([^|]*?)\|\>/g, '-->|$1|');
+  
+  // Fix arrows that end with |> instead of proper syntax
+  fixed = fixed.replace(/-->\|\>/g, '-->');
+  
+  // Ensure proper spacing around arrows
+  fixed = fixed.replace(/(\w+)\s*-->\s*(\w+)/g, '$1 --> $2');
+  fixed = fixed.replace(/(\w+)\s*-->\|([^|]+?)\|\s*(\w+)/g, '$1 -->|$2| $3');
+  
+  // Remove trailing semicolons which can cause issues
+  fixed = fixed.replace(/;\s*$/gm, '');
+  
+  return fixed.trim();
+}
+
 export interface ParsedSection {
   type: 'text' | 'mermaid' | 'table' | 'chart' | 'math' | 'code';
-  content: any;
-  config?: any;
+  content: string | TableRow[] | ChartDataPoint[];
+  config?: SectionConfig;
   startIndex: number;
   endIndex: number;
 }
 
+export interface SectionConfig {
+  headers?: string[];
+  type?: string;
+  language?: string;
+  displayMode?: 'block' | 'inline';
+  xAxis?: string;
+  yAxis?: string;
+  series?: ChartSeries[];
+  title?: string;
+  height?: number;
+  width?: number;
+}
+
+export interface TableRow {
+  [key: string]: string | number | boolean;
+}
+
 export interface TableData {
   headers: string[];
-  data: any[][];
+  data: TableRow[];
+}
+
+export interface ChartDataPoint {
+  [key: string]: string | number | undefined;
+}
+
+export interface ChartSeries {
+  name: string;
+  dataKey: string;
+  color?: string;
+  type?: 'line' | 'bar' | 'area';
 }
 
 export interface ChartData {
   type: 'line' | 'bar' | 'pie' | 'area' | 'radar' | 'composed' | 'scatter';
-  data: any[];
+  data: ChartDataPoint[];
   config: {
     xAxis?: string;
     yAxis?: string;
-    series?: Array<{
-      name: string;
-      dataKey: string;
-      color?: string;
-      type?: 'line' | 'bar' | 'area';
-    }>;
+    series?: ChartSeries[];
     title?: string;
     height?: number;
     width?: number;
@@ -49,7 +111,7 @@ export function parseAIContent(content: string): ParsedSection[] {
 
     sections.push({
       type: 'mermaid',
-      content: match[1].trim(),
+      content: fixMermaidSyntax(match[1].trim()),
       startIndex: match.index,
       endIndex: match.index + match[0].length
     });
@@ -224,7 +286,12 @@ export function parseAIContent(content: string): ParsedSection[] {
 export function extractTextContent(sections: ParsedSection[]): string {
   return sections
     .filter(section => section.type === 'text')
-    .map(section => section.content)
+    .map(section => {
+      if (typeof section.content === 'string') {
+        return section.content;
+      }
+      return '';
+    })
     .join('\n\n');
 }
 

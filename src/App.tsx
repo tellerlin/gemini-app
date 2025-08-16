@@ -1,33 +1,44 @@
 import React, { useState, useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
-import { Menu, X } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { Sidebar } from './components/Sidebar';
 import { ChatArea } from './components/ChatArea';
 import { ApiKeyModal } from './components/ApiKeyModal';
+import { AdvancedSettingsModal } from './components/AdvancedSettingsModal';
+import { PerformanceMonitor } from './components/PerformanceMonitor';
 import { useChat } from './hooks/useChat';
 import { useResponsive } from './hooks/useLocalStorage';
 import { Button } from './components/ui/Button';
-import { cn } from './utils/cn';
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [apiKeyModalOpen, setApiKeyModalOpen] = useState(false);
-  const { isMobile, isTablet, isDesktop } = useResponsive();
+  const [advancedSettingsOpen, setAdvancedSettingsOpen] = useState(false);
+  const [performanceMonitorOpen, setPerformanceMonitorOpen] = useState(false);
+  const { isMobile, isDesktop } = useResponsive();
   
   const {
     conversations,
     currentConversation,
     isLoading,
+    isStreaming,
+    streamingMessage,
     apiKeys,
     setApiKeys,
     selectedModel,
     setSelectedModel,
     sendMessage,
     generateImage,
+    stopGeneration,
     createNewConversation,
     deleteConversation,
     selectConversation,
     exportConversation,
+    defaultConversationConfig,
+    setDefaultConversationConfig,
+    defaultImageConfig,
+    setDefaultImageConfig,
+    getPerformanceMetrics,
   } = useChat();
 
   // Handle responsive behavior
@@ -89,6 +100,8 @@ function App() {
         onDeleteConversation={deleteConversation}
         onExportConversation={exportConversation}
         onOpenSettings={() => setApiKeyModalOpen(true)}
+        onOpenAdvancedSettings={() => setAdvancedSettingsOpen(true)}
+        onOpenPerformanceMonitor={() => setPerformanceMonitorOpen(true)}
         selectedModel={selectedModel}
         onModelChange={setSelectedModel}
         isMobile={isMobile}
@@ -118,7 +131,10 @@ function App() {
             messages={currentConversation?.messages || []}
             onSendMessage={sendMessage}
             onGenerateImage={generateImage}
+            onStopGeneration={stopGeneration}
             isLoading={isLoading}
+            isStreaming={isStreaming}
+            streamingMessage={streamingMessage}
             hasApiKey={apiKeys && apiKeys.length > 0}
             isMobile={isMobile}
           />
@@ -131,6 +147,21 @@ function App() {
         onClose={() => setApiKeyModalOpen(false)}
         currentApiKeys={apiKeys}
         onSave={handleSaveApiKeys}
+      />
+      {/* Advanced Settings Modal */}
+      <AdvancedSettingsModal
+        isOpen={advancedSettingsOpen}
+        onClose={() => setAdvancedSettingsOpen(false)}
+        conversationConfig={defaultConversationConfig}
+        onSave={setDefaultConversationConfig}
+        imageConfig={defaultImageConfig}
+        onImageConfigSave={setDefaultImageConfig}
+      />
+      {/* Performance Monitor */}
+      <PerformanceMonitor
+        isOpen={performanceMonitorOpen}
+        onClose={() => setPerformanceMonitorOpen(false)}
+        getMetrics={getPerformanceMetrics}
       />
     </div>
   );

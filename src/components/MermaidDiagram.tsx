@@ -4,6 +4,7 @@ import { Download, ZoomIn, ZoomOut, FileDown } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import { fixMermaidSyntax } from '../utils/contentParser';
 
 interface MermaidDiagramProps {
   code: string;
@@ -23,14 +24,26 @@ export function MermaidDiagram({ code, title }: MermaidDiagramProps) {
           startOnLoad: false,
           theme: 'default',
           securityLevel: 'loose',
-          fontFamily: 'Inter, system-ui, sans-serif',
+          fontFamily: '"Noto Sans CJK SC", "Microsoft YaHei", "SimHei", Inter, system-ui, sans-serif',
+          flowchart: {
+            useMaxWidth: true,
+            htmlLabels: true,
+            curve: 'basis'
+          }
         });
 
-        const { svg: generatedSvg } = await mermaid.render(`mermaid-${Date.now()}`, code);
+        const { svg: generatedSvg } = await mermaid.render(`mermaid-${Date.now()}`, fixMermaidSyntax(code));
         setSvg(generatedSvg);
         setError('');
       } catch (err) {
-        setError('Failed to render diagram');
+        const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+        
+        // Check if it's a Chinese syntax issue
+        if (errorMessage.includes('Parse error') && /[\u4e00-\u9fff]/.test(code)) {
+          setError('中文语法解析错误 - 请检查边缘标签格式 (使用 -->|标签| 格式)');
+        } else {
+          setError('Failed to render diagram');
+        }
         console.error('Mermaid error:', err);
       }
     };

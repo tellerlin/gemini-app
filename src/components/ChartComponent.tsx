@@ -9,22 +9,46 @@ import { toast } from 'react-hot-toast';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
+// Type definitions for chart data and configuration
+export interface ChartDataPoint {
+  [key: string]: string | number | undefined;
+}
+
+export interface ChartSeries {
+  name: string;
+  dataKey: string;
+  color?: string;
+  type?: 'line' | 'bar' | 'area';
+}
+
+export interface ChartConfig {
+  xAxis?: string;
+  yAxis?: string;
+  series?: ChartSeries[];
+  title?: string;
+  height?: number;
+  width?: number;
+}
+
+export interface TooltipPayload {
+  color: string;
+  name: string;
+  value: string | number;
+  dataKey: string;
+}
+
+export interface CustomTooltipProps {
+  active?: boolean;
+  payload?: TooltipPayload[];
+  label?: string | number;
+}
+
+export type ChartType = 'line' | 'bar' | 'pie' | 'area' | 'radar' | 'composed' | 'scatter';
+
 interface ChartComponentProps {
-  type: 'line' | 'bar' | 'pie' | 'area' | 'radar' | 'composed' | 'scatter';
-  data: any[];
-  config: {
-    xAxis?: string;
-    yAxis?: string;
-    series?: Array<{
-      name: string;
-      dataKey: string;
-      color?: string;
-      type?: 'line' | 'bar' | 'area';
-    }>;
-    title?: string;
-    height?: number;
-    width?: number;
-  };
+  type: ChartType;
+  data: ChartDataPoint[];
+  config: ChartConfig;
 }
 
 const COLORS = [
@@ -33,7 +57,7 @@ const COLORS = [
 ];
 
 export function ChartComponent({ type, data, config }: ChartComponentProps) {
-  const [chartType, setChartType] = useState(type);
+  const [chartType, setChartType] = useState<ChartType>(type);
 
   const downloadChart = (format: 'svg' | 'pdf' = 'svg') => {
     const filename = encodeURIComponent(config.title || 'chart');
@@ -105,12 +129,12 @@ export function ChartComponent({ type, data, config }: ChartComponentProps) {
       height: config.height || 400,
     };
 
-    const CustomTooltip = ({ active, payload, label }: any) => {
+    const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
       if (active && payload && payload.length) {
         return (
           <div className="bg-white border border-gray-200 rounded-lg p-3 shadow-lg">
             <p className="font-medium text-gray-900">{`${label}`}</p>
-            {payload.map((entry: any, index: number) => (
+            {payload.map((entry, index) => (
               <p key={index} style={{ color: entry.color }}>
                 {`${entry.name}: ${entry.value}`}
               </p>
@@ -310,7 +334,7 @@ export function ChartComponent({ type, data, config }: ChartComponentProps) {
             {chartTypes.map(({ key, icon: Icon, label }) => (
               <button
                 key={key}
-                onClick={() => setChartType(key as any)}
+                onClick={() => setChartType(key as ChartType)}
                 className={`p-2 rounded-md transition-colors ${
                   chartType === key
                     ? 'bg-blue-600 text-white'

@@ -1,5 +1,5 @@
 import React from 'react';
-import { MessageCircle, Plus, Trash2, Settings, X, Zap, Download } from 'lucide-react';
+import { MessageCircle, Plus, Trash2, Settings, X, Download, Sliders, Activity } from 'lucide-react';
 import { Button } from './ui/Button';
 import { Select } from './ui/Select';
 import type { Conversation } from '../types/chat';
@@ -16,6 +16,8 @@ interface SidebarProps {
   onDeleteConversation: (id: string) => void;
   onExportConversation: (id: string) => void;
   onOpenSettings: () => void;
+  onOpenAdvancedSettings: () => void;
+  onOpenPerformanceMonitor: () => void;
   selectedModel: string;
   onModelChange: (model: string) => void;
   isMobile?: boolean;
@@ -31,6 +33,8 @@ export function Sidebar({
   onDeleteConversation,
   onExportConversation,
   onOpenSettings,
+  onOpenAdvancedSettings,
+  onOpenPerformanceMonitor,
   selectedModel,
   onModelChange,
   isMobile = false,
@@ -165,8 +169,8 @@ export function Sidebar({
             </div>
           </div>
 
-          {/* Settings Button */}
-          <div className="p-3 sm:p-4 border-t bg-white">
+          {/* Settings Buttons */}
+          <div className="p-3 sm:p-4 border-t bg-white space-y-2">
             <Button
               onClick={onOpenSettings}
               variant="ghost"
@@ -174,6 +178,22 @@ export function Sidebar({
             >
               <Settings className="h-4 w-4 mr-2" />
               API Settings
+            </Button>
+            <Button
+              onClick={onOpenAdvancedSettings}
+              variant="ghost"
+              className="w-full justify-start"
+            >
+              <Sliders className="h-4 w-4 mr-2" />
+              Advanced Settings
+            </Button>
+            <Button
+              onClick={onOpenPerformanceMonitor}
+              variant="ghost"
+              className="w-full justify-start"
+            >
+              <Activity className="h-4 w-4 mr-2" />
+              Performance Monitor
             </Button>
           </div>
         </div>
