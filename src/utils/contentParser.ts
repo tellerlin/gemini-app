@@ -63,7 +63,7 @@ export function fixMermaidSyntax(mermaidCode: string): string {
       }
     );
     
-    // Pattern for decision nodes: A{中文} -> A{"中文"}
+    // Pattern for decision nodes: A{Chinese} -> A{"Chinese"}
     processedLine = processedLine.replace(
       /([A-Za-z0-9_]+)\{([^}]*[\u4e00-\u9fff][^}]*)\}/g, 
       (match, nodeId, text) => {
@@ -75,7 +75,7 @@ export function fixMermaidSyntax(mermaidCode: string): string {
       }
     );
     
-    // Pattern for round nodes: A(中文) -> A("中文")
+    // Pattern for round nodes: A(Chinese) -> A("Chinese")
     processedLine = processedLine.replace(
       /([A-Za-z0-9_]+)\(([^)]*[\u4e00-\u9fff][^)]*)\)/g, 
       (match, nodeId, text) => {

@@ -6,8 +6,6 @@ import { ChatArea } from './components/ChatArea';
 import { ApiKeyModal } from './components/ApiKeyModal';
 import { AdvancedSettingsModal } from './components/AdvancedSettingsModal';
 import { PerformanceMonitor } from './components/PerformanceMonitor';
-import { MermaidTest } from './components/MermaidTest';
-import { TableTestComponent } from './components/TableTestComponent';
 import { useChat } from './hooks/useChat';
 import { useResponsive } from './hooks/useLocalStorage';
 import { Button } from './components/ui/Button';
@@ -17,8 +15,6 @@ function App() {
   const [apiKeyModalOpen, setApiKeyModalOpen] = useState(false);
   const [advancedSettingsOpen, setAdvancedSettingsOpen] = useState(false);
   const [performanceMonitorOpen, setPerformanceMonitorOpen] = useState(false);
-  const [testMode, setTestMode] = useState(window.location.hash === '#test');
-  const [tableTestMode, setTableTestMode] = useState(window.location.hash === '#table');
   const { isMobile, isDesktop } = useResponsive();
   
   const {
@@ -98,32 +94,7 @@ function App() {
         }}
       />
 
-      {/* Test Mode */}
-      {testMode ? (
-        <div className="w-full h-full overflow-auto">
-          <div className="p-4">
-            <button 
-              onClick={() => setTestMode(false)}
-              className="mb-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-            >
-              返回主应用
-            </button>
-            <MermaidTest />
-          </div>
-        </div>
-      ) : tableTestMode ? (
-        <div className="w-full h-full overflow-auto">
-          <div className="p-4">
-            <button 
-              onClick={() => setTableTestMode(false)}
-              className="mb-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-            >
-              返回主应用
-            </button>
-            <TableTestComponent />
-          </div>
-        </div>
-      ) : (
+      {/* Main Application */}
         <>
           {/* Sidebar */}
           <Sidebar
@@ -201,7 +172,6 @@ function App() {
             getMetrics={getPerformanceMetrics}
           />
         </>
-      )}
     </div>
   );
 }

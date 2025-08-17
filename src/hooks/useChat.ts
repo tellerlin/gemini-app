@@ -14,7 +14,7 @@ import { ContextManager, type ContextConfig } from '../utils/contextManager';
 import { getOptimalThinkingConfig, getModelCapabilities } from '../config/gemini';
 
 export function useChat() {
-  // 使用新的IndexedDB存储系统
+  // Use new IndexedDB storage system
   const {
     conversations,
     isLoading: conversationsLoading,
@@ -116,7 +116,7 @@ export function useChat() {
 
     geminiService.setApiKeys(apiKeys);
 
-    // 确保我们有当前对话
+    // Ensure we have a current conversation
     let conversation = currentConversation;
     if (!conversation) {
       conversation = createNewConversation();
@@ -130,7 +130,7 @@ export function useChat() {
       files,
     };
 
-    // 更新对话，添加用户消息
+    // Update conversation, add user message
     const updatedMessages = [...conversation.messages, userMessage];
     
     // Get model capabilities and optimize configuration
@@ -168,7 +168,7 @@ export function useChat() {
       config: enhancedConfig,
     };
 
-    // 先保存用户消息到IndexedDB
+    // First save user message to IndexedDB
     await saveConversation(updatedConversation);
 
     setIsLoading(true);
@@ -197,7 +197,7 @@ export function useChat() {
         updatedAt: new Date(),
       };
 
-      // 保存带占位符的临时对话
+      // Save temporary conversation with placeholder
       await saveConversation(tempConversation);
 
       // Use enhanced streaming response with grounding support
@@ -364,7 +364,7 @@ export function useChat() {
       };
 
       console.log('✅ Final update with complete message');
-      // 保存最终完整的对话到IndexedDB
+      // Save final complete conversation to IndexedDB
       await saveConversation(finalConversation);
 
       // Show grounding info if available
@@ -375,7 +375,7 @@ export function useChat() {
       console.error('Error generating response:', error);
       toast.error('Failed to generate response. Please try again.');
       
-      // Remove placeholder message on error - 重新保存不包含空消息的对话
+      // Remove placeholder message on error - resave conversation without empty messages
       try {
         const errorConversation = {
           ...conversation,

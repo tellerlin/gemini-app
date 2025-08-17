@@ -1166,13 +1166,13 @@ export class GeminiService {
         topK: 40,
         topP: 0.95,
         maxOutputTokens: 1000000,
-        // 新的2.5模型思考功能配置
+        // New 2.5 model thinking configuration
         ...(model.includes('2.5') && {
           thinkingConfig: {
-            thinkingBudget: 10000, // 默认启用思考，可配置
+            thinkingBudget: 10000, // Default thinking enabled, configurable
           }
         }),
-        // 系统指令支持
+        // System instruction support
         systemInstruction: "You are a helpful assistant. Please provide accurate and detailed responses.",
       }
     });

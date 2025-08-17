@@ -1,6 +1,6 @@
 # Gemini AI Chat Application
 
-A modern, feature-rich chat interface for Google's Gemini AI models built with React, TypeScript, and Vite. This application provides a seamless conversational experience with support for multiple AI models, file uploads, and advanced error handling.
+A modern, feature-rich chat interface for Google's Gemini AI models built with React, TypeScript, and Vite. This application provides a seamless conversational experience with support for multiple AI models, file uploads, and advanced content rendering.
 
 ## 🚀 Features
 
@@ -9,15 +9,15 @@ A modern, feature-rich chat interface for Google's Gemini AI models built with R
 - **Multi-API Key Management**: Round-robin API key rotation for improved reliability and rate limit handling
 - **Conversation Management**: Create, save, and manage multiple conversations
 - **Conversation Export**: Export individual conversations as formatted text files
-- **File Upload Support**: Upload images for multimodal conversations
-- **Real-time Chat**: Instant messaging with AI responses
-- **Persistent Storage**: Local storage for conversations and settings
+- **File Upload Support**: Upload images, PDFs, and documents for multimodal conversations
+- **Real-time Chat**: Instant messaging with streaming AI responses
+- **Persistent Storage**: Local IndexedDB storage for conversations and settings
 
 ### Enhanced AI Response Support
 - **Interactive Flowcharts**: Mermaid diagram rendering with zoom and download capabilities
 - **Rich Data Tables**: Sortable, searchable, and paginated tables with CSV/JSON export
 - **Dynamic Charts**: Multiple chart types (line, bar, pie, area, radar, scatter) with interactive features
-- **Mathematical Expressions**: Support for inline and block math notation
+- **Mathematical Expressions**: Support for inline and block math notation using KaTeX
 - **Advanced Code Highlighting**: Syntax highlighting with copy functionality
 - **Content Summary**: Visual indicators for different content types in AI responses
 
@@ -28,6 +28,7 @@ A modern, feature-rich chat interface for Google's Gemini AI models built with R
 - **Markdown Rendering**: Rich text formatting with syntax highlighting
 - **Responsive Design**: Mobile-first responsive interface
 - **Toast Notifications**: User-friendly feedback system
+- **Performance Monitoring**: Real-time performance metrics and health tracking
 
 ### Technical Features
 - **TypeScript**: Full type safety and IntelliSense support
@@ -39,26 +40,30 @@ A modern, feature-rich chat interface for Google's Gemini AI models built with R
 ## 🛠️ Technology Stack
 
 ### Frontend
-- **React 18.3.1** - UI framework
-- **TypeScript 5.5.3** - Type safety
-- **Vite 5.4.2** - Build tool and dev server
-- **Tailwind CSS 3.4.1** - Styling framework
-- **Lucide React 0.539.0** - Icon library
+- **React 19.1.1** - UI framework with concurrent features
+- **TypeScript 5.5.3** - Type safety and enhanced development experience
+- **Vite 7.1.2** - Fast build tool and development server
+- **Tailwind CSS 3.4.1** - Utility-first CSS framework
+- **Lucide React 0.539.0** - Modern icon library
 
 ### AI Integration
-- **@google/generative-ai 0.24.1** - Official Google AI SDK
-- **React Markdown 10.1.0** - Markdown rendering
+- **@google/genai 1.14.0** - Official Google Generative AI SDK
+- **React Markdown 10.1.0** - Markdown rendering with custom components
 - **React Syntax Highlighter 15.6.1** - Code syntax highlighting
 
 ### Enhanced Content Libraries
-- **Mermaid 10.6.1** - Flowchart and diagram rendering
-- **Recharts 2.8.0** - Interactive chart components
-- **ReactFlow 11.10.1** - Node-based flow diagrams
-- **KaTeX 0.16.9** - Mathematical expression rendering
+- **Mermaid 11.9.0** - Flowchart and diagram rendering with Chinese character support
+- **@tanstack/react-table 8.21.3** - Modern table component with advanced features
+- **ReactFlow 11.11.4** - Node-based flow diagrams
+- **KaTeX 0.16.22** - Mathematical expression rendering
+- **React KaTeX 3.1.0** - React wrapper for KaTeX
 
 ### UI/UX
 - **React Hot Toast 2.5.2** - Toast notifications
 - **CLSX 2.1.1** - Conditional CSS classes
+- **Remark GFM 4.0.1** - GitHub Flavored Markdown support
+- **Remark Math 6.0.0** - Mathematical notation in Markdown
+- **Rehype KaTeX 7.0.1** - KaTeX integration for markdown
 
 ## 📦 Installation
 
@@ -222,29 +227,44 @@ Support for both inline (`$formula$`) and block (`$$formula$$`) mathematical not
 ```
 src/
 ├── components/          # React components
-│   ├── ui/             # Reusable UI components
+│   ├── ui/             # Reusable UI components (Button, Input, Select)
 │   ├── ApiKeyModal.tsx # API key management modal
+│   ├── AdvancedSettingsModal.tsx # Advanced configuration settings
 │   ├── ChatArea.tsx    # Main chat interface
-│   ├── ChatInput.tsx   # Message input component
-│   ├── EnhancedMessageBubble.tsx # Enhanced message display with rich content
-│   ├── MermaidDiagram.tsx # Flowchart and diagram rendering
-│   ├── EnhancedTable.tsx # Interactive data tables
-│   ├── ChartComponent.tsx # Dynamic chart components
+│   ├── ChatInput.tsx   # Message input component with file upload
+│   ├── CodeBlockCopy.tsx # Code block with copy functionality
 │   ├── DemoContent.tsx # Feature showcase component
-│   ├── FileUpload.tsx  # File upload functionality
-│   ├── MessageBubble.tsx # Legacy message display
-│   └── Sidebar.tsx     # Conversation sidebar
+│   ├── EnhancedMessageBubble.tsx # Advanced message display with rich content
+│   ├── EnhancedTable.tsx # Interactive data tables with sorting and export
+│   ├── ExportRenderer.tsx # Content export functionality
+│   ├── FileUpload.tsx  # Drag-and-drop file upload component
+│   ├── MermaidDiagram.tsx # Flowchart and diagram rendering
+│   ├── MessageBubble.tsx # Basic message display component
+│   ├── ModernMarkdownRenderer.tsx # Enhanced markdown rendering
+│   ├── OptimizedMermaidDiagram.tsx # Performance-optimized Mermaid rendering
+│   ├── PerformanceMonitor.tsx # Real-time performance monitoring
+│   ├── RenderingErrorBoundary.tsx # Error boundary for content rendering
+│   ├── Sidebar.tsx     # Conversation sidebar with navigation
+│   ├── SmartLoadingIndicator.tsx # Intelligent loading states
+│   ├── StreamingMessage.tsx # Real-time streaming message display
+│   └── UserManager.tsx # User profile and settings management
+├── config/             # Configuration files
+│   └── gemini.ts       # Gemini model configurations and capabilities
 ├── hooks/              # Custom React hooks
-│   ├── useChat.ts      # Chat state management
-│   └── useLocalStorage.ts # Local storage utilities
+│   ├── useChat.ts      # Chat state management with IndexedDB
+│   └── useLocalStorage.ts # Local storage utilities and conversation management
 ├── services/           # External service integrations
-│   └── gemini.ts       # Gemini AI service layer
+│   └── gemini.ts       # Gemini AI service layer with advanced error handling
 ├── types/              # TypeScript type definitions
-│   └── chat.ts         # Chat-related interfaces
+│   └── chat.ts         # Chat-related interfaces and types
 ├── utils/              # Utility functions
 │   ├── cn.ts           # Class name utilities
-│   ├── contentParser.ts # AI response content parsing
-│   └── env.ts          # Environment variable utilities
+│   ├── contentParser.ts # AI response content parsing with Chinese support
+│   ├── contextManager.ts # Context optimization and summarization
+│   ├── conversationDB.ts # IndexedDB conversation storage
+│   ├── env.ts          # Environment variable utilities
+│   ├── storageStrategy.ts # Storage strategy implementation
+│   └── userManager.ts  # User data management
 ├── App.tsx             # Main application component
 └── main.tsx            # Application entry point
 ```
@@ -252,20 +272,28 @@ src/
 ## 🔌 API Architecture
 
 ### GeminiService Class
-The core service layer provides:
+The core service layer provides comprehensive AI integration:
 
-- **Multi-API Key Management**: Round-robin key rotation
-- **Error Handling**: Categorized error responses
-- **Retry Logic**: Exponential backoff with configurable attempts
-- **Timeout Management**: 30-second default timeout
-- **Multimodal Support**: Text and image processing
-- **Conversation History**: Context-aware chat sessions
+- **Multi-API Key Management**: Intelligent round-robin key rotation with health tracking
+- **Error Handling**: Advanced error categorization with retry strategies
+- **Retry Logic**: Exponential backoff with configurable attempts and intelligent delays
+- **Timeout Management**: 30-second default timeout with graceful handling
+- **Multimodal Support**: Text, image, PDF, and video processing
+- **Conversation History**: Context-aware chat sessions with optimization
+- **Performance Monitoring**: Real-time statistics and health metrics
+- **Content Generation**: Support for both streaming and non-streaming responses
+- **Advanced Features**: Grounding, URL context, and thinking capabilities
 
 ### Key Methods
-- `generateResponse()`: Main content generation
-- `testConnection()`: API connectivity verification
-- `getAvailableModels()`: Model capability information
-- `setApiKeys()`: API key configuration
+- `generateResponse()`: Main content generation with comprehensive error handling
+- `generateStreamingResponse()`: Real-time streaming with performance optimization
+- `generateStreamingResponseWithGrounding()`: Enhanced streaming with search grounding
+- `testConnection()`: API connectivity verification with detailed diagnostics
+- `getAvailableModelsWithCapabilities()`: Model information with real-time capability detection
+- `setApiKeys()`: Multi-key configuration with health tracking initialization
+- `batchValidateApiKeys()`: Comprehensive key validation with retry logic
+- `getOptimalModelForTask()`: AI-powered model selection based on task analysis
+- `analyzeUrls()`: URL content analysis with context understanding
 
 ## 🎨 UI Components
 
