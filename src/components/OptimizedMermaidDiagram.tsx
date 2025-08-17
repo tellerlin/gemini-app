@@ -5,6 +5,7 @@ import { toast } from 'react-hot-toast';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { cn } from '../utils/cn';
+import { fixMermaidSyntax } from '../utils/contentParser';
 
 interface OptimizedMermaidDiagramProps {
   code: string;
@@ -34,26 +35,41 @@ export function OptimizedMermaidDiagram({
         setIsLoading(true);
         setError('');
         
-        // Initialize Mermaid with optimized config
+        // Initialize Mermaid with optimized config based on 2025 best practices
         mermaid.initialize({
           startOnLoad: false,
           theme: 'default',
           securityLevel: 'loose',
           fontFamily: '"Inter", "Noto Sans CJK SC", "Microsoft YaHei", system-ui, sans-serif',
+          // Accessibility best practices
+          accessibility: {
+            enabled: true,
+          },
           flowchart: {
             useMaxWidth: true,
             htmlLabels: true,
             curve: 'basis',
-            padding: 20
+            padding: 20,
+            // Performance optimization
+            diagramPadding: 8,
           },
           themeVariables: {
             fontFamily: '"Inter", system-ui, sans-serif',
-            fontSize: '14px'
+            fontSize: '14px',
+            // Improved contrast for accessibility
+            primaryColor: '#0088FE',
+            primaryTextColor: '#000000',
+            primaryBorderColor: '#0088FE',
+            lineColor: '#333333',
           }
         });
 
-        // Clean and fix common Mermaid syntax issues
-        const cleanedCode = cleanMermaidCode(code);
+        // Clean and fix common Mermaid syntax issues using our enhanced fix function
+        const cleanedCode = fixMermaidSyntax(code);
+        
+        // Temporarily disable accessibility features to avoid parsing conflicts
+        // TODO: Re-enable once Mermaid accessibility syntax is stabilized
+        // const accessibleCode = addAccessibilityFeatures(cleanedCode, title);
         
         // Generate unique ID to avoid conflicts
         const chartId = `mermaid-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -97,27 +113,49 @@ export function OptimizedMermaidDiagram({
     };
   }, [code]);
 
-  // Clean and fix common Mermaid syntax issues
-  const cleanMermaidCode = (rawCode: string): string => {
-    let cleaned = rawCode.trim();
+  // Add accessibility features to Mermaid code based on 2025 best practices
+  const addAccessibilityFeatures = (mermaidCode: string, title?: string): string => {
+    let accessibleCode = mermaidCode.trim();
     
-    // Fix common Chinese syntax issues
-    cleaned = cleaned.replace(/\|\>\|\>/g, '-->');
-    cleaned = cleaned.replace(/\s+\|\s+/g, ' --> ');
-    cleaned = cleaned.replace(/\|\s+([A-Z])/g, '--> $1');
-    cleaned = cleaned.replace(/([A-Z])\s+\|/g, '$1 -->');
-    cleaned = cleaned.replace(/-->\|([^|]*?)>\|>/g, '-->|$1|');
-    cleaned = cleaned.replace(/-->\|>\s+/g, '--> ');
-    cleaned = cleaned.replace(/--\s*([^-]+?)\s*-->/g, '-->|$1|');
-    cleaned = cleaned.replace(/\{([^{}]*?)\s*\([^)]*?\)\s*\}/g, '{$1}');
-    cleaned = cleaned.replace(/-->\|\>\|/g, '-->');
-    cleaned = cleaned.replace(/-->\|([^|]*?)\|\>/g, '-->|$1|');
-    cleaned = cleaned.replace(/-->\|\>/g, '-->');
-    cleaned = cleaned.replace(/(\w+)\s*-->\s*(\w+)/g, '$1 --> $2');
-    cleaned = cleaned.replace(/(\w+)\s*-->\|([^|]+?)\|\s*(\w+)/g, '$1 -->|$2| $3');
-    cleaned = cleaned.replace(/;\s*$/gm, '');
+    // Check if it's a valid diagram type first
+    const firstLine = accessibleCode.split('\n')[0].toLowerCase().trim();
+    const validDiagramTypes = ['graph', 'flowchart', 'sequencediagram', 'classDiagram', 'stateDiagram', 'gantt', 'pie', 'gitgraph'];
     
-    return cleaned;
+    const isValidDiagram = validDiagramTypes.some(type => 
+      firstLine.startsWith(type) || firstLine.includes(type)
+    );
+    
+    if (!isValidDiagram) {
+      console.warn('Invalid Mermaid diagram type, skipping accessibility features');
+      return accessibleCode;
+    }
+    
+    // Only add accessibility features if they don't already exist
+    if (!accessibleCode.includes('accTitle:') && title) {
+      const lines = accessibleCode.split('\n');
+      lines.splice(1, 0, `    accTitle: ${title}`);
+      accessibleCode = lines.join('\n');
+    }
+    
+    if (!accessibleCode.includes('accDescr:')) {
+      const lines = accessibleCode.split('\n');
+      let description = '';
+      
+      if (firstLine.includes('graph') || firstLine.includes('flowchart')) {
+        description = '这是一个流程图，显示了步骤之间的关系和流程';
+      } else if (firstLine.includes('sequencediagram')) {
+        description = '这是一个时序图，显示了对象之间的交互顺序';
+      } else if (firstLine.includes('classdiagram')) {
+        description = '这是一个类图，显示了类的结构和关系';
+      } else {
+        description = '这是一个图表，用于可视化数据和关系';
+      }
+      
+      lines.splice(1, 0, `    accDescr: ${description}`);
+      accessibleCode = lines.join('\n');
+    }
+    
+    return accessibleCode;
   };
 
   const downloadDiagram = async (format: 'svg' | 'pdf' = 'svg') => {

@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { Download, ChevronUp, ChevronDown, Search, FileDown } from 'lucide-react';
+import React, { useState, useMemo, useCallback } from 'react';
+import { Download, ChevronUp, ChevronDown, Search, FileDown, ArrowUpDown } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -16,6 +16,7 @@ export function EnhancedTable({ data, headers, title }: EnhancedTableProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
+  // Performance optimization: Memoized filtering with useCallback
   const filteredData = useMemo(() => {
     if (!searchTerm) return data;
     
@@ -26,6 +27,7 @@ export function EnhancedTable({ data, headers, title }: EnhancedTableProps) {
     );
   }, [data, searchTerm]);
 
+  // Performance optimization: Memoized sorting
   const sortedData = useMemo(() => {
     if (!sortConfig) return filteredData;
 
@@ -33,45 +35,48 @@ export function EnhancedTable({ data, headers, title }: EnhancedTableProps) {
       const aVal = a[sortConfig.key];
       const bVal = b[sortConfig.key];
 
-      // Handle numeric values
+      // Enhanced numeric handling with better performance
       const aNum = parseFloat(aVal);
       const bNum = parseFloat(bVal);
       
       if (!isNaN(aNum) && !isNaN(bNum)) {
-        if (aNum < bNum) return sortConfig.direction === 'asc' ? -1 : 1;
-        if (aNum > bNum) return sortConfig.direction === 'asc' ? 1 : -1;
-        return 0;
+        return sortConfig.direction === 'asc' ? aNum - bNum : bNum - aNum;
       }
 
-      // Handle string values
+      // String comparison with locale support for international characters
       const aStr = String(aVal).toLowerCase();
       const bStr = String(bVal).toLowerCase();
       
-      if (aStr < bStr) return sortConfig.direction === 'asc' ? -1 : 1;
-      if (aStr > bStr) return sortConfig.direction === 'asc' ? 1 : -1;
-      return 0;
+      const comparison = aStr.localeCompare(bStr);
+      return sortConfig.direction === 'asc' ? comparison : -comparison;
     });
   }, [filteredData, sortConfig]);
 
-  const paginatedData = sortedData.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  // Accessibility: Enhanced sort handler with keyboard support
+  const handleSort = useCallback((columnIndex: number) => {
+    setSortConfig(current => ({
+      key: columnIndex,
+      direction: current?.key === columnIndex && current.direction === 'asc' ? 'desc' : 'asc'
+    }));
+  }, []);
+
+  // Accessibility: Keyboard event handler
+  const handleKeyPress = useCallback((event: React.KeyboardEvent, columnIndex: number) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      handleSort(columnIndex);
+    }
+  }, [handleSort]);
+
+  // Pagination with performance optimization
+  const paginatedData = useMemo(() => {
+    return sortedData.slice(
+      (currentPage - 1) * itemsPerPage,
+      currentPage * itemsPerPage
+    );
+  }, [sortedData, currentPage, itemsPerPage]);
 
   const totalPages = Math.ceil(sortedData.length / itemsPerPage);
-
-  const handleSort = (columnIndex: number) => {
-    setSortConfig(current => {
-      if (current?.key === columnIndex) {
-        return {
-          key: columnIndex,
-          direction: current.direction === 'asc' ? 'desc' : 'asc'
-        };
-      }
-      return { key: columnIndex, direction: 'asc' };
-    });
-    setCurrentPage(1);
-  };
 
   const exportToCSV = () => {
     const filename = encodeURIComponent(title || 'table-data');

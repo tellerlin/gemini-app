@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试特定Mermaid代码</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11.9.0/dist/mermaid.min.js"></script>
+    <style>
+        body {
+            font-family: "Noto Sans CJK SC", "Microsoft YaHei", "SimHei", sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .test-section {
+            background: white;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .mermaid {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        pre {
+            background: #f8f8f8;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧜‍♀️ 测试美人鱼流程图</h1>
+    
+    <div class="test-section">
+        <h2>原始代码：</h2>
+        <pre>graph TD
+    A[出生/生活在大海中] --> B[好奇地观察人类世界]
+    B --> C{遇到困难或挑战？}
+    C --> D[发现陆地上的某物/人]
+    D --> E[克服困难/解决挑战]
+    E --> F[做出选择/决定]
+    F --> G[结果：幸福、自由或新的开始]</pre>
+        
+        <div class="mermaid">
+graph TD
+    A[出生/生活在大海中] --> B[好奇地观察人类世界]
+    B --> C{遇到困难或挑战？}
+    C --> D[发现陆地上的某物/人]
+    D --> E[克服困难/解决挑战]
+    E --> F[做出选择/决定]
+    F --> G[结果：幸福、自由或新的开始]
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>修复后的代码：</h2>
+        <pre>graph TD
+    A["出生/生活在大海中"] --> B["好奇地观察人类世界"]
+    B --> C{"遇到困难或挑战?"}
+    C --> D["发现陆地上的某物/人"]
+    D --> E["克服困难/解决挑战"]
+    E --> F["做出选择/决定"]
+    F --> G["结果:幸福、自由或新的开始"]</pre>
+        
+        <div class="mermaid">
+graph TD
+    A["出生/生活在大海中"] --> B["好奇地观察人类世界"]
+    B --> C{"遇到困难或挑战?"}
+    C --> D["发现陆地上的某物/人"]
+    D --> E["克服困难/解决挑战"]
+    E --> F["做出选择/决定"]
+    F --> G["结果:幸福、自由或新的开始"]
+        </div>
+    </div>
+
+    <script>
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            securityLevel: 'loose',
+            fontFamily: '"Noto Sans CJK SC", "Microsoft YaHei", "SimHei", sans-serif',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis',
+                padding: 15
+            }
+        });
+
+        // 错误处理
+        window.addEventListener('error', function(e) {
+            console.error('页面错误:', e.error);
+        });
+
+        // Mermaid错误处理
+        mermaid.parseError = function(err, hash) {
+            console.error('Mermaid解析错误:', err);
+            console.error('错误哈希:', hash);
+        };
+    </script>
+</body>
+</html>

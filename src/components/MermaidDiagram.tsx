@@ -19,36 +19,109 @@ export function MermaidDiagram({ code, title }: MermaidDiagramProps) {
 
   useEffect(() => {
     const renderDiagram = async () => {
+      if (!code || !code.trim()) {
+        setSvg('');
+        setError('');
+        return;
+      }
+
       try {
+        // Clear any existing SVG content first
+        setSvg('');
+        setError('');
+
+        // Configure Mermaid with enhanced Chinese support
         mermaid.initialize({
           startOnLoad: false,
           theme: 'default',
           securityLevel: 'loose',
-          fontFamily: '"Noto Sans CJK SC", "Microsoft YaHei", "SimHei", Inter, system-ui, sans-serif',
+          fontFamily: '"Noto Sans CJK SC", "Microsoft YaHei", "SimHei", sans-serif',
           flowchart: {
             useMaxWidth: true,
             htmlLabels: true,
-            curve: 'basis'
+            curve: 'basis',
+            padding: 15,
+            nodeSpacing: 50,
+            rankSpacing: 50
+          },
+          sequence: {
+            diagramMarginX: 50,
+            diagramMarginY: 10,
+            actorMargin: 50,
+            width: 150,
+            height: 65,
+            boxMargin: 10,
+            boxTextMargin: 5,
+            noteMargin: 10,
+            messageMargin: 35
+          },
+          gantt: {
+            titleTopMargin: 25,
+            barHeight: 20,
+            fontSize: 11,
+            sectionFontSize: 11,
+            gridLineStartPadding: 35,
+            bottomPadding: 5
           }
         });
 
-        const { svg: generatedSvg } = await mermaid.render(`mermaid-${Date.now()}`, fixMermaidSyntax(code));
+        // Fix and clean the Mermaid syntax
+        const cleanedCode = fixMermaidSyntax(code);
+        console.log('Original code:', code);
+        console.log('Cleaned code:', cleanedCode);
+
+        // Validate that the cleaned code is not empty
+        if (!cleanedCode || !cleanedCode.trim()) {
+          setError('清理后的代码为空，请检查原始图表语法');
+          return;
+        }
+
+        // Generate unique ID for this render
+        const elementId = `mermaid-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        
+        // First parse to check for syntax errors
+        try {
+          await mermaid.parse(cleanedCode);
+        } catch (parseError) {
+          console.error('Mermaid parse error:', parseError);
+          throw parseError;
+        }
+        
+        // Render the diagram
+        const { svg: generatedSvg } = await mermaid.render(elementId, cleanedCode);
+        
+        // Set the generated SVG
         setSvg(generatedSvg);
         setError('');
+        
+        console.log('Mermaid diagram rendered successfully');
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+        console.error('Mermaid rendering error:', err);
+        console.error('Error message:', errorMessage);
+        console.error('Original code that failed:', code);
         
-        // Check if it's a Chinese syntax issue
-        if (errorMessage.includes('Parse error') && /[\u4e00-\u9fff]/.test(code)) {
-          setError('中文语法解析错误 - 请检查边缘标签格式 (使用 -->|标签| 格式)');
+        // Provide more specific error messages
+        if (errorMessage.includes('Parse error') || errorMessage.includes('Expecting')) {
+          if (/[\u4e00-\u9fff]/.test(code)) {
+            setError('中文语法解析错误 - 节点标签需要用引号包围，如: A["中文标签"]');
+          } else {
+            setError('语法解析错误 - 请检查图表语法是否正确');
+          }
+        } else if (errorMessage.includes('Lexical error')) {
+          setError('词法分析错误 - 可能存在不支持的字符或格式');
+        } else if (errorMessage.includes('Cannot read')) {
+          setError('渲染错误 - 可能存在无效的节点引用');
         } else {
-          setError('Failed to render diagram');
+          setError(`渲染失败: ${errorMessage}`);
         }
-        console.error('Mermaid error:', err);
       }
     };
 
-    renderDiagram();
+    // Add a small delay to ensure DOM is ready
+    const timeoutId = setTimeout(renderDiagram, 100);
+    
+    return () => clearTimeout(timeoutId);
   }, [code]);
 
   const downloadDiagram = (format: 'svg' | 'pdf' = 'svg') => {

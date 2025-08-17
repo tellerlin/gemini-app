@@ -1,40 +1,96 @@
 export function fixMermaidSyntax(mermaidCode: string): string {
-  // Fix common Chinese syntax issues in Mermaid diagrams
-  let fixed = mermaidCode;
+  // Fix Chinese characters in Mermaid diagrams using official best practices
+  // Based on GitHub issues: #687, #1925, #5597 - the solution is double quotes
   
-  // Fix invalid |>|> syntax - replace with proper arrow syntax
-  fixed = fixed.replace(/\|\>\|\>/g, '-->');
+  let fixed = mermaidCode.trim();
   
-  // Fix standalone pipe symbols that should be arrows
-  fixed = fixed.replace(/\s+\|\s+/g, ' --> ');
-  fixed = fixed.replace(/\|\s+([A-Z])/g, '--> $1');
-  fixed = fixed.replace(/([A-Z])\s+\|/g, '$1 -->');
+  // Early return if empty
+  if (!fixed) return fixed;
   
-  // Fix malformed edge labels with angle brackets
-  fixed = fixed.replace(/-->\|([^|]*?)>\|>/g, '-->|$1|');
-  fixed = fixed.replace(/-->\|>\s+/g, '--> ');
+  console.log('Fixing Mermaid syntax using official best practices, input:', fixed);
   
-  // Replace "-- text -->" with "-->|text|" format for Chinese labels
-  fixed = fixed.replace(/--\s*([^-]+?)\s*-->/g, '-->|$1|');
+  // First, remove comments and clean up the code
+  // Remove block comments /* ... */
+  fixed = fixed.replace(/\/\*[\s\S]*?\*\//g, '');
   
-  // Remove extra parentheses from decision node labels that cause parsing issues
-  fixed = fixed.replace(/\{([^{}]*?)\s*\([^)]*?\)\s*\}/g, '{$1}');
+  // Remove line comments // ...
+  fixed = fixed.replace(/\/\/.*$/gm, '');
   
-  // Clean up malformed arrow syntax
-  fixed = fixed.replace(/-->\|\>\|/g, '-->');
-  fixed = fixed.replace(/-->\|([^|]*?)\|\>/g, '-->|$1|');
+  // Fix each line independently
+  const lines = fixed.split('\n');
+  const processedLines = lines.map(line => {
+    const trimmedLine = line.trim();
+    
+    // Skip empty lines, graph declarations, style statements, and accessibility statements
+    if (!trimmedLine || 
+        trimmedLine.startsWith('graph ') || 
+        trimmedLine.startsWith('flowchart ') ||
+        trimmedLine.startsWith('style ') ||
+        trimmedLine.startsWith('accTitle:') ||
+        trimmedLine.startsWith('accDescr:')) {
+      return trimmedLine;
+    }
+    
+    let processedLine = trimmedLine;
+    
+    // Remove trailing semicolons which cause parsing issues
+    processedLine = processedLine.replace(/;+$/g, '');
+    
+    // Fix Chinese punctuation marks that cause issues
+    processedLine = processedLine.replace(/？/g, '?'); // Chinese question mark to ASCII
+    processedLine = processedLine.replace(/：/g, ':'); // Chinese colon to ASCII
+    processedLine = processedLine.replace(/，/g, ','); // Chinese comma to ASCII
+    processedLine = processedLine.replace(/。/g, '.'); // Chinese period to ASCII
+    
+    // The key fix: wrap any text containing Chinese characters in double quotes
+    // This handles ALL Chinese character issues according to official docs
+    
+    // Pattern for node definitions with Chinese characters: A[中文] -> A["中文"]
+    processedLine = processedLine.replace(
+      /([A-Za-z0-9_]+)\[([^\]]*[\u4e00-\u9fff][^\]]*)\]/g, 
+      (match, nodeId, text) => {
+        // Only add quotes if not already quoted
+        if (text.startsWith('"') && text.endsWith('"')) {
+          return match; // Already quoted
+        }
+        return `${nodeId}["${text}"]`;
+      }
+    );
+    
+    // Pattern for decision nodes: A{中文} -> A{"中文"}
+    processedLine = processedLine.replace(
+      /([A-Za-z0-9_]+)\{([^}]*[\u4e00-\u9fff][^}]*)\}/g, 
+      (match, nodeId, text) => {
+        // Only add quotes if not already quoted
+        if (text.startsWith('"') && text.endsWith('"')) {
+          return match; // Already quoted
+        }
+        return `${nodeId}{"${text}"}`;
+      }
+    );
+    
+    // Pattern for round nodes: A(中文) -> A("中文")
+    processedLine = processedLine.replace(
+      /([A-Za-z0-9_]+)\(([^)]*[\u4e00-\u9fff][^)]*)\)/g, 
+      (match, nodeId, text) => {
+        // Only add quotes if not already quoted
+        if (text.startsWith('"') && text.endsWith('"')) {
+          return match; // Already quoted
+        }
+        return `${nodeId}("${text}")`;
+      }
+    );
+    
+    // Clean up any remaining whitespace issues
+    processedLine = processedLine.replace(/\s+/g, ' ').trim();
+    
+    return processedLine;
+  });
   
-  // Fix arrows that end with |> instead of proper syntax
-  fixed = fixed.replace(/-->\|\>/g, '-->');
+  const result = processedLines.filter(line => line.length > 0).join('\n');
+  console.log('Fixed Mermaid syntax using official best practices, output:', result);
   
-  // Ensure proper spacing around arrows
-  fixed = fixed.replace(/(\w+)\s*-->\s*(\w+)/g, '$1 --> $2');
-  fixed = fixed.replace(/(\w+)\s*-->\|([^|]+?)\|\s*(\w+)/g, '$1 -->|$2| $3');
-  
-  // Remove trailing semicolons which can cause issues
-  fixed = fixed.replace(/;\s*$/gm, '');
-  
-  return fixed.trim();
+  return result;
 }
 
 export interface ParsedSection {

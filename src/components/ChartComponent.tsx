@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, 
   BarChart, Bar, PieChart, Pie, Cell, AreaChart, Area, RadarChart, Radar, PolarGrid, 
@@ -28,6 +28,10 @@ export interface ChartConfig {
   title?: string;
   height?: number;
   width?: number;
+  // 2025 best practices: accessibility and performance
+  ariaLabel?: string;
+  description?: string;
+  animate?: boolean;
 }
 
 export interface TooltipPayload {
@@ -51,15 +55,24 @@ interface ChartComponentProps {
   config: ChartConfig;
 }
 
+// 2025 best practices: Enhanced color palette with better accessibility
 const COLORS = [
   '#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8', 
-  '#82CA9D', '#FFC658', '#FF6B6B', '#4ECDC4', '#45B7D1'
+  '#82CA9D', '#FFC658', '#FF6B6B', '#4ECDC4', '#45B7D1',
+  '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8', '#F7DC6F'
 ];
 
 export function ChartComponent({ type, data, config }: ChartComponentProps) {
   const [chartType, setChartType] = useState<ChartType>(type);
 
-  const downloadChart = (format: 'svg' | 'pdf' = 'svg') => {
+  // Performance optimization: Memoized chart dimensions
+  const chartDimensions = useMemo(() => ({
+    height: config.height || 400,
+    width: config.width || '100%'
+  }), [config.height, config.width]);
+
+  // Performance optimization: Memoized download handler
+  const downloadChart = useCallback(async (format: 'svg' | 'pdf' = 'svg') => {
     const filename = encodeURIComponent(config.title || 'chart');
     
     if (format === 'svg') {

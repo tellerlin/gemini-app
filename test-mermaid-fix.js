@@ -1,27 +1,66 @@
-// Test script to verify Mermaid syntax fixes
-const { fixMermaidSyntax } = require('./src/utils/contentParser.ts');
+// Test script to verify Mermaid syntax fixes  
+import { fixMermaidSyntax } from './src/utils/contentParser.js';
 
-// Test the problematic syntax from the error
-const problematicCode = `flowchart TD
-    A[开始] -->|>|> B{程序入口: main函数}; 
-    B --> C[读取配置文件];
-    C --> D{配置是否有效?};`;
-
-console.log('Original code:');
-console.log(problematicCode);
-console.log('\nFixed code:');
-console.log(fixMermaidSyntax(problematicCode));
-
-// Test other edge cases
-const edgeCases = [
-  'A -->|label>|> B',
-  'A -->|>| B',
-  'A --> B;',
-  'A -- label --> B'
+// Test cases from user's examples
+const testCases = [
+  {
+    name: '用户登录流程图（原始）- 包含分号和注释',
+    code: `graph TD
+    A[开始] --> B{用户输入登录信息?};
+    B --> C{验证凭据};
+    C --> D{凭据有效?};
+    D -- 是 --> E[登录成功];
+    D -- 否 --> F[显示错误消息];
+    F --> B; /* 循环回B，让用户重新尝试 */
+    E --> G[结束];`
+  },
+  {
+    name: '美人鱼流程图（原始）- 深海守护者',
+    code: `graph TD
+    A[美人鱼诞生] --> B{探索浅水区}
+    B -- 学习捕食 --> C[掌握生存技能]
+    C --> D{好奇深海世界}
+    D -- 独自探险 --> E[发现古老遗迹]
+    E --> F[与深海生物交流]
+    F --> G[成为深海守护者]`
+  },
+  {
+    name: '简单中文测试',
+    code: `graph TD
+    A[开始] --> B{判断？}
+    B --> C[结束：成功]`
+  }
 ];
 
-edgeCases.forEach((code, index) => {
-  console.log(`\nEdge case ${index + 1}:`);
-  console.log(`Original: ${code}`);
-  console.log(`Fixed: ${fixMermaidSyntax(code)}`);
+console.log('🧜‍♀️ Testing Mermaid Syntax Fix Function\n');
+console.log('='.repeat(60));
+
+testCases.forEach((testCase, index) => {
+  console.log(`\n📝 Test ${index + 1}: ${testCase.name}`);
+  console.log('-'.repeat(40));
+  
+  console.log('\n🔴 Original:');
+  console.log(testCase.code);
+  
+  const fixed = fixMermaidSyntax(testCase.code);
+  console.log('\n🟢 Fixed:');
+  console.log(fixed);
+  
+  console.log('\n📊 Analysis:');
+  const originalLines = testCase.code.split('\n').length;
+  const fixedLines = fixed.split('\n').length;
+  const hasChinese = /[\u4e00-\u9fff]/.test(testCase.code);
+  const hasQuotes = fixed.includes('"');
+  const hasSemicolons = testCase.code.includes(';');
+  const hasComments = testCase.code.includes('/*') || testCase.code.includes('//');
+  
+  console.log(`  • Contains Chinese: ${hasChinese ? '✅' : '❌'}`);
+  console.log(`  • Added quotes: ${hasQuotes ? '✅' : '❌'}`);
+  console.log(`  • Original had semicolons: ${hasSemicolons ? '✅' : '❌'}`);
+  console.log(`  • Original had comments: ${hasComments ? '✅' : '❌'}`);
+  console.log(`  • Lines: ${originalLines} → ${fixedLines}`);
+  
+  console.log('\n' + '='.repeat(60));
 });
+
+console.log('\n✅ All tests completed! Check the output above to verify fixes.');

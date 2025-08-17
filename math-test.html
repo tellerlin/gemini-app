@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI回复数学公式测试</title>
+    <style>
+        body { 
+            font-family: system-ui, sans-serif; 
+            max-width: 900px; 
+            margin: 0 auto; 
+            padding: 20px;
+            background: #f8f9fa;
+        }
+        .chat-container { 
+            background: white; 
+            border-radius: 12px; 
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .message { 
+            margin: 20px 0; 
+            padding: 15px; 
+            border-radius: 8px;
+        }
+        .user-message { 
+            background: #e3f2fd; 
+            border-left: 4px solid #2196f3;
+            margin-left: 20px;
+        }
+        .ai-message { 
+            background: #f1f8e9; 
+            border-left: 4px solid #4caf50;
+            margin-right: 20px;
+        }
+        .test-info {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+            color: #856404;
+        }
+        .math-test {
+            background: #f8f9ff;
+            border: 1px solid #c7d2fe;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+        }
+        .katex { font-size: 1.1em; }
+    </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+</head>
+<body>
+    <h1>🧮 AI回复数学公式渲染测试</h1>
+    
+    <div class="test-info">
+        <h3>📋 测试说明</h3>
+        <p>这个页面测试AI回复中复杂数学公式的渲染。我们会测试：</p>
+        <ul>
+            <li>✅ 各种LaTeX数学公式语法</li>
+            <li>✅ 块级和内联数学公式</li>
+            <li>✅ 复杂的数学表达式</li>
+            <li>✅ 特殊字符和符号</li>
+        </ul>
+    </div>
+
+    <div class="chat-container">
+        <div class="message user-message">
+            <h3>👤 用户</h3>
+            <p>请帮我解释一些复杂的数学公式，包括微积分、线性代数和概率论的内容。</p>
+        </div>
+
+        <div class="message ai-message">
+            <h3>🤖 AI助手</h3>
+            <div class="markdown-content">
+                <p>当然！我来为你解释一些重要的数学公式：</p>
+                
+                <div class="math-test">
+                    <h4>1. 微积分 - 导数和积分</h4>
+                    <p>导数的定义：$$f'(x) = \lim_{h \to 0} \frac{f(x+h) - f(x)}{h}$$</p>
+                    <p>基本积分公式：$$\int x^n dx = \frac{x^{n+1}}{n+1} + C, \quad n \neq -1$$</p>
+                    <p>分部积分：$$\int u \, dv = uv - \int v \, du$$</p>
+                </div>
+
+                <div class="math-test">
+                    <h4>2. 线性代数 - 矩阵和向量</h4>
+                    <p>矩阵乘法：$$(\mathbf{AB})_{ij} = \sum_{k=1}^{n} a_{ik}b_{kj}$$</p>
+                    <p>特征值方程：$$\mathbf{A}\mathbf{v} = \lambda\mathbf{v}$$</p>
+                    <p>行列式（2×2矩阵）：$$\det\begin{pmatrix} a & b \\ c & d \end{pmatrix} = ad - bc$$</p>
+                </div>
+
+                <div class="math-test">
+                    <h4>3. 概率论和统计</h4>
+                    <p>贝叶斯定理：$$P(A|B) = \frac{P(B|A)P(A)}{P(B)}$$</p>
+                    <p>正态分布密度函数：$$f(x) = \frac{1}{\sigma\sqrt{2\pi}} e^{-\frac{1}{2}\left(\frac{x-\mu}{\sigma}\right)^2}$$</p>
+                    <p>期望值：$$E[X] = \sum_{i} x_i P(X = x_i)$$ 或 $$E[X] = \int_{-\infty}^{\infty} x f(x) dx$$</p>
+                </div>
+
+                <div class="math-test">
+                    <h4>4. 复分析</h4>
+                    <p>欧拉公式：$$e^{i\theta} = \cos\theta + i\sin\theta$$</p>
+                    <p>柯西-黎曼方程：$$\frac{\partial u}{\partial x} = \frac{\partial v}{\partial y}, \quad \frac{\partial u}{\partial y} = -\frac{\partial v}{\partial x}$$</p>
+                </div>
+
+                <div class="math-test">
+                    <h4>5. 内联数学公式测试</h4>
+                    <p>在文本中，我们可以写内联公式，比如勾股定理 $a^2 + b^2 = c^2$，或者二次公式 $x = \frac{-b \pm \sqrt{b^2-4ac}}{2a}$。</p>
+                    <p>常见的数学常数：$\pi \approx 3.14159$，$e \approx 2.71828$，黄金比例 $\phi = \frac{1+\sqrt{5}}{2}$。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-info">
+        <h3>🔍 测试结果观察</h3>
+        <p>请观察上面的AI回复中数学公式是否正确渲染。如果公式显示正确，说明KaTeX工作正常；如果显示原始LaTeX代码或报错，说明需要调试数学公式渲染逻辑。</p>
+        <p><strong>预期结果：</strong>所有 $...$ 和 $$...$$ 应该渲染为美观的数学公式。</p>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            renderMathInElement(document.body, {
+                delimiters: [
+                    {left: "$$", right: "$$", display: true},
+                    {left: "$", right: "$", display: false}
+                ],
+                throwOnError: false
+            });
+            
+            // 测试结果状态
+            const testResult = document.createElement('div');
+            testResult.className = 'test-info';
+            testResult.innerHTML = `
+                <h3>🎯 客户端渲染测试状态</h3>
+                <p>✅ KaTeX已加载</p>
+                <p>✅ 数学公式已处理</p>
+                <p>📝 此页面使用客户端KaTeX渲染，实际应用中的渲染可能不同</p>
+                <p>🔧 需要检查ModernMarkdownRenderer组件的数学公式处理逻辑</p>
+            `;
+            document.body.appendChild(testResult);
+        });
+    </script>
+</body>
+</html>

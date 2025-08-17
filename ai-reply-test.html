@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI回复Mermaid测试</title>
+    <style>
+        body { 
+            font-family: system-ui, sans-serif; 
+            max-width: 800px; 
+            margin: 0 auto; 
+            padding: 20px;
+            background: #f8f9fa;
+        }
+        .chat-container { 
+            background: white; 
+            border-radius: 12px; 
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .message { 
+            margin: 20px 0; 
+            padding: 15px; 
+            border-radius: 8px;
+        }
+        .user-message { 
+            background: #e3f2fd; 
+            border-left: 4px solid #2196f3;
+            margin-left: 20px;
+        }
+        .ai-message { 
+            background: #f1f8e9; 
+            border-left: 4px solid #4caf50;
+            margin-right: 20px;
+        }
+        .markdown-content {
+            line-height: 1.6;
+        }
+        h3 { color: #333; margin: 10px 0; }
+        pre { 
+            background: #f5f5f5; 
+            padding: 15px; 
+            border-radius: 6px; 
+            overflow-x: auto;
+            border: 1px solid #ddd;
+        }
+        .test-info {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 20px 0;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <h1>🤖 AI回复Mermaid渲染测试</h1>
+    
+    <div class="test-info">
+        <h3>📋 测试说明</h3>
+        <p>这个页面模拟AI回复包含中文Mermaid图表的场景。我们会测试以下内容：</p>
+        <ul>
+            <li>✅ 用户询问创建流程图</li>
+            <li>✅ AI回复包含中文的Mermaid代码</li>
+            <li>✅ 验证OptimizedMermaidDiagram组件是否正确渲染</li>
+        </ul>
+    </div>
+
+    <div class="chat-container">
+        <div class="message user-message">
+            <h3>👤 用户</h3>
+            <p>你能帮我创建一个用户登录流程的Mermaid图吗？包含验证步骤和错误处理。</p>
+        </div>
+
+        <div class="message ai-message">
+            <h3>🤖 AI助手</h3>
+            <div class="markdown-content">
+                <p>当然可以！我来为你创建一个详细的用户登录流程图，包括验证步骤和错误处理机制：</p>
+                
+                <pre><code class="language-mermaid">graph TD
+    A[开始] --> B{用户输入登录信息?};
+    B --> C{验证凭据};
+    C --> D{凭据有效?};
+    D -- 是 --> E[登录成功];
+    D -- 否 --> F[显示错误消息];
+    F --> B; /* 循环回B，让用户重新尝试 */
+    E --> G[结束];</code></pre>
+
+                <p>这个流程图包含了完整的登录验证流程：</p>
+                <ul>
+                    <li><strong>输入阶段</strong>：用户输入登录信息</li>
+                    <li><strong>验证阶段</strong>：系统验证用户凭据</li>
+                    <li><strong>成功路径</strong>：凭据有效时直接登录成功</li>
+                    <li><strong>错误处理</strong>：凭据无效时显示错误并允许重新尝试</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-info">
+        <h3>🔍 测试结果观察</h3>
+        <p>请观察上面的AI回复中是否正确渲染了Mermaid流程图。如果看到正确的图表，说明修复成功；如果显示错误或"图表渲染失败"，说明还需要进一步调试。</p>
+    </div>
+
+    <script type="module">
+        // 模拟React应用的渲染逻辑
+        import { marked } from 'https://cdn.skypack.dev/marked';
+        
+        // 这里应该调用我们的ModernMarkdownRenderer组件
+        // 但为了简化测试，我们直接检查代码是否能被正确处理
+        
+        const mermaidCode = `graph TD
+    A[开始] --> B{用户输入登录信息?};
+    B --> C{验证凭据};
+    C --> D{凭据有效?};
+    D -- 是 --> E[登录成功];
+    D -- 否 --> F[显示错误消息];
+    F --> B; /* 循环回B，让用户重新尝试 */
+    E --> G[结束];`;
+
+        console.log('🧜‍♀️ Mermaid代码测试:');
+        console.log('原始代码:', mermaidCode);
+        
+        // 这里我们无法直接导入fixMermaidSyntax，但可以检查
+        // 在实际应用中，这段代码会通过OptimizedMermaidDiagram组件处理
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            const testResult = document.createElement('div');
+            testResult.className = 'test-info';
+            testResult.innerHTML = `
+                <h3>🎯 测试执行状态</h3>
+                <p>✅ 页面加载完成</p>
+                <p>✅ Mermaid代码已插入到AI回复中</p>
+                <p>🔄 在实际应用中，OptimizedMermaidDiagram组件会处理这段代码</p>
+                <p>📝 请在主应用 http://localhost:5173 中测试实际渲染效果</p>
+            `;
+            document.body.appendChild(testResult);
+        });
+    </script>
+</body>
+</html>

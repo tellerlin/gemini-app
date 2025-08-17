@@ -25,6 +25,46 @@ export function ModernMarkdownRenderer({
   enableExport = false,
   className 
 }: ModernMarkdownRendererProps) {
+
+  // 智能预处理 - 只处理代码块保护，不处理数学公式
+  const preprocessContent = (rawContent: string): string => {
+    try {
+      let processed = rawContent;
+      
+      // 1. 保护代码块，避免处理其中的$符号
+      const codeBlocks: string[] = [];
+      processed = processed.replace(/```[\s\S]*?```/g, (match) => {
+        codeBlocks.push(match);
+        return `__CODE_BLOCK_${codeBlocks.length - 1}__`;
+      });
+      
+      // 2. 保护内联代码
+      const inlineCodes: string[] = [];
+      processed = processed.replace(/`[^`]*?`/g, (match) => {
+        inlineCodes.push(match);
+        return `__INLINE_CODE_${inlineCodes.length - 1}__`;
+      });
+      
+      // 不再预处理数学公式 - 让remarkMath插件自动处理所有$...$和$$...$$
+      
+      // 3. 恢复代码块
+      codeBlocks.forEach((code, index) => {
+        processed = processed.replace(`__CODE_BLOCK_${index}__`, code);
+      });
+      
+      // 4. 恢复内联代码
+      inlineCodes.forEach((code, index) => {
+        processed = processed.replace(`__INLINE_CODE_${index}__`, code);
+      });
+      
+      return processed;
+    } catch (error) {
+      console.error('Preprocessing error:', error);
+      return rawContent;
+    }
+  };
+
+  const processedContent = preprocessContent(content);
   
   const components = {
     code({ node, inline, className, children, ...props }: any) {
@@ -148,11 +188,14 @@ export function ModernMarkdownRenderer({
   return (
     <div className={cn("prose prose-sm sm:prose-base max-w-none", className)}>
       <ReactMarkdown
-        remarkPlugins={[remarkGfm, remarkMath]}
+        remarkPlugins={[
+          remarkGfm, 
+          remarkMath  // 使用默认配置，自动支持 $...$ 和 $$...$$
+        ]}
         rehypePlugins={[rehypeKatex]}
         components={components}
       >
-        {content}
+        {processedContent}
       </ReactMarkdown>
     </div>
   );
