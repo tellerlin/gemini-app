@@ -8,7 +8,6 @@ export const GEMINI_MODELS: Array<{
   supportsVideo?: boolean;
   supportsPdf?: boolean;
   supportsLive?: boolean;
-  supportsImageGeneration?: boolean;
   supportsThinking?: boolean;
   supportsGrounding?: boolean;
   supportsUrlContext?: boolean;
@@ -55,18 +54,6 @@ export const GEMINI_MODELS: Array<{
     costTier: 'low',
   },
   {
-    id: 'gemini-2.0-flash',
-    name: 'Gemini 2.0 Flash',
-    description: 'Next-gen features with superior speed, native tool use, and 1M token context window',
-    supportsVision: true,
-    supportsAudio: true,
-    supportsVideo: true,
-    supportsGrounding: true,
-    supportsUrlContext: true,
-    maxTokens: 1000000,
-    costTier: 'medium',
-  },
-  {
     id: 'gemini-2.5-flash-live',
     name: 'Gemini 2.5 Flash Live',
     description: 'Low-latency bidirectional voice and video interactions with real-time processing',
@@ -77,61 +64,6 @@ export const GEMINI_MODELS: Array<{
     supportsThinking: true,
     maxTokens: 8192,
     costTier: 'high',
-  },
-  {
-    id: 'gemini-2.0-flash-preview-image-generation',
-    name: 'Gemini 2.0 Flash (Image Generation)',
-    description: 'Image generation and editing capabilities with text-to-image and image-to-image support',
-    supportsVision: true,
-    supportsAudio: false,
-    supportsVideo: false,
-    supportsImageGeneration: true,
-    maxTokens: 1000000,
-    costTier: 'medium',
-  },
-  {
-    id: 'imagen-4.0-generate-001',
-    name: 'Imagen 4.0 (Standard)',
-    description: 'Latest Imagen model for high-quality image generation with advanced controls',
-    supportsVision: false,
-    supportsAudio: false,
-    supportsVideo: false,
-    supportsImageGeneration: true,
-    maxTokens: 480, // Token limit for prompts
-    costTier: 'medium',
-  },
-  {
-    id: 'imagen-4.0-ultra-generate-001',
-    name: 'Imagen 4.0 Ultra',
-    description: 'Ultra high-quality Imagen model for professional image generation (1 image only)',
-    supportsVision: false,
-    supportsAudio: false,
-    supportsVideo: false,
-    supportsImageGeneration: true,
-    maxTokens: 480,
-    costTier: 'high',
-  },
-  {
-    id: 'imagen-4.0-fast-generate-001',
-    name: 'Imagen 4.0 Fast',
-    description: 'Fast Imagen model optimized for speed while maintaining quality',
-    supportsVision: false,
-    supportsAudio: false,
-    supportsVideo: false,
-    supportsImageGeneration: true,
-    maxTokens: 480,
-    costTier: 'low',
-  },
-  {
-    id: 'imagen-3.0-generate-002',
-    name: 'Imagen 3.0',
-    description: 'Previous generation Imagen model for reliable image generation',
-    supportsVision: false,
-    supportsAudio: false,
-    supportsVideo: false,
-    supportsImageGeneration: true,
-    maxTokens: 480,
-    costTier: 'low',
   },
 ];
 
@@ -154,7 +86,6 @@ export const getModelCapabilities = (modelId: string) => {
     supportsThinking: model.supportsThinking || false,
     supportsGrounding: model.supportsGrounding || false,
     supportsUrlContext: model.supportsUrlContext || false,
-    supportsImageGeneration: model.supportsImageGeneration || false,
     maxContextTokens: model.maxTokens || 32768,
   };
 };
@@ -253,30 +184,3 @@ export const getOptimalThinkingConfig = (messageContent: string, model: string) 
   return { enabled: true, budget: 15000 };
 };
 
-// Image generation model selection helper
-export const getOptimalImageModel = (prompt: string, requirements?: {
-  quality?: 'fast' | 'standard' | 'ultra';
-  artistic?: boolean;
-  conversational?: boolean;
-  speed?: 'fast' | 'normal';
-}) => {
-  const reqs = requirements || {};
-  
-  // Ultra quality for professional use
-  if (reqs.quality === 'ultra' || reqs.artistic) {
-    return 'imagen-4.0-ultra-generate-001';
-  }
-  
-  // Fast generation for quick iterations
-  if (reqs.speed === 'fast' || reqs.quality === 'fast') {
-    return 'imagen-4.0-fast-generate-001';
-  }
-  
-  // Conversational image generation with context
-  if (reqs.conversational) {
-    return 'gemini-2.0-flash-preview-image-generation';
-  }
-  
-  // Default standard quality
-  return 'imagen-4.0-generate-001';
-};

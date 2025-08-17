@@ -9,6 +9,12 @@ export function fixMermaidSyntax(mermaidCode: string): string {
   
   console.log('Fixing Mermaid syntax using official best practices, input:', fixed);
   
+  // Check if code is already properly formatted to avoid double-processing
+  if (fixed.includes('["') && fixed.includes('{"') && !fixed.includes(';')) {
+    console.log('Mermaid code appears already fixed, returning as-is');
+    return fixed;
+  }
+  
   // First, remove comments and clean up the code
   // Remove block comments /* ... */
   fixed = fixed.replace(/\/\*[\s\S]*?\*\//g, '');
@@ -94,8 +100,8 @@ export function fixMermaidSyntax(mermaidCode: string): string {
 }
 
 export interface ParsedSection {
-  type: 'text' | 'mermaid' | 'table' | 'chart' | 'math' | 'code';
-  content: string | TableRow[] | ChartDataPoint[];
+  type: 'text' | 'mermaid' | 'table' | 'math' | 'code';
+  content: string | TableRow[];
   config?: SectionConfig;
   startIndex: number;
   endIndex: number;
@@ -106,12 +112,6 @@ export interface SectionConfig {
   type?: string;
   language?: string;
   displayMode?: 'block' | 'inline';
-  xAxis?: string;
-  yAxis?: string;
-  series?: ChartSeries[];
-  title?: string;
-  height?: number;
-  width?: number;
 }
 
 export interface TableRow {
@@ -123,29 +123,6 @@ export interface TableData {
   data: TableRow[];
 }
 
-export interface ChartDataPoint {
-  [key: string]: string | number | undefined;
-}
-
-export interface ChartSeries {
-  name: string;
-  dataKey: string;
-  color?: string;
-  type?: 'line' | 'bar' | 'area';
-}
-
-export interface ChartData {
-  type: 'line' | 'bar' | 'pie' | 'area' | 'radar' | 'composed' | 'scatter';
-  data: ChartDataPoint[];
-  config: {
-    xAxis?: string;
-    yAxis?: string;
-    series?: ChartSeries[];
-    title?: string;
-    height?: number;
-    width?: number;
-  };
-}
 
 export function parseAIContent(content: string): ParsedSection[] {
   const sections: ParsedSection[] = [];
@@ -211,46 +188,11 @@ export function parseAIContent(content: string): ParsedSection[] {
     currentIndex = match.index + match[0].length;
   }
 
-  // Parse charts
-  const chartRegex = /```chart\n([\s\S]*?)\n```/g;
-  while ((match = chartRegex.exec(content)) !== null) {
-    // Add text before chart
-    if (match.index > currentIndex) {
-      sections.push({
-        type: 'text',
-        content: content.slice(currentIndex, match.index),
-        startIndex: currentIndex,
-        endIndex: match.index
-      });
-    }
 
-    try {
-      const chartData = JSON.parse(match[1]) as ChartData;
-      sections.push({
-        type: 'chart',
-        content: chartData.data,
-        config: { type: chartData.type, ...chartData.config },
-        startIndex: match.index,
-        endIndex: match.index + match[0].length
-      });
-    } catch (e) {
-      console.error('Failed to parse chart data:', e);
-      // Fallback to text
-      sections.push({
-        type: 'text',
-        content: match[0],
-        startIndex: match.index,
-        endIndex: match.index + match[0].length
-      });
-    }
-
-    currentIndex = match.index + match[0].length;
-  }
-
-  // Parse code blocks (excluding mermaid, table, chart)
+  // Parse code blocks (excluding mermaid, table)
   const codeRegex = /```(\w+)?\n([\s\S]*?)\n```/g;
   while ((match = codeRegex.exec(content)) !== null) {
-    // Skip if already processed as mermaid, table, or chart
+    // Skip if already processed as mermaid or table
     const isProcessed = sections.some(section => 
       section.startIndex === match.index && section.endIndex === match.index + match[0].length
     );
@@ -358,14 +300,12 @@ export function hasRichContent(sections: ParsedSection[]): boolean {
 export function getContentSummary(sections: ParsedSection[]): {
   hasDiagrams: boolean;
   hasTables: boolean;
-  hasCharts: boolean;
   hasMath: boolean;
   hasCode: boolean;
 } {
   return {
     hasDiagrams: sections.some(s => s.type === 'mermaid'),
     hasTables: sections.some(s => s.type === 'table'),
-    hasCharts: sections.some(s => s.type === 'chart'),
     hasMath: sections.some(s => s.type === 'math'),
     hasCode: sections.some(s => s.type === 'code'),
   };

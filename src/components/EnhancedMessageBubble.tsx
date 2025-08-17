@@ -67,6 +67,7 @@ export function EnhancedMessageBubble({
           isMobile={isMobile}
           enableCopy={true}
           enableExport={true}
+          isStreaming={isStreaming}
         />
       </RenderingErrorBoundary>
     );

@@ -1,4 +1,4 @@
-import { GoogleGenAI, Modality } from '@google/genai';
+import { GoogleGenAI } from '@google/genai';
 import type { Message, GroundingMetadata, UrlContextMetadata } from '../types/chat';
 import { loadEnvConfig } from '../utils/env';
 
@@ -22,6 +22,13 @@ export interface GeminiGenerationConfig {
     enabled?: boolean;
     budget?: number;
   };
+}
+
+// Response type that can contain both text and images with RAI info
+export interface GeminiResponse {
+  text?: string;
+  groundingMetadata?: GroundingMetadata;
+  urlContextMetadata?: UrlContextMetadata;
 }
 
 export interface GeminiTool {
@@ -50,6 +57,25 @@ export interface GeminiRequestConfig {
   };
 }
 
+// Simplified direct config pattern borrowed from examples
+export interface DirectGeminiConfig {
+  model: string;
+  contents: Array<{
+    role: 'user' | 'model';
+    parts: Array<{ text?: string; inlineData?: { mimeType: string; data: string } }>;
+  }>;
+  config?: {
+    temperature?: number;
+    topK?: number;
+    topP?: number;
+    maxOutputTokens?: number;
+    responseMimeType?: string;
+    tools?: GeminiTool[];
+    systemInstruction?: string;
+    thinkingConfig?: { thinkingBudget: number };
+  };
+}
+
 export interface ModelCapabilities {
   supportsThinking: boolean;
   supportsGrounding: boolean;
@@ -57,19 +83,6 @@ export interface ModelCapabilities {
   maxContextTokens: number;
 }
 
-export interface ImagenConfig {
-  numberOfImages?: number;
-  aspectRatio?: '1:1' | '3:4' | '4:3' | '9:16' | '16:9';
-  personGeneration?: string;
-  sampleImageSize?: '1K' | '2K';
-}
-
-export interface ImagenRequestConfig {
-  numberOfImages: number;
-  aspectRatio?: string;
-  personGeneration?: string;
-  sampleImageSize?: string;
-}
 
 /**
  * Enhanced Gemini Service with comprehensive error handling and timeout management
@@ -663,6 +676,7 @@ export class GeminiService {
     model: string,
     config?: GeminiGenerationConfig
   ): AsyncGenerator<string, void, unknown> {
+    
     const parts: GeminiContentPart[] = [{ text: message.content }];
     
     for (const file of message.files!) {
@@ -807,7 +821,7 @@ export class GeminiService {
   }
 
   /**
-   * Handle streaming text-only generation with conversation history
+   * Handle streaming text-only generation with simplified chat history (pattern from examples)
    * @private
    */
   private async* handleStreamingTextGeneration(
@@ -818,29 +832,24 @@ export class GeminiService {
   ): AsyncGenerator<string, void, unknown> {
     const lastMessage = messages[messages.length - 1];
     
+    
+    // Simplified config pattern from examples
+    const requestConfig = {
+      temperature: config?.generationConfig?.temperature ?? 0.7,
+      topK: config?.generationConfig?.topK ?? 40,
+      topP: config?.generationConfig?.topP ?? 0.95,
+      maxOutputTokens: config?.generationConfig?.maxOutputTokens ?? 1000000,
+      ...(config?.systemInstruction && { systemInstruction: config.systemInstruction }),
+      ...(model.includes('2.5') && {
+        thinkingConfig: {
+          thinkingBudget: config?.thinkingConfig?.enabled === false ? 0 : (config?.thinkingConfig?.budget ?? 10000),
+        }
+      }),
+    };
+    
     if (messages.length === 1) {
-      // Single message - use generateContentStream
+      // Single message - direct generation pattern from examples
       console.log('📝 Single message streaming generation');
-      
-      // Merge config with defaults
-      const generationConfig = {
-        temperature: config?.generationConfig?.temperature ?? 0.7,
-        topK: config?.generationConfig?.topK ?? 40,
-        topP: config?.generationConfig?.topP ?? 0.95,
-        maxOutputTokens: config?.generationConfig?.maxOutputTokens ?? 1000000,
-      };
-
-      const requestConfig: GeminiRequestConfig = {
-        ...generationConfig,
-        ...(config?.systemInstruction && {
-          systemInstruction: config.systemInstruction
-        }),
-        ...(model.includes('2.5') && {
-          thinkingConfig: {
-            thinkingBudget: config?.thinkingConfig?.enabled === false ? 0 : (config?.thinkingConfig?.budget ?? 10000),
-          }
-        }),
-      };
       
       const response = await ai.models.generateContentStream({
         model,
@@ -849,68 +858,33 @@ export class GeminiService {
       });
 
       for await (const chunk of response) {
-        // Check if generation was aborted
-        if (this.currentAbortController?.signal.aborted) {
-          break;
-        }
-        
-        if (chunk.text) {
-          yield chunk.text;
-        }
+        if (this.currentAbortController?.signal.aborted) break;
+        if (chunk.text) yield chunk.text;
       }
     } else {
-      // Updated for @google/genai v1.14.0 - proper history format with validation
-      const history = messages.slice(0, -1).map((msg) => ({
-        role: msg.role === 'assistant' ? 'model' as const : 'user' as const,
-        parts: [{ text: msg.content || '' }], // Ensure content is never empty
-      })).filter(msg => msg.parts[0].text.trim() !== ''); // Filter out empty messages
+      // Multi-turn conversation using SDK built-in chat pattern (from examples)
+      const history = messages.slice(0, -1)
+        .map(msg => ({
+          role: msg.role === 'assistant' ? 'model' as const : 'user' as const,
+          parts: [{ text: msg.content || '' }]
+        }))
+        .filter(msg => msg.parts[0].text.trim() !== '');
 
-      console.log(`📚 Chat history: ${history.length} messages`);
+      console.log(`📚 Chat with ${history.length} history messages (SDK pattern)`);
       
-      // Merge config with defaults
-      const generationConfig = {
-        temperature: config?.generationConfig?.temperature ?? 0.7,
-        topK: config?.generationConfig?.topK ?? 40,
-        topP: config?.generationConfig?.topP ?? 0.95,
-        maxOutputTokens: config?.generationConfig?.maxOutputTokens ?? 1000000,
-      };
+      // Use SDK's built-in chat creation pattern from examples
+      const chat = ai.chats.create({ model, history, config: requestConfig });
 
-      const requestConfig: GeminiRequestConfig = {
-        ...generationConfig,
-        ...(config?.systemInstruction && {
-          systemInstruction: config.systemInstruction
-        }),
-        ...(model.includes('2.5') && {
-          thinkingConfig: {
-            thinkingBudget: config?.thinkingConfig?.enabled === false ? 0 : (config?.thinkingConfig?.budget ?? 10000),
-          }
-        }),
-      };
-      
-      const chat = ai.chats.create({
-        model,
-        history,
-        config: requestConfig
-      });
-
-      // Updated for @google/genai v1.14.0 - use object with message property and validation
-      if (!lastMessage.content || lastMessage.content.trim() === '') {
+      if (!lastMessage.content?.trim()) {
         throw new Error('Message content cannot be empty');
       }
       
-      const response = await chat.sendMessageStream({
-        message: lastMessage.content.trim()
-      });
+      // Simplified message sending pattern from examples
+      const response = await chat.sendMessageStream({ message: lastMessage.content.trim() });
       
       for await (const chunk of response) {
-        // Check if generation was aborted
-        if (this.currentAbortController?.signal.aborted) {
-          break;
-        }
-        
-        if (chunk.text) {
-          yield chunk.text;
-        }
+        if (this.currentAbortController?.signal.aborted) break;
+        if (chunk.text) yield chunk.text;
       }
     }
   }
@@ -923,8 +897,9 @@ export class GeminiService {
    */
   async generateResponse(
     messages: Message[],
-    model: string = 'gemini-2.5-flash'
-  ): Promise<string> {
+    model: string = 'gemini-2.5-flash',
+    config?: GeminiGenerationConfig
+  ): Promise<string | GeminiResponse> {
     // Validate prerequisites
     if (this.apiKeys.length === 0) {
       const error = new Error('No API keys available. Please set API keys first.');
@@ -950,7 +925,7 @@ export class GeminiService {
       try {
         console.log(`🔄 Attempting with API key ${this.currentKeyIndex + 1}/${this.apiKeys.length}`);
         this.totalRequests++;
-        const result = await this.executeGenerationWithRetries(messages, model);
+        const result = await this.executeGenerationWithRetries(messages, model, config);
         
         // Track success
         this.trackKeySuccess(this.currentKeyIndex);
@@ -995,7 +970,7 @@ export class GeminiService {
    * Execute generation with retries for a single API key
    * @private
    */
-  private async executeGenerationWithRetries(messages: Message[], model: string): Promise<string> {
+  private async executeGenerationWithRetries(messages: Message[], model: string, config?: GeminiGenerationConfig): Promise<string | GeminiResponse> {
     let attempt = 0;
     let lastError: Error | null = null;
 
@@ -1004,7 +979,7 @@ export class GeminiService {
       console.log(`🔄 Retry attempt ${attempt}/${this.MAX_RETRIES} for current API key`);
 
       try {
-        const result = await this.executeGeneration(messages, model);
+        const result = await this.executeGeneration(messages, model, config);
         return result;
       } catch (error) {
         lastError = error as Error;
@@ -1036,7 +1011,7 @@ export class GeminiService {
    * Updated for new @google/genai SDK architecture
    * @private
    */
-  private async executeGeneration(messages: Message[], model: string): Promise<string> {
+  private async executeGeneration(messages: Message[], model: string, config?: GeminiGenerationConfig): Promise<string | GeminiResponse> {
     const ai = this.createGenAI();
     const lastMessage = messages[messages.length - 1];
     
@@ -1051,13 +1026,13 @@ export class GeminiService {
       if (lastMessage.files && lastMessage.files.length > 0) {
         console.log(`📎 Processing ${lastMessage.files.length} file attachments`);
         return await Promise.race([
-          this.handleMultimodalGeneration(ai, lastMessage, model),
+          this.handleMultimodalGeneration(ai, lastMessage, model, config),
           timeoutPromise
         ]);
       } else {
         console.log('💬 Processing text-only conversation');
         return await Promise.race([
-          this.handleTextGeneration(ai, messages, model),
+          this.handleTextGeneration(ai, messages, model, config),
           timeoutPromise
         ]);
       }
@@ -1075,8 +1050,10 @@ export class GeminiService {
   private async handleMultimodalGeneration(
     ai: GoogleGenAI, 
     message: Message,
-    model: string
-  ): Promise<string> {
+    model: string,
+    config?: GeminiGenerationConfig
+  ): Promise<string | GeminiResponse> {
+    
     const parts: GeminiContentPart[] = [{ text: message.content }];
     
     for (const file of message.files!) {
@@ -1208,203 +1185,114 @@ export class GeminiService {
   }
 
   /**
-   * Handle text-only generation with conversation history
-   * Updated for new @google/genai SDK
+   * Handle text-only generation with simplified chat history pattern (from examples)
    * @private
    */
   private async handleTextGeneration(
     ai: GoogleGenAI, 
     messages: Message[],
-    model: string
-  ): Promise<string> {
+    model: string,
+    config?: GeminiGenerationConfig
+  ): Promise<string | GeminiResponse> {
+    
     const lastMessage = messages[messages.length - 1];
     
+    // Simplified configuration pattern from examples
+    const requestConfig = {
+      temperature: 0.7,
+      topK: 40,
+      topP: 0.95,
+      maxOutputTokens: 1000000,
+      ...(model.includes('2.5') && {
+        thinkingConfig: { thinkingBudget: 10000 }
+      }),
+      systemInstruction: "You are a helpful assistant. Please provide accurate and detailed responses.",
+    };
+    
     if (messages.length === 1) {
-      // Single message - use generateContent
+      // Single message generation (pattern from examples)
       console.log('📝 Single message generation');
       const response = await ai.models.generateContent({
         model,
         contents: [{ role: 'user', parts: [{ text: lastMessage.content }] }],
-        config: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 1000000,
-          // 新的2.5模型思考功能配置
-          ...(model.includes('2.5') && {
-            thinkingConfig: {
-              thinkingBudget: 10000,
-            }
-          }),
-          systemInstruction: "You are a helpful assistant. Please provide accurate and detailed responses.",
-        }
+        config: requestConfig
       });
       return response.text;
     } else {
-      // Updated for @google/genai v1.14.0 - proper history format with validation
-      const history = messages.slice(0, -1).map((msg) => ({
-        role: msg.role === 'assistant' ? 'model' as const : 'user' as const,
-        parts: [{ text: msg.content || '' }], // Ensure content is never empty
-      })).filter(msg => msg.parts[0].text.trim() !== ''); // Filter out empty messages
+      // Multi-turn conversation using SDK chat pattern (simplified from examples)
+      const history = messages.slice(0, -1)
+        .map(msg => ({
+          role: msg.role === 'assistant' ? 'model' as const : 'user' as const,
+          parts: [{ text: msg.content || '' }]
+        }))
+        .filter(msg => msg.parts[0].text.trim() !== '');
 
       console.log(`📚 Chat history: ${history.length} messages`);
       
-      const chat = ai.chats.create({
-        model,
-        history,
-        config: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 1000000,
-          // 新的2.5模型思考功能配置
-          ...(model.includes('2.5') && {
-            thinkingConfig: {
-              thinkingBudget: 10000,
-            }
-          }),
-          systemInstruction: "You are a helpful assistant. Please provide accurate and detailed responses.",
-        }
-      });
-      // Updated for @google/genai v1.14.0 - use object with message property and validation
-      if (!lastMessage.content || lastMessage.content.trim() === '') {
+      // SDK built-in chat creation (pattern from examples)
+      const chat = ai.chats.create({ model, history, config: requestConfig });
+      
+      if (!lastMessage.content?.trim()) {
         throw new Error('Message content cannot be empty');
       }
       
-      const response = await chat.sendMessage({
-        message: lastMessage.content.trim()
-      });
+      // Simplified message sending (pattern from examples)
+      const response = await chat.sendMessage({ message: lastMessage.content.trim() });
       return response.text;
     }
   }
 
   /**
-   * Categorize and log errors with detailed information
-   * Enhanced for 2025 with more intelligent error handling
+   * Simplified error categorization inspired by Google examples
    * @private
    */
   private categorizeAndLogError(error: Error): void {
-    const errorInfo = {
+    const timestamp = new Date().toISOString();
+    const errorContext = {
       message: error.message,
       name: error.name,
-      stack: error.stack,
-      timestamp: new Date().toISOString(),
-      keyIndex: this.currentKeyIndex,
-      totalKeys: this.apiKeys.length
+      keyIndex: this.currentKeyIndex + 1,
+      totalKeys: this.apiKeys.length,
+      timestamp
     };
 
-    // Enhanced error categorization with 2025 patterns and ContentUnion specific errors
-    if (error.message.includes('ContentUnion') || error.message.includes('content') && error.message.includes('required')) {
-      console.error('📝 CONTENT VALIDATION ERROR:', {
-        ...errorInfo,
-        category: 'CONTENT_VALIDATION',
-        severity: 'high',
-        retryable: false,
-        suggestedAction: 'Check message content format and ensure all content is non-empty'
-      });
-    } else if (error.message.includes('timeout') || error.message.includes('TIMEOUT')) {
-      console.error('⏰ TIMEOUT ERROR:', {
-        ...errorInfo,
-        category: 'TIMEOUT',
-        severity: 'medium',
-        retryable: true,
-        suggestedAction: 'Increase timeout or check network connection'
-      });
-    } else if (error.message.includes('API_KEY') || error.message.includes('401') || error.message.includes('unauthorized') || error.message.includes('PERMISSION_DENIED')) {
-      console.error('🔑 AUTHENTICATION ERROR:', {
-        ...errorInfo,
-        category: 'AUTH',
-        severity: 'high',
-        retryable: false,
-        suggestedAction: 'Check API key validity and permissions'
-      });
-    } else if (error.message.includes('quota') || error.message.includes('429') || error.message.includes('rate limit') || error.message.includes('RESOURCE_EXHAUSTED')) {
-      console.error('📊 QUOTA/RATE LIMIT ERROR:', {
-        ...errorInfo,
-        category: 'QUOTA',
-        severity: 'medium',
-        retryable: true,
-        suggestedAction: 'Use multiple API keys or reduce request frequency'
-      });
-    } else if (error.message.includes('network') || error.message.includes('fetch') || error.message.includes('ENOTFOUND') || error.message.includes('UNAVAILABLE')) {
-      console.error('🌐 NETWORK ERROR:', {
-        ...errorInfo,
-        category: 'NETWORK',
-        severity: 'medium',
-        retryable: true,
-        suggestedAction: 'Check internet connection and proxy settings'
-      });
-    } else if (error.message.includes('400') || error.message.includes('invalid') || error.message.includes('malformed') || error.message.includes('INVALID_ARGUMENT')) {
-      console.error('📝 REQUEST ERROR:', {
-        ...errorInfo,
-        category: 'REQUEST',
-        severity: 'high',
-        retryable: false,
-        suggestedAction: 'Check request format and parameters'
-      });
-    } else if (error.message.includes('500') || error.message.includes('503') || error.message.includes('502') || error.message.includes('INTERNAL') || error.message.includes('DEADLINE_EXCEEDED')) {
-      console.error('🔧 SERVER ERROR:', {
-        ...errorInfo,
-        category: 'SERVER',
-        severity: 'medium',
-        retryable: true,
-        suggestedAction: 'Server issues - retry with exponential backoff'
-      });
-    } else if (error.message.includes('model') || error.message.includes('MODEL') || error.message.includes('NOT_FOUND')) {
-      console.error('🤖 MODEL ERROR:', {
-        ...errorInfo,
-        category: 'MODEL',
-        severity: 'medium',
-        retryable: false,
-        suggestedAction: 'Check model availability and name'
-      });
-    } else if (error.message.includes('safety') || error.message.includes('SAFETY') || error.message.includes('blocked')) {
-      console.error('🛡️ SAFETY ERROR:', {
-        ...errorInfo,
-        category: 'SAFETY',
-        severity: 'low',
-        retryable: false,
-        suggestedAction: 'Content was blocked by safety filters - modify the input'
-      });
-    } else {
-      console.error('❓ UNKNOWN ERROR:', {
-        ...errorInfo,
-        category: 'UNKNOWN',
-        severity: 'low',
-        retryable: true,
-        suggestedAction: 'Generic retry with different API key'
-      });
-    }
+    // Simplified error patterns inspired by examples
+    const errorTypes = [
+      { pattern: /contentunion|content.*required/i, type: 'CONTENT_VALIDATION', emoji: '📝', retryable: false },
+      { pattern: /timeout/i, type: 'TIMEOUT', emoji: '⏰', retryable: true },
+      { pattern: /api_key|401|unauthorized|permission_denied/i, type: 'AUTH', emoji: '🔑', retryable: false },
+      { pattern: /quota|429|rate.*limit|resource_exhausted/i, type: 'QUOTA', emoji: '📊', retryable: true },
+      { pattern: /network|fetch|enotfound|unavailable/i, type: 'NETWORK', emoji: '🌐', retryable: true },
+      { pattern: /400|invalid|malformed|invalid_argument/i, type: 'REQUEST', emoji: '📝', retryable: false },
+      { pattern: /5\d\d|internal|deadline_exceeded/i, type: 'SERVER', emoji: '🔧', retryable: true },
+      { pattern: /model|not_found/i, type: 'MODEL', emoji: '🤖', retryable: false },
+      { pattern: /safety|blocked/i, type: 'SAFETY', emoji: '🛡️', retryable: false }
+    ];
+
+    const errorType = errorTypes.find(et => et.pattern.test(error.message)) || 
+      { type: 'UNKNOWN', emoji: '❓', retryable: true };
+
+    // Concise logging pattern from examples
+    console.error(`${errorType.emoji} ${errorType.type} ERROR:`, {
+      ...errorContext,
+      retryable: errorType.retryable
+    });
   }
 
   /**
-   * Determine if an error should not be retried
-   * Enhanced logic for 2025 error patterns
+   * Simplified error retry logic pattern from examples
    * @private
    */
   private isNonRetryableError(error: Error): boolean {
     const nonRetryablePatterns = [
-      'API_KEY',
-      '401',
-      '400',
-      'invalid',
-      'malformed',
-      'unauthorized',
-      'MODEL',
-      'model not found',
-      'unsupported model',
-      'PERMISSION_DENIED',
-      'INVALID_ARGUMENT',
-      'NOT_FOUND',
-      'safety',
-      'SAFETY',
-      'blocked'
+      /api_key|401|unauthorized|permission_denied/i,
+      /400|invalid|malformed|invalid_argument/i,
+      /model.*not.*found|not_found/i,
+      /safety|blocked/i,
+      /contentunion|content.*required/i
     ];
 
-    const errorMessage = error.message.toLowerCase();
-    return nonRetryablePatterns.some(pattern => 
-      errorMessage.includes(pattern.toLowerCase())
-    );
+    return nonRetryablePatterns.some(pattern => pattern.test(error.message));
   }
 
   /**
@@ -2040,434 +1928,11 @@ export class GeminiService {
     }
   }
 
-  /**
-   * Generate images using Imagen with advanced configuration
-   * Supports Imagen 4.0 and enhanced parameters
-   * @param messages - Array of conversation messages
-   * @param model - Image generation model (defaults to imagen-4.0-generate-001)
-   * @param imageConfig - Image generation configuration
-   * @returns Promise<{ text?: string; images?: string[] }> - Text response and generated images as base64
-   */
-  async generateImageWithImagen(
-    messages: Message[],
-    model: string = 'imagen-4.0-generate-001',
-    imageConfig?: ImagenConfig
-  ): Promise<{ text?: string; images?: string[] }> {
-    // Validate prerequisites
-    if (this.apiKeys.length === 0) {
-      const error = new Error('No API keys available. Please set API keys first.');
-      console.error('❌ API Key Error:', error.message);
-      throw error;
-    }
 
-    if (!messages || messages.length === 0) {
-      const error = new Error('No messages provided for image generation');
-      console.error('❌ Input Validation Error:', error.message);
-      throw error;
-    }
 
-    console.log(`🎨 Starting Imagen generation with model: ${model}`);
-    console.log(`📝 Processing ${messages.length} messages`);
 
-    let lastError: Error | null = null;
-    const initialKeyIndex = this.currentKeyIndex;
 
-    // Try each API key until one succeeds
-    do {
-      try {
-        console.log(`🔄 Attempting Imagen generation with API key ${this.currentKeyIndex + 1}/${this.apiKeys.length}`);
-        this.totalRequests++;
-        
-        const result = await this.executeImagenGeneration(messages, model, imageConfig);
-        
-        // Track success
-        this.trackKeySuccess(this.currentKeyIndex);
-        console.log('✅ Imagen generation successful');
-        return result;
-      } catch (error) {
-        lastError = error as Error;
-        this.totalErrors++;
-        
-        // Track error for current key
-        this.trackKeyError(this.currentKeyIndex, (error as Error).message);
-        
-        console.error(`❌ Imagen generation API key ${this.currentKeyIndex + 1} failed:`, {
-          error: error instanceof Error ? error.message : 'Unknown error',
-          type: error instanceof Error ? error.constructor.name : 'Unknown'
-        });
 
-        // Move to next key
-        this.moveToNextKey();
-
-        // If we've tried all keys, break
-        if (this.currentKeyIndex === initialKeyIndex) {
-          console.log('💥 All API keys failed for Imagen generation');
-          break;
-        }
-      }
-    } while (this.currentKeyIndex !== initialKeyIndex);
-
-    // All API keys exhausted
-    console.error('💥 All API keys failed for Imagen generation');
-    throw lastError || new Error('Failed to generate images with Imagen using any API key');
-  }
-
-  /**
-   * Execute Imagen generation with timeout handling
-   * @private
-   */
-  private async executeImagenGeneration(
-    messages: Message[], 
-    model: string,
-    imageConfig?: ImagenConfig
-  ): Promise<{ text?: string; images?: string[] }> {
-    const ai = this.createGenAI();
-    const lastMessage = messages[messages.length - 1];
-    
-    // Create timeout promise
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => {
-        reject(new Error(`Imagen generation timeout after ${this.DEFAULT_TIMEOUT}ms`));
-      }, this.DEFAULT_TIMEOUT);
-    });
-
-    try {
-      const result = await Promise.race([
-        this.handleImagenGeneration(ai, lastMessage, model, imageConfig),
-        timeoutPromise
-      ]);
-      return result;
-    } catch (error) {
-      this.categorizeAndLogError(error as Error);
-      throw error;
-    }
-  }
-
-  /**
-   * Handle Imagen generation with advanced configuration
-   * @private
-   */
-  private async handleImagenGeneration(
-    ai: GoogleGenAI,
-    message: Message,
-    model: string,
-    imageConfig?: ImagenConfig
-  ): Promise<{ text?: string; images?: string[] }> {
-    console.log(`🎨 Using Imagen model: ${model}`);
-    
-    // Build Imagen request config
-    const imagenConfig: ImagenRequestConfig = {
-      numberOfImages: imageConfig?.numberOfImages || 1,
-      ...(imageConfig?.aspectRatio && { aspectRatio: imageConfig.aspectRatio }),
-      ...(imageConfig?.personGeneration && { personGeneration: imageConfig.personGeneration }),
-    };
-
-    // Add sampleImageSize for models that support it
-    if (model.includes('imagen-4.0') && !model.includes('fast')) {
-      imagenConfig.sampleImageSize = imageConfig?.sampleImageSize || '1K';
-    }
-
-    console.log(`🔧 Imagen config:`, imagenConfig);
-    
-    const response = await ai.models.generateImages({
-      model,
-      prompt: message.content,
-      config: imagenConfig
-    });
-
-    // Extract images from response
-    const images: string[] = [];
-    if (response.generatedImages && response.generatedImages.length > 0) {
-      for (const generatedImage of response.generatedImages) {
-        if (generatedImage.image && generatedImage.image.imageBytes) {
-          images.push(generatedImage.image.imageBytes);
-          console.log('🖼️ Imagen image generated successfully');
-        }
-      }
-    }
-
-    if (images.length === 0) {
-      throw new Error('No images generated by Imagen');
-    }
-
-    return {
-      text: `Generated ${images.length} image${images.length > 1 ? 's' : ''} using ${model}`,
-      images
-    };
-  }
-
-  /**
-   * Generate images with intelligent model selection
-   * Enhanced for 2025 with automatic model optimization based on requirements
-   * @param messages - Array of conversation messages
-   * @param imageRequirements - Image generation requirements
-   * @returns Promise<{ text?: string; images?: string[] }> - Text response and generated images as base64
-   */
-  async generateImageWithIntelligentSelection(
-    messages: Message[],
-    imageRequirements?: {
-      quality?: 'fast' | 'standard' | 'ultra';
-      artistic?: boolean;
-      conversational?: boolean;
-      speed?: 'fast' | 'normal';
-      numberOfImages?: number;
-      aspectRatio?: '1:1' | '3:4' | '4:3' | '9:16' | '16:9';
-    }
-  ): Promise<{ text?: string; images?: string[] }> {
-    // Validate prerequisites
-    if (this.apiKeys.length === 0) {
-      const error = new Error('No API keys available. Please set API keys first.');
-      console.error('❌ API Key Error:', error.message);
-      throw error;
-    }
-
-    if (!messages || messages.length === 0) {
-      const error = new Error('No messages provided for image generation');
-      console.error('❌ Input Validation Error:', error.message);
-      throw error;
-    }
-
-    const lastMessage = messages[messages.length - 1];
-    const requirements = imageRequirements || {};
-    
-    // Import helper functions
-    const { getOptimalImageModel } = await import('../config/gemini');
-    
-    // Determine optimal model based on requirements and prompt content
-    const selectedModel = getOptimalImageModel(lastMessage.content, requirements);
-    
-    console.log(`🎨 Starting intelligent image generation with model: ${selectedModel}`);
-    console.log(`📝 Requirements:`, requirements);
-    console.log(`🎯 Selected model based on: quality=${requirements.quality}, speed=${requirements.speed}, conversational=${requirements.conversational}`);
-
-    let lastError: Error | null = null;
-    const initialKeyIndex = this.currentKeyIndex;
-
-    // Try each API key until one succeeds
-    do {
-      try {
-        console.log(`🔄 Attempting image generation with API key ${this.currentKeyIndex + 1}/${this.apiKeys.length}`);
-        this.totalRequests++;
-        
-        let result;
-        
-        // Use appropriate generation method based on model type
-        if (selectedModel.startsWith('imagen-')) {
-          // Use Imagen API with enhanced configuration
-          const imagenConfig = {
-            numberOfImages: requirements.numberOfImages || 1,
-            ...(requirements.aspectRatio && { aspectRatio: requirements.aspectRatio }),
-            ...(selectedModel.includes('4.0') && !selectedModel.includes('fast') && {
-              sampleImageSize: requirements.quality === 'ultra' ? '2K' : '1K'
-            }),
-          };
-          
-          result = await this.executeImagenGeneration(messages, selectedModel, imagenConfig);
-        } else {
-          // Use Gemini native image generation
-          result = await this.executeImageGeneration(messages, selectedModel);
-        }
-        
-        // Track success
-        this.trackKeySuccess(this.currentKeyIndex);
-        console.log('✅ Intelligent image generation successful');
-        return result;
-      } catch (error) {
-        lastError = error as Error;
-        this.totalErrors++;
-        
-        // Track error for current key
-        this.trackKeyError(this.currentKeyIndex, (error as Error).message);
-        
-        console.error(`❌ Image generation API key ${this.currentKeyIndex + 1} failed:`, {
-          error: error instanceof Error ? error.message : 'Unknown error',
-          type: error instanceof Error ? error.constructor.name : 'Unknown'
-        });
-
-        // Move to next key
-        this.moveToNextKey();
-
-        // If we've tried all keys, break
-        if (this.currentKeyIndex === initialKeyIndex) {
-          console.log('💥 All API keys failed for image generation');
-          break;
-        }
-      }
-    } while (this.currentKeyIndex !== initialKeyIndex);
-
-    // All API keys exhausted
-    console.error('💥 All API keys failed for image generation');
-    throw lastError || new Error('Failed to generate images with any API key');
-  }
-  async generateImageContent(
-    messages: Message[],
-    model: string = 'gemini-2.0-flash-preview-image-generation'
-  ): Promise<{ text?: string; images?: string[] }> {
-    // Validate prerequisites
-    if (this.apiKeys.length === 0) {
-      const error = new Error('No API keys available. Please set API keys first.');
-      console.error('❌ API Key Error:', error.message);
-      throw error;
-    }
-
-    if (!messages || messages.length === 0) {
-      const error = new Error('No messages provided for image generation');
-      console.error('❌ Input Validation Error:', error.message);
-      throw error;
-    }
-
-    console.log(`🎨 Starting image generation with model: ${model}`);
-    console.log(`📝 Processing ${messages.length} messages`);
-
-    let lastError: Error | null = null;
-    const initialKeyIndex = this.currentKeyIndex;
-
-    // Try each API key until one succeeds
-    do {
-      try {
-        console.log(`🔄 Attempting image generation with API key ${this.currentKeyIndex + 1}/${this.apiKeys.length}`);
-        this.totalRequests++;
-        
-        const result = await this.executeImageGeneration(messages, model);
-        
-        // Track success
-        this.trackKeySuccess(this.currentKeyIndex);
-        console.log('✅ Image generation successful');
-        return result;
-      } catch (error) {
-        lastError = error as Error;
-        this.totalErrors++;
-        
-        // Track error for current key
-        this.trackKeyError(this.currentKeyIndex, (error as Error).message);
-        
-        console.error(`❌ Image generation API key ${this.currentKeyIndex + 1} failed:`, {
-          error: error instanceof Error ? error.message : 'Unknown error',
-          type: error instanceof Error ? error.constructor.name : 'Unknown'
-        });
-
-        // Move to next key
-        this.moveToNextKey();
-
-        // If we've tried all keys, break
-        if (this.currentKeyIndex === initialKeyIndex) {
-          console.log('💥 All API keys failed for image generation');
-          break;
-        }
-      }
-    } while (this.currentKeyIndex !== initialKeyIndex);
-
-    // All API keys exhausted
-    console.error('💥 All API keys failed for image generation');
-    throw lastError || new Error('Failed to generate images with any API key');
-  }
-
-  /**
-   * Execute image generation with timeout handling
-   * @private
-   */
-  private async executeImageGeneration(
-    messages: Message[], 
-    model: string
-  ): Promise<{ text?: string; images?: string[] }> {
-    const ai = this.createGenAI();
-    const lastMessage = messages[messages.length - 1];
-    
-    // Create timeout promise
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      setTimeout(() => {
-        reject(new Error(`Image generation timeout after ${this.DEFAULT_TIMEOUT}ms`));
-      }, this.DEFAULT_TIMEOUT);
-    });
-
-    try {
-      const result = await Promise.race([
-        this.handleImageGeneration(ai, lastMessage, model),
-        timeoutPromise
-      ]);
-      return result;
-    } catch (error) {
-      this.categorizeAndLogError(error as Error);
-      throw error;
-    }
-  }
-
-  /**
-   * Handle image generation (text-to-image or image-to-image)
-   * @private
-   */
-  private async handleImageGeneration(
-    ai: GoogleGenAI,
-    message: Message,
-    model: string
-  ): Promise<{ text?: string; images?: string[] }> {
-    const parts: GeminiContentPart[] = [{ text: message.content }];
-    
-    // Add any input images for image-to-image generation
-    if (message.files && message.files.length > 0) {
-      for (const file of message.files) {
-        if (file.type.startsWith('image/')) {
-          console.log(`🖼️ Adding input image for editing: ${file.name} (${file.type})`);
-          
-          if (!file.data) {
-            throw new Error(`Image data missing for file: ${file.name}`);
-          }
-
-          const base64Data = file.data.includes(',') 
-            ? file.data.split(',')[1] 
-            : file.data;
-
-          parts.push({
-            inlineData: {
-              mimeType: file.type,
-              data: base64Data,
-            },
-          });
-        }
-      }
-    }
-
-    console.log(`🎨 Generating images with ${parts.length} parts`);
-    
-    // Use image generation model with response modalities
-    const response = await ai.models.generateContent({
-      model,
-      contents: [{ role: 'user', parts }],
-      config: {
-        responseModalities: [Modality.TEXT, Modality.IMAGE],
-      },
-      generationConfig: {
-        temperature: 0.7,
-        maxOutputTokens: 1000000,
-      }
-    });
-
-    // Extract text and images from response
-    const result: { text?: string; images?: string[] } = {};
-    const images: string[] = [];
-    
-    if (response.candidates && response.candidates[0] && response.candidates[0].content.parts) {
-      for (const part of response.candidates[0].content.parts) {
-        if (part.text) {
-          result.text = part.text;
-        } else if (part.inlineData) {
-          // Generated image data
-          console.log('🖼️ Image generated successfully');
-          images.push(part.inlineData.data);
-        }
-      }
-    }
-    
-    if (images.length > 0) {
-      result.images = images;
-    }
-
-    if (!result.text && (!result.images || result.images.length === 0)) {
-      throw new Error('Empty response received from Gemini image generation API');
-    }
-
-    return result;
-  }
 
   /**
    * Analyze URLs with context understanding

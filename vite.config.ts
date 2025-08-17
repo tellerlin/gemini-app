@@ -15,7 +15,6 @@ export default defineConfig({
           'vendor-react': ['react', 'react-dom'],
           'vendor-gemini': ['@google/genai'],
           'vendor-ui': ['lucide-react', 'clsx', 'react-hot-toast'],
-          'vendor-charts': ['recharts', 'reactflow'],
           'vendor-markdown': ['react-markdown', 'react-syntax-highlighter', 'remark-gfm'],
           'vendor-math': ['katex', 'react-katex'],
           'vendor-table': ['@tanstack/react-table'],

@@ -1,9 +1,7 @@
 import React, { useState, useLayoutEffect, useRef } from 'react';
 import mermaid from 'mermaid';
-import { Download, ZoomIn, ZoomOut, FileDown, AlertCircle } from 'lucide-react';
+import { Download, ZoomIn, ZoomOut, AlertCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
 import { cn } from '../utils/cn';
 import { fixMermaidSyntax } from '../utils/contentParser';
 
@@ -158,7 +156,7 @@ export function OptimizedMermaidDiagram({
     return accessibleCode;
   };
 
-  const downloadDiagram = async (format: 'svg' | 'pdf' = 'svg') => {
+  const downloadDiagram = async () => {
     if (!svg) {
       toast.error('No diagram to download');
       return;
@@ -167,51 +165,16 @@ export function OptimizedMermaidDiagram({
     const filename = encodeURIComponent(title || 'mermaid-diagram');
     
     try {
-      if (format === 'svg') {
-        const blob = new Blob([svg], { type: 'image/svg+xml' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${filename}.svg`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        toast.success('图表已下载为SVG格式');
-      } else if (format === 'pdf' && svgRef.current) {
-        const canvas = await html2canvas(svgRef.current, {
-          backgroundColor: '#ffffff',
-          scale: 2,
-          useCORS: true,
-          allowTaint: true
-        });
-        
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jsPDF({
-          orientation: canvas.width > canvas.height ? 'landscape' : 'portrait'
-        });
-        
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = pdf.internal.pageSize.getHeight();
-        const imgAspectRatio = canvas.width / canvas.height;
-        const pdfAspectRatio = pdfWidth / pdfHeight;
-        
-        let imgWidth, imgHeight;
-        if (imgAspectRatio > pdfAspectRatio) {
-          imgWidth = pdfWidth - 20;
-          imgHeight = imgWidth / imgAspectRatio;
-        } else {
-          imgHeight = pdfHeight - 20;
-          imgWidth = imgHeight * imgAspectRatio;
-        }
-        
-        const x = (pdfWidth - imgWidth) / 2;
-        const y = (pdfHeight - imgHeight) / 2;
-        
-        pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
-        pdf.save(`${filename}.pdf`);
-        toast.success('图表已下载为PDF格式');
-      }
+      const blob = new Blob([svg], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${filename}.svg`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success('图表已下载为SVG格式');
     } catch (error) {
       console.error('Download error:', error);
       toast.error('下载失败，请重试');
@@ -283,18 +246,11 @@ export function OptimizedMermaidDiagram({
           {enableExport && (
             <div className="flex items-center space-x-1 ml-2 border-l border-gray-300 pl-2">
               <button
-                onClick={() => downloadDiagram('svg')}
+                onClick={downloadDiagram}
                 className="p-1.5 text-gray-500 hover:text-gray-700 rounded hover:bg-gray-100"
                 title="下载SVG格式"
               >
                 <Download className="h-4 w-4" />
-              </button>
-              <button
-                onClick={() => downloadDiagram('pdf')}
-                className="p-1.5 text-gray-500 hover:text-gray-700 rounded hover:bg-gray-100"
-                title="下载PDF格式"
-              >
-                <FileDown className="h-4 w-4" />
               </button>
             </div>
           )}

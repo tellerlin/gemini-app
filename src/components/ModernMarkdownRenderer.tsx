@@ -16,6 +16,7 @@ interface ModernMarkdownRendererProps {
   enableCopy?: boolean;
   enableExport?: boolean;
   className?: string;
+  isStreaming?: boolean;
 }
 
 export function ModernMarkdownRenderer({ 
@@ -23,13 +24,31 @@ export function ModernMarkdownRenderer({
   isMobile = false, 
   enableCopy = true,
   enableExport = false,
-  className 
+  className,
+  isStreaming = false
 }: ModernMarkdownRendererProps) {
 
   // 智能预处理 - 只处理代码块保护，不处理数学公式
   const preprocessContent = (rawContent: string): string => {
     try {
       let processed = rawContent;
+      
+      // If streaming, check for incomplete Mermaid blocks and temporarily replace them
+      if (isStreaming) {
+        // Find incomplete mermaid blocks (```mermaid without closing ```)
+        const incompleteMermaidRegex = /```mermaid\n([\s\S]*?)(?!```)/g;
+        const matches = [...processed.matchAll(incompleteMermaidRegex)];
+        
+        for (const match of matches) {
+          // Check if this is truly incomplete (no closing ``` after the content)
+          const remainingContent = processed.substring(match.index + match[0].length);
+          if (!remainingContent.startsWith('```') && !remainingContent.includes('\n```')) {
+            // Replace incomplete mermaid with a placeholder
+            const placeholder = '```text\n⏳ Generating diagram...\n```';
+            processed = processed.replace(match[0], placeholder);
+          }
+        }
+      }
       
       // 1. 保护代码块，避免处理其中的$符号
       const codeBlocks: string[] = [];

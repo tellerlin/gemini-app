@@ -4,10 +4,10 @@ import type {
   Message, 
   Conversation, 
   FileAttachment, 
-  ConversationConfig, 
-  ImageGenerationConfig
+  ConversationConfig
 } from '../types/chat';
 import { geminiService } from '../services/gemini';
+import type { GeminiResponse } from '../services/gemini';
 import { useLocalStorage, useConversations } from './useLocalStorage';
 import { loadApiKeysFromEnv } from '../utils/env';
 import { ContextManager, type ContextConfig } from '../utils/contextManager';
@@ -59,13 +59,6 @@ export function useChat() {
     typewriterEffect: true,
     smartLoadingIndicators: true,
     realtimeFeedback: true,
-  });
-  
-  const [defaultImageConfig, setDefaultImageConfig] = useLocalStorage<ImageGenerationConfig>('default-image-config', {
-    numberOfImages: 1,
-    sampleImageSize: '1K',
-    aspectRatio: '1:1',
-    personGeneration: 'allow_adult',
   });
 
   // Enhanced context management configuration
@@ -226,7 +219,9 @@ export function useChat() {
 
       // Use grounding-enabled streaming if available and enabled
       const useGrounding = enhancedConfig.groundingConfig?.enabled && modelCapabilities.supportsGrounding;
-      const useStreaming = enhancedConfig.streamingEnabled !== false; // Default to true if not specified
+      
+      // Disable streaming for some models as they don't support it
+      const useStreaming = enhancedConfig.streamingEnabled !== false;
       
       if (useStreaming) {
         setIsStreaming(true);
@@ -282,10 +277,66 @@ export function useChat() {
           groundingMetadata = response.groundingMetadata;
           urlContextMetadata = response.urlContextMetadata;
         } else {
-          fullResponse = await geminiService.generateResponse(
+          const response = await geminiService.generateResponse(
             optimizedMessages,
-            selectedModel
+            selectedModel,
+            enhancedConfig
           );
+          
+          // Handle both string and GeminiResponse types
+          if (typeof response === 'string') {
+            fullResponse = response;
+          } else {
+            fullResponse = response.text || '';
+            // Handle images if present
+            if (response.images && response.images.length > 0) {
+              const generatedImages: FileAttachment[] = [];
+              response.images.forEach((imageData, index) => {
+                const imageFile: FileAttachment = {
+                  id: `generated-${Date.now()}-${index}`,
+                  name: `generated_image_${index + 1}.png`,
+                  type: 'image/png',
+                  size: Math.round(imageData.length * 0.75),
+                  url: `data:image/png;base64,${imageData}`,
+                  data: `data:image/png;base64,${imageData}`,
+                };
+                generatedImages.push(imageFile);
+              });
+              
+              // Update the final message to include images
+              const imageMessage: Message = {
+                id: assistantMessageId,
+                role: 'assistant',
+                content: fullResponse || `Generated ${response.images.length} image${response.images.length > 1 ? 's' : ''} using ${selectedModel}`,
+                timestamp: new Date(),
+                files: generatedImages,
+                metadata: {
+                  modelUsed: selectedModel,
+                  thinkingEnabled: optimalThinking.enabled,
+                  ...(response.groundingMetadata && { groundingMetadata: response.groundingMetadata }),
+                  ...(response.urlContextMetadata && { urlContextMetadata: response.urlContextMetadata }),
+                },
+              };
+              
+              const finalMessagesWithImages = [...updatedMessages, imageMessage];
+              const finalConversationWithImages = {
+                ...updatedConversation,
+                messages: finalMessagesWithImages,
+                updatedAt: new Date(),
+              };
+              
+              await saveConversation(finalConversationWithImages);
+              setConversations(prev => ({
+                ...prev,
+                [conversationId]: finalConversationWithImages,
+              }));
+              
+              return;
+            }
+            
+            groundingMetadata = response.groundingMetadata;
+            urlContextMetadata = response.urlContextMetadata;
+          }
         }
         
         // No need to update conversations here - it will be done in the final update below
@@ -342,134 +393,6 @@ export function useChat() {
     }
   }, [apiKeys, currentConversation, createNewConversation, selectedModel, saveConversation, contextManager]);
 
-  const generateImage = useCallback(async (
-    content: string, 
-    files?: FileAttachment[], 
-    imageRequirements?: {
-      quality?: 'fast' | 'standard' | 'ultra';
-      artistic?: boolean;
-      conversational?: boolean;
-      speed?: 'fast' | 'normal';
-    }
-  ) => {
-    if (!apiKeys || apiKeys.length === 0) {
-      toast.error('Please set your Gemini API keys first');
-      return;
-    }
-
-    geminiService.setApiKeys(apiKeys);
-
-    // 确保我们有当前对话
-    let conversation = currentConversation;
-    if (!conversation) {
-      conversation = createNewConversation();
-    }
-
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: 'user',
-      content,
-      timestamp: new Date(),
-      files,
-    };
-
-    // 更新对话，添加用户消息
-    const updatedMessages = [...conversation.messages, userMessage];
-    const updatedConversation = {
-      ...conversation,
-      messages: updatedMessages,
-      title: conversation.messages.length === 0 ? content.slice(0, 50) : conversation.title,
-      updatedAt: new Date(),
-    };
-
-    // 先保存用户消息到IndexedDB
-    await saveConversation(updatedConversation);
-
-    setIsLoading(true);
-
-    try {
-      let response;
-      
-      // Determine if user wants conversational or dedicated image generation
-      const useConversationalGeneration = imageRequirements?.conversational || 
-        (files && files.length > 0); // Use conversational for image editing
-      
-      if (useConversationalGeneration) {
-        console.log('🎨 Using conversational image generation');
-        response = await geminiService.generateImageContent(
-          updatedMessages, 
-          'gemini-2.0-flash-preview-image-generation'
-        );
-      } else {
-        console.log('🎨 Using intelligent image model selection');
-        // Use intelligent selection with enhanced requirements
-        const enhancedRequirements = {
-          ...defaultImageConfig,
-          ...imageRequirements,
-        };
-        
-        response = await geminiService.generateImageWithIntelligentSelection(
-          updatedMessages,
-          enhancedRequirements
-        );
-      }
-
-      // Create assistant message with text and images
-      let responseContent = response.text || '';
-      const generatedImages: FileAttachment[] = [];
-      
-      if (response.images && response.images.length > 0) {
-        // Convert generated images to FileAttachment format
-        response.images.forEach((imageData, index) => {
-          const imageFile: FileAttachment = {
-            id: `generated-${Date.now()}-${index}`,
-            name: `generated_image_${index + 1}.png`,
-            type: 'image/png',
-            size: Math.round(imageData.length * 0.75), // Estimate size from base64
-            url: `data:image/png;base64,${imageData}`,
-            data: `data:image/png;base64,${imageData}`,
-          };
-          generatedImages.push(imageFile);
-        });
-        
-        if (!responseContent) {
-          const modelType = useConversationalGeneration ? 'Gemini conversational' : 'intelligent selection';
-          responseContent = `Generated ${response.images.length} image${response.images.length > 1 ? 's' : ''} using ${modelType}`;
-        }
-      }
-
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: responseContent,
-        timestamp: new Date(),
-        files: generatedImages.length > 0 ? generatedImages : undefined,
-        metadata: {
-          modelUsed: useConversationalGeneration ? 'gemini-2.0-flash-preview-image-generation' : 'intelligent-selection',
-        },
-      };
-
-      // 更新对话，添加助手消息 - 先保存用户消息再保存完整对话
-      await saveConversation(updatedConversation);
-      
-      const finalMessages = [...updatedMessages, assistantMessage];
-      const finalConversation = {
-        ...updatedConversation,
-        messages: finalMessages,
-        updatedAt: new Date(),
-      };
-
-      // 保存完整对话到IndexedDB
-      await saveConversation(finalConversation);
-
-      toast.success(`✨ Generated ${generatedImages.length} image${generatedImages.length > 1 ? 's' : ''} successfully!`);
-    } catch (error) {
-      console.error('Error generating images:', error);
-      toast.error('Failed to generate images. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [apiKeys, currentConversation, createNewConversation, defaultImageConfig, saveConversation]);
 
   const deleteConversation = useCallback((conversationId: string) => {
     dbDeleteConversation(conversationId);
@@ -571,7 +494,6 @@ export function useChat() {
     selectedModel,
     setSelectedModel,
     sendMessage,
-    generateImage,
     stopGeneration,
     createNewConversation,
     deleteConversation,
@@ -580,8 +502,6 @@ export function useChat() {
     // New configuration functions
     defaultConversationConfig,
     setDefaultConversationConfig,
-    defaultImageConfig,
-    setDefaultImageConfig,
     updateConversationConfig,
     getPerformanceMetrics,
     // Context management

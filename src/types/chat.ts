@@ -107,12 +107,6 @@ export interface GenerationConfig {
   responseMimeType?: string;
 }
 
-export interface ImageGenerationConfig {
-  numberOfImages: number;
-  sampleImageSize: '1K' | '2K';
-  aspectRatio: '1:1' | '3:4' | '4:3' | '9:16' | '16:9';
-  personGeneration: 'dont_allow' | 'allow_adult' | 'allow_all';
-}
 
 export interface GeminiModel {
   id: string;
