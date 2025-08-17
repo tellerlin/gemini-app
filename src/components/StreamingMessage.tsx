@@ -7,13 +7,15 @@ interface StreamingMessageProps {
   isStreaming: boolean;
   onStop?: () => void;
   className?: string;
+  enableTypewriter?: boolean;
 }
 
 export function StreamingMessage({ 
   content, 
   isStreaming, 
   onStop, 
-  className = '' 
+  className = '',
+  enableTypewriter = true
 }: StreamingMessageProps) {
   const [displayedContent, setDisplayedContent] = useState('');
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -22,8 +24,8 @@ export function StreamingMessage({
 
   // Typewriter effect
   useEffect(() => {
-    if (!isStreaming && content) {
-      // If not streaming, show all content immediately
+    if (!enableTypewriter || !isStreaming) {
+      // If typewriter is disabled or not streaming, show all content immediately
       setDisplayedContent(content);
       setCurrentIndex(content.length);
       return;
@@ -41,7 +43,7 @@ export function StreamingMessage({
         clearTimeout(intervalRef.current);
       }
     };
-  }, [content, currentIndex, isStreaming, typingSpeed]);
+  }, [content, currentIndex, isStreaming, typingSpeed, enableTypewriter]);
 
   // Reset when new content starts
   useEffect(() => {

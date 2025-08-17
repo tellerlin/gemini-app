@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { Menu } from 'lucide-react';
 import { Sidebar } from './components/Sidebar';
@@ -7,6 +7,7 @@ import { ApiKeyModal } from './components/ApiKeyModal';
 import { AdvancedSettingsModal } from './components/AdvancedSettingsModal';
 import { PerformanceMonitor } from './components/PerformanceMonitor';
 import { MermaidTest } from './components/MermaidTest';
+import { TableTestComponent } from './components/TableTestComponent';
 import { useChat } from './hooks/useChat';
 import { useResponsive } from './hooks/useLocalStorage';
 import { Button } from './components/ui/Button';
@@ -17,6 +18,7 @@ function App() {
   const [advancedSettingsOpen, setAdvancedSettingsOpen] = useState(false);
   const [performanceMonitorOpen, setPerformanceMonitorOpen] = useState(false);
   const [testMode, setTestMode] = useState(window.location.hash === '#test');
+  const [tableTestMode, setTableTestMode] = useState(window.location.hash === '#table');
   const { isMobile, isDesktop } = useResponsive();
   
   const {
@@ -76,6 +78,11 @@ function App() {
     }
   };
 
+  // 稳定化 conversationConfig 引用以避免不必要的重新渲染
+  const stableConversationConfig = useMemo(() => {
+    return currentConversation?.config || defaultConversationConfig;
+  }, [currentConversation?.config, defaultConversationConfig]);
+
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
       <Toaster
@@ -102,6 +109,18 @@ function App() {
               返回主应用
             </button>
             <MermaidTest />
+          </div>
+        </div>
+      ) : tableTestMode ? (
+        <div className="w-full h-full overflow-auto">
+          <div className="p-4">
+            <button 
+              onClick={() => setTableTestMode(false)}
+              className="mb-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            >
+              返回主应用
+            </button>
+            <TableTestComponent />
           </div>
         </div>
       ) : (
@@ -154,6 +173,7 @@ function App() {
                 streamingMessage={streamingMessage}
                 hasApiKey={apiKeys && apiKeys.length > 0}
                 isMobile={isMobile}
+                conversationConfig={stableConversationConfig}
               />
             </div>
           </div>

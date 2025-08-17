@@ -45,6 +45,11 @@ export interface ConversationConfig {
   generationConfig?: GenerationConfig;
   groundingConfig?: GroundingConfig;
   urlContextConfig?: UrlContextConfig;
+  // Interface settings
+  streamingEnabled?: boolean;
+  typewriterEffect?: boolean;
+  smartLoadingIndicators?: boolean;
+  realtimeFeedback?: boolean;
 }
 
 export interface GroundingConfig {
@@ -146,4 +151,13 @@ export interface KeyHealthStats {
   lastError?: string;
   consecutiveErrors: number;
   isHealthy: boolean;
+}
+
+// 用户管理相关类型
+export interface UserProfile {
+  id: string;
+  name: string;
+  avatar?: string;
+  createdAt: Date;
+  lastUsed: Date;
 }

@@ -1,17 +1,29 @@
 import React, { useState } from 'react';
-import { Copy, Check, User, Bot, Image, File } from 'lucide-react';
+import { Copy, Check, User, Bot, Image, File, Square } from 'lucide-react';
 import { toast } from 'react-hot-toast';
-import type { Message } from '../types/chat';
+import type { Message, ConversationConfig } from '../types/chat';
 import { cn } from '../utils/cn';
 import { ModernMarkdownRenderer } from './ModernMarkdownRenderer';
 import { RenderingErrorBoundary } from './RenderingErrorBoundary';
+import { Button } from './ui/Button';
 
 interface MessageBubbleProps {
   message: Message;
   isMobile?: boolean;
+  isStreaming?: boolean;
+  conversationConfig?: ConversationConfig;
+  onStopGeneration?: () => void;
+  streamingContent?: string;
 }
 
-export function EnhancedMessageBubble({ message, isMobile = false }: MessageBubbleProps) {
+export function EnhancedMessageBubble({ 
+  message, 
+  isMobile = false, 
+  isStreaming = false, 
+  conversationConfig,
+  onStopGeneration,
+  streamingContent
+}: MessageBubbleProps) {
   const [copied, setCopied] = useState(false);
 
   const copyToClipboard = async () => {
@@ -43,11 +55,15 @@ export function EnhancedMessageBubble({ message, isMobile = false }: MessageBubb
       );
     }
 
-    // For AI responses, use modern markdown renderer
+    // For AI responses, use streaming content if available, otherwise use message content
+    const contentToRender = isStreaming && streamingContent !== undefined 
+      ? streamingContent 
+      : message.content;
+
     return (
       <RenderingErrorBoundary>
         <ModernMarkdownRenderer 
-          content={message.content}
+          content={contentToRender}
           isMobile={isMobile}
           enableCopy={true}
           enableExport={true}
@@ -120,6 +136,34 @@ export function EnhancedMessageBubble({ message, isMobile = false }: MessageBubb
 
             {/* Content */}
             {renderContent()}
+            
+            {/* Streaming Indicator */}
+            {isStreaming && !isUser && (
+              <div className="mt-2 flex items-center justify-between">
+                <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <div className="flex gap-1">
+                    <div className="w-1 h-1 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <div className="w-1 h-1 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                    <div className="w-1 h-1 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                  </div>
+                  <span>正在生成回答...</span>
+                  {conversationConfig?.streamingEnabled !== false && (
+                    <span className="inline-block w-2 h-3 bg-blue-500 ml-1 animate-pulse" />
+                  )}
+                </div>
+                {onStopGeneration && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onStopGeneration}
+                    className="text-red-600 border-red-200 hover:bg-red-50 text-xs py-1 px-2 h-6"
+                  >
+                    <Square className="h-2 w-2 mr-1" />
+                    停止
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Message Actions */}

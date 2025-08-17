@@ -8,13 +8,23 @@ import type {
   ImageGenerationConfig
 } from '../types/chat';
 import { geminiService } from '../services/gemini';
-import { useLocalStorage } from './useLocalStorage';
+import { useLocalStorage, useConversations } from './useLocalStorage';
 import { loadApiKeysFromEnv } from '../utils/env';
 import { ContextManager, type ContextConfig } from '../utils/contextManager';
 import { getOptimalThinkingConfig, getModelCapabilities } from '../config/gemini';
 
 export function useChat() {
-  const [conversations, setConversations] = useLocalStorage<Conversation[]>('gemini-conversations', []);
+  // 使用新的IndexedDB存储系统
+  const {
+    conversations,
+    isLoading: conversationsLoading,
+    error: conversationsError,
+    saveConversation,
+    deleteConversation: dbDeleteConversation,
+    cleanupOldConversations,
+    getStorageUsage,
+  } = useConversations();
+  
   const [currentConversationId, setCurrentConversationId] = useLocalStorage<string | null>('current-conversation', null);
   const [isLoading, setIsLoading] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
@@ -44,6 +54,11 @@ export function useChat() {
       enabled: false, // User can enable when needed
       maxUrls: 3,
     },
+    // Interface settings with sensible defaults
+    streamingEnabled: true,
+    typewriterEffect: true,
+    smartLoadingIndicators: true,
+    realtimeFeedback: true,
   });
   
   const [defaultImageConfig, setDefaultImageConfig] = useLocalStorage<ImageGenerationConfig>('default-image-config', {
@@ -94,10 +109,11 @@ export function useChat() {
       config: defaultConversationConfig,
     };
 
-    setConversations(prev => [newConversation, ...prev]);
+    // 使用新的保存方法
+    saveConversation(newConversation);
     setCurrentConversationId(newConversation.id);
     return newConversation;
-  }, [selectedModel, defaultConversationConfig, setConversations, setCurrentConversationId]);
+  }, [selectedModel, defaultConversationConfig, saveConversation, setCurrentConversationId]);
 
   const sendMessage = useCallback(async (content: string, files?: FileAttachment[]) => {
     if (!apiKeys || apiKeys.length === 0) {
@@ -159,16 +175,8 @@ export function useChat() {
       config: enhancedConfig,
     };
 
-    setConversations(prev => {
-      const existingIndex = prev.findIndex(conv => conv.id === conversation.id);
-      if (existingIndex >= 0) {
-        const newConversations = [...prev];
-        newConversations[existingIndex] = updatedConversation;
-        return newConversations;
-      } else {
-        return [updatedConversation, ...prev];
-      }
-    });
+    // 先保存用户消息到IndexedDB
+    await saveConversation(updatedConversation);
 
     setIsLoading(true);
     setIsStreaming(true);
@@ -196,16 +204,8 @@ export function useChat() {
         updatedAt: new Date(),
       };
 
-      setConversations(prev => {
-        const existingIndex = prev.findIndex(conv => conv.id === conversation.id);
-        if (existingIndex >= 0) {
-          const newConversations = [...prev];
-          newConversations[existingIndex] = tempConversation;
-          return newConversations;
-        } else {
-          return [tempConversation, ...prev];
-        }
-      });
+      // 保存带占位符的临时对话
+      await saveConversation(tempConversation);
 
       // Use enhanced streaming response with grounding support
       let optimizedMessages = updatedMessages;
@@ -226,78 +226,69 @@ export function useChat() {
 
       // Use grounding-enabled streaming if available and enabled
       const useGrounding = enhancedConfig.groundingConfig?.enabled && modelCapabilities.supportsGrounding;
+      const useStreaming = enhancedConfig.streamingEnabled !== false; // Default to true if not specified
       
-      if (useGrounding) {
-        console.log('🔍 Using grounding-enabled generation');
-        const stream = geminiService.generateStreamingResponseWithGrounding(
-          optimizedMessages, 
-          selectedModel,
-          enhancedConfig
-        );
+      if (useStreaming) {
+        setIsStreaming(true);
+        if (useGrounding) {
+          console.log('🔍 Using grounding-enabled streaming generation');
+          const stream = geminiService.generateStreamingResponseWithGrounding(
+            optimizedMessages, 
+            selectedModel,
+            enhancedConfig
+          );
 
-        for await (const chunk of stream) {
-          if (chunk.text) {
-            fullResponse += chunk.text;
-            setStreamingMessage(fullResponse);
+          for await (const chunk of stream) {
+            if (chunk.text) {
+              fullResponse += chunk.text;
+              setStreamingMessage(fullResponse);
+              // Don't update conversations during streaming - only update streamingMessage
+            }
             
-            // Update the message in real-time
-            setConversations(prev => {
-              return prev.map(conv => {
-                if (conv.id === conversation.id) {
-                  return {
-                    ...conv,
-                    messages: conv.messages.map(msg => 
-                      msg.id === assistantMessageId 
-                        ? { ...msg, content: fullResponse }
-                        : msg
-                    ),
-                    updatedAt: new Date(),
-                  };
-                }
-                return conv;
-              });
-            });
+            // Capture grounding metadata
+            if (chunk.groundingMetadata) {
+              groundingMetadata = chunk.groundingMetadata;
+            }
+            
+            if (chunk.urlContextMetadata) {
+              urlContextMetadata = chunk.urlContextMetadata;
+            }
           }
-          
-          // Capture grounding metadata
-          if (chunk.groundingMetadata) {
-            groundingMetadata = chunk.groundingMetadata;
-          }
-          
-          if (chunk.urlContextMetadata) {
-            urlContextMetadata = chunk.urlContextMetadata;
+        } else {
+          // Use standard streaming
+          console.log('⚡ Using standard streaming generation');
+          const stream = geminiService.generateStreamingResponse(
+            optimizedMessages, 
+            selectedModel,
+            enhancedConfig
+          );
+
+          for await (const chunk of stream) {
+            fullResponse += chunk;
+            setStreamingMessage(fullResponse);
+            // Don't update conversations during streaming - only update streamingMessage
           }
         }
       } else {
-        // Use standard streaming
-        const stream = geminiService.generateStreamingResponse(
-          optimizedMessages, 
-          selectedModel,
-          enhancedConfig
-        );
-
-        for await (const chunk of stream) {
-          fullResponse += chunk;
-          setStreamingMessage(fullResponse);
-          
-          // Update the message in real-time
-          setConversations(prev => {
-            return prev.map(conv => {
-              if (conv.id === conversation.id) {
-                return {
-                  ...conv,
-                  messages: conv.messages.map(msg => 
-                    msg.id === assistantMessageId 
-                      ? { ...msg, content: fullResponse }
-                      : msg
-                  ),
-                  updatedAt: new Date(),
-                };
-              }
-              return conv;
-            });
-          });
+        // Non-streaming mode - get complete response at once
+        console.log('🎯 Using non-streaming generation');
+        if (useGrounding) {
+          const response = await geminiService.generateResponseWithGrounding(
+            optimizedMessages,
+            selectedModel,
+            enhancedConfig
+          );
+          fullResponse = response.text;
+          groundingMetadata = response.groundingMetadata;
+          urlContextMetadata = response.urlContextMetadata;
+        } else {
+          fullResponse = await geminiService.generateResponse(
+            optimizedMessages,
+            selectedModel
+          );
         }
+        
+        // No need to update conversations here - it will be done in the final update below
       }
 
       // Final update with complete message and metadata
@@ -321,16 +312,9 @@ export function useChat() {
         updatedAt: new Date(),
       };
 
-      setConversations(prev => {
-        const existingIndex = prev.findIndex(conv => conv.id === conversation.id);
-        if (existingIndex >= 0) {
-          const newConversations = [...prev];
-          newConversations[existingIndex] = finalConversation;
-          return newConversations;
-        } else {
-          return [finalConversation, ...prev];
-        }
-      });
+      console.log('✅ Final update with complete message');
+      // 保存最终完整的对话到IndexedDB
+      await saveConversation(finalConversation);
 
       // Show grounding info if available
       if (groundingMetadata?.webSearchQueries?.length > 0) {
@@ -340,24 +324,23 @@ export function useChat() {
       console.error('Error generating response:', error);
       toast.error('Failed to generate response. Please try again.');
       
-      // Remove placeholder message on error
-      setConversations(prev => {
-        return prev.map(conv => {
-          if (conv.id === conversation.id) {
-            return {
-              ...conv,
-              messages: conv.messages.filter(msg => msg.content !== ''),
-            };
-          }
-          return conv;
-        });
-      });
+      // Remove placeholder message on error - 重新保存不包含空消息的对话
+      try {
+        const errorConversation = {
+          ...conversation,
+          messages: conversation.messages.filter(msg => msg.content !== ''),
+          updatedAt: new Date(),
+        };
+        await saveConversation(errorConversation);
+      } catch (saveErr) {
+        console.error('Failed to save conversation after error:', saveErr);
+      }
     } finally {
       setIsLoading(false);
       setIsStreaming(false);
       setStreamingMessage('');
     }
-  }, [apiKeys, currentConversation, createNewConversation, selectedModel, setConversations, contextManager]);
+  }, [apiKeys, currentConversation, createNewConversation, selectedModel, saveConversation, contextManager]);
 
   const generateImage = useCallback(async (
     content: string, 
@@ -399,18 +382,8 @@ export function useChat() {
       updatedAt: new Date(),
     };
 
-    setConversations(prev => {
-      const existingIndex = prev.findIndex(conv => conv.id === conversation.id);
-      if (existingIndex >= 0) {
-        // 更新现有对话
-        const newConversations = [...prev];
-        newConversations[existingIndex] = updatedConversation;
-        return newConversations;
-      } else {
-        // 添加新对话
-        return [updatedConversation, ...prev];
-      }
-    });
+    // 先保存用户消息到IndexedDB
+    await saveConversation(updatedConversation);
 
     setIsLoading(true);
 
@@ -476,7 +449,9 @@ export function useChat() {
         },
       };
 
-      // 更新对话，添加助手消息
+      // 更新对话，添加助手消息 - 先保存用户消息再保存完整对话
+      await saveConversation(updatedConversation);
+      
       const finalMessages = [...updatedMessages, assistantMessage];
       const finalConversation = {
         ...updatedConversation,
@@ -484,16 +459,8 @@ export function useChat() {
         updatedAt: new Date(),
       };
 
-      setConversations(prev => {
-        const existingIndex = prev.findIndex(conv => conv.id === conversation.id);
-        if (existingIndex >= 0) {
-          const newConversations = [...prev];
-          newConversations[existingIndex] = finalConversation;
-          return newConversations;
-        } else {
-          return [finalConversation, ...prev];
-        }
-      });
+      // 保存完整对话到IndexedDB
+      await saveConversation(finalConversation);
 
       toast.success(`✨ Generated ${generatedImages.length} image${generatedImages.length > 1 ? 's' : ''} successfully!`);
     } catch (error) {
@@ -502,14 +469,14 @@ export function useChat() {
     } finally {
       setIsLoading(false);
     }
-  }, [apiKeys, currentConversation, createNewConversation, defaultImageConfig, setConversations]);
+  }, [apiKeys, currentConversation, createNewConversation, defaultImageConfig, saveConversation]);
 
   const deleteConversation = useCallback((conversationId: string) => {
-    setConversations(prev => prev.filter(conv => conv.id !== conversationId));
+    dbDeleteConversation(conversationId);
     if (currentConversationId === conversationId) {
       setCurrentConversationId(null);
     }
-  }, [setConversations, currentConversationId, setCurrentConversationId]);
+  }, [dbDeleteConversation, currentConversationId, setCurrentConversationId]);
 
   const selectConversation = useCallback((conversationId: string) => {
     setCurrentConversationId(conversationId);
@@ -545,13 +512,17 @@ export function useChat() {
     toast.success('Conversation exported successfully');
   }, [conversations]);
 
-  const updateConversationConfig = useCallback((conversationId: string, config: ConversationConfig) => {
-    setConversations(prev => prev.map(conv => 
-      conv.id === conversationId 
-        ? { ...conv, config, updatedAt: new Date() }
-        : conv
-    ));
-  }, [setConversations]);
+  const updateConversationConfig = useCallback(async (conversationId: string, config: ConversationConfig) => {
+    const conversation = conversations.find(conv => conv.id === conversationId);
+    if (conversation) {
+      const updatedConversation = {
+        ...conversation,
+        config,
+        updatedAt: new Date()
+      };
+      await saveConversation(updatedConversation);
+    }
+  }, [conversations, saveConversation]);
 
   const stopGeneration = useCallback(() => {
     geminiService.stopGeneration();
@@ -592,7 +563,7 @@ export function useChat() {
   return {
     conversations,
     currentConversation,
-    isLoading,
+    isLoading: isLoading || conversationsLoading,
     isStreaming,
     streamingMessage,
     apiKeys,
@@ -617,5 +588,10 @@ export function useChat() {
     contextConfig,
     updateContextConfig,
     getContextInfo,
+    // Data management
+    cleanupOldConversations,
+    getStorageUsage,
+    // Error state
+    error: conversationsError,
   };
 }

@@ -1,19 +1,35 @@
 import React, { useRef, useEffect } from 'react';
 import { EnhancedMessageBubble } from './EnhancedMessageBubble';
 import { ChatInput } from './ChatInput';
-import type { Message, FileAttachment } from '../types/chat';
+import { SmartLoadingIndicator } from './SmartLoadingIndicator';
+import type { Message, FileAttachment, ConversationConfig } from '../types/chat';
 import { Bot, Sparkles } from 'lucide-react';
 
 interface ChatAreaProps {
   messages: Message[];
   onSendMessage: (content: string, files?: FileAttachment[]) => void;
   onGenerateImage?: (content: string, files?: FileAttachment[]) => void;
+  onStopGeneration?: () => void;
   isLoading: boolean;
+  isStreaming: boolean;
+  streamingMessage?: string;
   hasApiKey: boolean;
   isMobile?: boolean;
+  conversationConfig?: ConversationConfig;
 }
 
-export function ChatArea({ messages, onSendMessage, onGenerateImage, isLoading, hasApiKey, isMobile = false }: ChatAreaProps) {
+export function ChatArea({ 
+  messages, 
+  onSendMessage, 
+  onGenerateImage, 
+  onStopGeneration,
+  isLoading, 
+  isStreaming,
+  streamingMessage,
+  hasApiKey, 
+  isMobile = false,
+  conversationConfig
+}: ChatAreaProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -22,7 +38,7 @@ export function ChatArea({ messages, onSendMessage, onGenerateImage, isLoading, 
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [messages, streamingMessage || '']); // 确保依赖数组大小稳定
 
   if (!hasApiKey) {
     return (
@@ -95,27 +111,27 @@ export function ChatArea({ messages, onSendMessage, onGenerateImage, isLoading, 
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-2 sm:p-4 space-y-3 sm:space-y-4">
         {messages.map((message) => (
-          <EnhancedMessageBubble key={message.id} message={message} isMobile={isMobile} />
+          <EnhancedMessageBubble 
+            key={message.id} 
+            message={message} 
+            isMobile={isMobile}
+            isStreaming={isStreaming && message.id === messages[messages.length - 1]?.id && message.role === 'assistant'}
+            conversationConfig={conversationConfig}
+            onStopGeneration={onStopGeneration}
+            streamingContent={isStreaming && message.id === messages[messages.length - 1]?.id && message.role === 'assistant' ? streamingMessage : undefined}
+          />
         ))}
         
-        {/* Loading Indicator */}
-        {isLoading && (
-          <div className="flex justify-start">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center">
-                <Bot className="h-4 w-4 text-white" />
-              </div>
-              <div className="bg-white border border-gray-200 rounded-2xl px-3 sm:px-4 py-3">
-                <div className="flex items-center space-x-1">
-                  <div className="flex space-x-1">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+        {/* Loading Indicator - only show when not streaming */}
+        {isLoading && !isStreaming && (
+          <SmartLoadingIndicator
+            isLoading={isLoading}
+            isStreaming={isStreaming}
+            messageContent={messages[messages.length - 1]?.content || ''}
+            requestType="text"
+            enableSmartIndicators={conversationConfig?.smartLoadingIndicators}
+            enableRealtimeFeedback={conversationConfig?.realtimeFeedback}
+          />
         )}
         
         <div ref={messagesEndRef} />

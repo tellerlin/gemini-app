@@ -22,7 +22,7 @@ export function AdvancedSettingsModal({
   imageConfig,
   onImageConfigSave,
 }: AdvancedSettingsModalProps) {
-  const [activeTab, setActiveTab] = useState<'thinking' | 'generation' | 'image' | 'system'>('thinking');
+  const [activeTab, setActiveTab] = useState<'thinking' | 'generation' | 'image' | 'system' | 'interface'>('thinking');
   const [localConfig, setLocalConfig] = useState<ConversationConfig>(conversationConfig);
   const [localImageConfig, setLocalImageConfig] = useState<ImageGenerationConfig>(imageConfig);
 
@@ -78,6 +78,7 @@ export function AdvancedSettingsModal({
     { id: 'generation' as const, label: '生成参数', icon: Sliders },
     { id: 'image' as const, label: '图片生成', icon: Image },
     { id: 'system' as const, label: '系统指令', icon: Settings },
+    { id: 'interface' as const, label: '界面设置', icon: Settings },
   ];
 
   return (
@@ -453,6 +454,141 @@ export function AdvancedSettingsModal({
                       })}
                     >
                       📲 手机壁纸
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'interface' && (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">界面设置</h3>
+                  <p className="text-sm text-gray-600 mb-6">
+                    配置应用界面行为和用户体验设置。
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <label className="text-sm font-medium text-gray-700">流式响应</label>
+                      <p className="text-xs text-gray-500 mt-1">
+                        启用后回答将逐字显示，提供更好的反馈体验但可能增加延迟
+                      </p>
+                    </div>
+                    <Button
+                      variant={localConfig.streamingEnabled !== false ? 'primary' : 'outline'}
+                      size="sm"
+                      onClick={() => setLocalConfig(prev => ({ ...prev, streamingEnabled: !prev.streamingEnabled }))}
+                    >
+                      {localConfig.streamingEnabled !== false ? '已启用' : '已禁用'}
+                    </Button>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <label className="text-sm font-medium text-gray-700">打字效果</label>
+                      <p className="text-xs text-gray-500 mt-1">
+                        为流式响应添加打字机效果，使回答显示更自然
+                      </p>
+                    </div>
+                    <Button
+                      variant={localConfig.typewriterEffect !== false ? 'primary' : 'outline'}
+                      size="sm"
+                      onClick={() => setLocalConfig(prev => ({ ...prev, typewriterEffect: !prev.typewriterEffect }))}
+                    >
+                      {localConfig.typewriterEffect !== false ? '已启用' : '已禁用'}
+                    </Button>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <label className="text-sm font-medium text-gray-700">智能加载提示</label>
+                      <p className="text-xs text-gray-500 mt-1">
+                        根据请求类型显示不同的加载提示信息
+                      </p>
+                    </div>
+                    <Button
+                      variant={localConfig.smartLoadingIndicators !== false ? 'primary' : 'outline'}
+                      size="sm"
+                      onClick={() => setLocalConfig(prev => ({ ...prev, smartLoadingIndicators: !prev.smartLoadingIndicators }))}
+                    >
+                      {localConfig.smartLoadingIndicators !== false ? '已启用' : '已禁用'}
+                    </Button>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <label className="text-sm font-medium text-gray-700">实时反馈</label>
+                      <p className="text-xs text-gray-500 mt-1">
+                        在处理过程中显示详细的状态信息和进度提示
+                      </p>
+                    </div>
+                    <Button
+                      variant={localConfig.realtimeFeedback !== false ? 'primary' : 'outline'}
+                      size="sm"
+                      onClick={() => setLocalConfig(prev => ({ ...prev, realtimeFeedback: !prev.realtimeFeedback }))}
+                    >
+                      {localConfig.realtimeFeedback !== false ? '已启用' : '已禁用'}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h4 className="font-medium text-gray-900 mb-2">用户体验预设</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setLocalConfig(prev => ({ 
+                        ...prev, 
+                        streamingEnabled: true,
+                        typewriterEffect: true,
+                        smartLoadingIndicators: true,
+                        realtimeFeedback: true
+                      }))}
+                    >
+                      ✨ 最佳体验
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setLocalConfig(prev => ({ 
+                        ...prev, 
+                        streamingEnabled: false,
+                        typewriterEffect: false,
+                        smartLoadingIndicators: false,
+                        realtimeFeedback: false
+                      }))}
+                    >
+                      ⚡ 极速模式
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setLocalConfig(prev => ({ 
+                        ...prev, 
+                        streamingEnabled: true,
+                        typewriterEffect: false,
+                        smartLoadingIndicators: true,
+                        realtimeFeedback: true
+                      }))}
+                    >
+                      ⚖️ 平衡模式
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setLocalConfig(prev => ({ 
+                        ...prev, 
+                        streamingEnabled: true,
+                        typewriterEffect: true,
+                        smartLoadingIndicators: false,
+                        realtimeFeedback: false
+                      }))}
+                    >
+                      🎯 专注模式
                     </Button>
                   </div>
                 </div>
