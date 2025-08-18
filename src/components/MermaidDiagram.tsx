@@ -13,6 +13,8 @@ export function MermaidDiagram({ code, title }: MermaidDiagramProps) {
   const [svg, setSvg] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [scale, setScale] = useState(1);
+  const [diagramType, setDiagramType] = useState<string>('');
+  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -27,46 +29,87 @@ export function MermaidDiagram({ code, title }: MermaidDiagramProps) {
         // Clear any existing SVG content first
         setSvg('');
         setError('');
+        
+        // Detect diagram type for intelligent sizing
+        const cleanedCode = fixMermaidSyntax(code);
+        const firstLine = cleanedCode.split('\n')[0].toLowerCase().trim();
+        let detectedType = 'flowchart';
+        
+        if (firstLine.includes('graph lr') || firstLine.includes('flowchart lr') || firstLine.includes('graph rl') || firstLine.includes('flowchart rl')) {
+          detectedType = 'horizontal-flowchart';
+        } else if (firstLine.includes('graph td') || firstLine.includes('flowchart td') || firstLine.includes('graph tb') || firstLine.includes('flowchart tb')) {
+          detectedType = 'vertical-flowchart';
+        } else if (firstLine.includes('sequencediagram')) {
+          detectedType = 'sequence';
+        } else if (firstLine.includes('gantt')) {
+          detectedType = 'gantt';
+        } else if (firstLine.includes('pie')) {
+          detectedType = 'pie';
+        }
+        
+        setDiagramType(detectedType);
+        
+        // Get container dimensions for responsive sizing
+        const containerWidth = containerRef.current?.clientWidth || window.innerWidth * 0.9;
+        const containerHeight = window.innerHeight * 0.6;
+        
+        // Calculate optimal dimensions based on diagram type - never exceed container width
+        let optimalWidth = containerWidth;
+        let optimalHeight = containerHeight;
+        
+        if (detectedType === 'horizontal-flowchart') {
+          // For horizontal flowcharts, use full container width but ensure adequate height
+          optimalWidth = Math.min(containerWidth, containerWidth * 0.95); // Stay within container
+          optimalHeight = Math.max(containerHeight * 0.6, 400); // Minimum 400px height
+        } else if (detectedType === 'vertical-flowchart') {
+          // For vertical flowcharts, prioritize height
+          optimalWidth = Math.min(containerWidth, 600);
+          optimalHeight = Math.max(containerHeight, 500);
+        } else if (detectedType === 'sequence') {
+          optimalWidth = Math.min(containerWidth, containerWidth * 0.9);
+          optimalHeight = Math.max(containerHeight * 0.5, 350);
+        }
+        
+        setContainerSize({ width: optimalWidth, height: optimalHeight });
 
-        // Configure Mermaid with enhanced Chinese support
+        // Configure Mermaid with intelligent sizing
         mermaid.initialize({
           startOnLoad: false,
           theme: 'default',
           securityLevel: 'loose',
           fontFamily: '"Noto Sans CJK SC", "Microsoft YaHei", "SimHei", sans-serif',
           flowchart: {
-            useMaxWidth: true,
+            useMaxWidth: true, // Re-enable to respect container width
             htmlLabels: true,
             curve: 'basis',
-            padding: 15,
-            nodeSpacing: 50,
-            rankSpacing: 50
+            padding: detectedType === 'horizontal-flowchart' ? 20 : 15,
+            nodeSpacing: detectedType === 'horizontal-flowchart' ? 60 : 50,
+            rankSpacing: detectedType === 'horizontal-flowchart' ? 80 : 50
           },
           sequence: {
-            diagramMarginX: 50,
-            diagramMarginY: 10,
-            actorMargin: 50,
+            diagramMarginX: 30,
+            diagramMarginY: 15,
+            actorMargin: 40,
             width: 150,
             height: 65,
             boxMargin: 10,
             boxTextMargin: 5,
             noteMargin: 10,
-            messageMargin: 35
+            messageMargin: 35,
+            useMaxWidth: true
           },
           gantt: {
             titleTopMargin: 25,
             barHeight: 20,
-            fontSize: 11,
-            sectionFontSize: 11,
+            fontSize: 12,
+            sectionFontSize: 12,
             gridLineStartPadding: 35,
-            bottomPadding: 5
+            bottomPadding: 20,
+            useMaxWidth: true
           }
         });
 
-        // Fix and clean the Mermaid syntax
-        const cleanedCode = fixMermaidSyntax(code);
-        console.log('Original code:', code);
-        console.log('Cleaned code:', cleanedCode);
+        // Use already cleaned code from initialization
 
         // Validate that the cleaned code is not empty
         if (!cleanedCode || !cleanedCode.trim()) {
@@ -197,13 +240,29 @@ export function MermaidDiagram({ code, title }: MermaidDiagramProps) {
       </div>
 
       {/* Diagram */}
-      <div className="p-4 overflow-auto">
+      <div 
+        className="w-full overflow-hidden"
+        style={{
+          padding: diagramType === 'horizontal-flowchart' ? '16px' : '16px',
+          minHeight: diagramType === 'horizontal-flowchart' ? '400px' : '200px',
+          maxHeight: diagramType === 'horizontal-flowchart' ? '600px' : '80vh'
+        }}
+      >
         <div 
           ref={containerRef}
-          className="flex justify-center"
-          style={{ transform: `scale(${scale})`, transformOrigin: 'center top' }}
+          className="w-full overflow-auto transition-transform duration-200"
+          style={{ 
+            transform: `scale(${scale})`, 
+            transformOrigin: diagramType === 'horizontal-flowchart' ? 'center center' : 'center top'
+          }}
         >
-          <div dangerouslySetInnerHTML={{ __html: svg }} />
+          <div 
+            dangerouslySetInnerHTML={{ __html: svg }} 
+            className="w-full"
+            style={{
+              minHeight: diagramType === 'horizontal-flowchart' ? '350px' : 'auto'
+            }}
+          />
         </div>
       </div>
     </div>

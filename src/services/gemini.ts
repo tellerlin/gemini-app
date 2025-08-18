@@ -1,6 +1,7 @@
 import { GoogleGenAI } from '@google/genai';
 import type { Message, GroundingMetadata, UrlContextMetadata } from '../types/chat';
 import { loadEnvConfig } from '../utils/env';
+import { getNextBestModel, getModelSwitchExplanation } from '../config/gemini';
 
 // Enhanced type definitions for Gemini service
 export interface GeminiGenerationConfig {
@@ -114,6 +115,17 @@ export class GeminiService {
   
   // AbortController for stopping generation
   private currentAbortController?: AbortController;
+  
+  // Model switching tracking
+  private modelSwitchHistory: Array<{
+    fromModel: string;
+    toModel: string;
+    reason: string;
+    timestamp: Date;
+  }> = [];
+  
+  // Callback for notifying UI about model switches
+  private onModelSwitchCallback?: (fromModel: string, toModel: string, reason: string) => void;
 
   constructor(apiKeys?: string[], proxyUrl?: string) {
     if (apiKeys && apiKeys.length > 0) {
@@ -173,6 +185,54 @@ export class GeminiService {
   }
 
   /**
+   * Set callback for model switch notifications
+   * @param callback - Function to call when model switches occur
+   */
+  setModelSwitchCallback(callback: (fromModel: string, toModel: string, reason: string) => void): void {
+    this.onModelSwitchCallback = callback;
+  }
+
+  /**
+   * Get model switch history
+   * @returns Array of model switch events
+   */
+  getModelSwitchHistory(): Array<{
+    fromModel: string;
+    toModel: string;
+    reason: string;
+    timestamp: Date;
+  }> {
+    return [...this.modelSwitchHistory];
+  }
+
+  /**
+   * Record a model switch event
+   * @private
+   */
+  private recordModelSwitch(fromModel: string, toModel: string, reason: string): void {
+    const switchEvent = {
+      fromModel,
+      toModel,
+      reason,
+      timestamp: new Date(),
+    };
+    
+    this.modelSwitchHistory.push(switchEvent);
+    
+    // Keep only last 50 switch events
+    if (this.modelSwitchHistory.length > 50) {
+      this.modelSwitchHistory.shift();
+    }
+    
+    // Notify UI if callback is set
+    if (this.onModelSwitchCallback) {
+      this.onModelSwitchCallback(fromModel, toModel, reason);
+    }
+    
+    console.log(`🔄 Model switched: ${fromModel} → ${toModel} (${reason})`);
+  }
+
+  /**
    * Get current proxy configuration
    */
   getProxyUrl(): string | undefined {
@@ -183,7 +243,13 @@ export class GeminiService {
    * Analyze and categorize API errors with user-friendly explanations
    * @private
    */
-  private categorizeApiError(error: any): { category: string; explanation: string; suggestion: string } {
+  private categorizeApiError(error: any): { 
+    category: string; 
+    explanation: string; 
+    suggestion: string; 
+    isQuotaExhausted?: boolean;
+    allowModelSwitch?: boolean;
+  } {
     const errorMessage = error?.message || '';
     const errorCode = error?.status || error?.code;
 
@@ -192,7 +258,9 @@ export class GeminiService {
       return {
         category: 'QUOTA_EXCEEDED',
         explanation: 'API quota limit reached. You have exceeded the daily free tier limit (100 requests per day).',
-        suggestion: 'Wait 24 hours for quota reset or upgrade to a paid plan at https://makersuite.google.com/'
+        suggestion: 'Wait 24 hours for quota reset or upgrade to a paid plan at https://makersuite.google.com/',
+        isQuotaExhausted: true,
+        allowModelSwitch: true,
       };
     }
 
@@ -201,7 +269,8 @@ export class GeminiService {
       return {
         category: 'API_KEY_EXPIRED',
         explanation: 'Your API key has expired and needs to be renewed.',
-        suggestion: 'Generate a new API key at https://makersuite.google.com/app/apikey'
+        suggestion: 'Generate a new API key at https://makersuite.google.com/app/apikey',
+        allowModelSwitch: false,
       };
     }
 
@@ -210,7 +279,8 @@ export class GeminiService {
       return {
         category: 'API_NOT_ENABLED',
         explanation: 'The Generative Language API is not enabled for your Google Cloud project.',
-        suggestion: 'Enable the API in the Google Cloud Console at the URL provided in the error message'
+        suggestion: 'Enable the API in the Google Cloud Console at the URL provided in the error message',
+        allowModelSwitch: false,
       };
     }
 
@@ -219,7 +289,8 @@ export class GeminiService {
       return {
         category: 'THINKING_MODE_REQUIRED',
         explanation: 'The gemini-2.5-pro model requires thinking mode to be enabled with a budget > 0.',
-        suggestion: 'This has been automatically fixed. Please try again.'
+        suggestion: 'This has been automatically fixed. Please try again.',
+        allowModelSwitch: true,
       };
     }
 
@@ -228,7 +299,8 @@ export class GeminiService {
       return {
         category: 'AUTHENTICATION_ERROR',
         explanation: 'Authentication failed. Your API key may be invalid or lacking permissions.',
-        suggestion: 'Check your API key and ensure it has the necessary permissions'
+        suggestion: 'Check your API key and ensure it has the necessary permissions',
+        allowModelSwitch: false,
       };
     }
 
@@ -237,7 +309,8 @@ export class GeminiService {
       return {
         category: 'NETWORK_ERROR',
         explanation: 'Network connectivity issue or request timeout.',
-        suggestion: 'Check your internet connection and proxy settings'
+        suggestion: 'Check your internet connection and proxy settings',
+        allowModelSwitch: false,
       };
     }
 
@@ -245,7 +318,8 @@ export class GeminiService {
     return {
       category: 'UNKNOWN_ERROR',
       explanation: `Unexpected error: ${errorMessage}`,
-      suggestion: 'Please check the error details and try again'
+      suggestion: 'Please check the error details and try again',
+      allowModelSwitch: true, // Allow model switch for unknown errors
     };
   }
 
@@ -290,16 +364,159 @@ export class GeminiService {
   }
 
   /**
+   * Generate streaming response with intelligent model switching
+   * Automatically switches to alternative models when quota is exhausted
+   * @param messages - Array of conversation messages
+   * @param preferredModel - Preferred model to start with
+   * @param config - Optional conversation configuration
+   * @returns AsyncGenerator yielding chunks with model switch notifications
+   */
+  async* generateStreamingResponseWithModelSwitch(
+    messages: Message[],
+    preferredModel: string = 'gemini-2.0-flash',
+    config?: GeminiGenerationConfig
+  ): AsyncGenerator<{ 
+    text?: string; 
+    groundingMetadata?: GroundingMetadata; 
+    urlContextMetadata?: UrlContextMetadata;
+    modelSwitched?: boolean;
+    newModel?: string;
+    switchReason?: string;
+  }, void, unknown> {
+    
+    // Validate prerequisites
+    if (this.apiKeys.length === 0) {
+      const error = new Error('No API keys available. Please set API keys first.');
+      console.error('❌ API Key Error:', error.message);
+      throw error;
+    }
+
+    if (!messages || messages.length === 0) {
+      const error = new Error('No messages provided for generation');
+      console.error('❌ Input Validation Error:', error.message);
+      throw error;
+    }
+
+    console.log(`🚀 Starting intelligent streaming with preferred model: ${preferredModel}`);
+    console.log(`📝 Processing ${messages.length} messages`);
+
+    let currentModel = preferredModel;
+    let hasTriedAlternatives = false;
+
+    // Try preferred model first, then alternatives if needed
+    while (true) {
+      try {
+        console.log(`🔄 Attempting streaming with model: ${currentModel}`);
+        
+        // Use grounding-enabled streaming if available and enabled
+        const useGrounding = config?.groundingConfig?.enabled;
+        
+        if (useGrounding) {
+          yield* this.executeStreamingWithModel(
+            messages, 
+            currentModel, 
+            config, 
+            true // use grounding
+          );
+        } else {
+          yield* this.executeStreamingWithModel(
+            messages, 
+            currentModel, 
+            config, 
+            false // no grounding
+          );
+        }
+        
+        // Success - exit the loop
+        console.log(`✅ Streaming successful with model: ${currentModel}`);
+        return;
+        
+      } catch (error) {
+        const errorAnalysis = this.categorizeApiError(error as Error);
+        
+        console.error(`❌ Model ${currentModel} failed:`, {
+          error: error instanceof Error ? error.message : 'Unknown error',
+          category: errorAnalysis.category,
+          allowModelSwitch: errorAnalysis.allowModelSwitch
+        });
+
+        // If error allows model switching and we haven't tried alternatives yet
+        if (errorAnalysis.allowModelSwitch && errorAnalysis.isQuotaExhausted && !hasTriedAlternatives) {
+          const nextModel = getNextBestModel(currentModel);
+          
+          if (nextModel) {
+            const switchReason = getModelSwitchExplanation(currentModel, nextModel);
+            this.recordModelSwitch(currentModel, nextModel, `Quota exhausted: ${switchReason}`);
+            
+            // Notify UI about model switch
+            yield {
+              modelSwitched: true,
+              newModel: nextModel,
+              switchReason: `⚠️ ${currentModel} quota exhausted. ${switchReason}`
+            };
+            
+            currentModel = nextModel;
+            hasTriedAlternatives = true;
+            
+            // Reset the error state and try again with the new model
+            console.log(`🔄 Retrying with new model: ${currentModel}`);
+            continue; // Try again with new model
+          } else {
+            // No alternative model available
+            console.log(`💥 No alternative model available for ${currentModel}`);
+            throw new Error(`Quota exhausted for model ${currentModel} and no suitable alternatives available. Please wait for quota reset or upgrade your plan.`);
+          }
+        }
+        
+        // If we can't switch models or have no alternatives, give up
+        console.error(`💥 All model options exhausted for streaming`);
+        throw error;
+      }
+    }
+  }
+
+  /**
+   * Execute streaming generation with a specific model
+   * @private
+   */
+  private async* executeStreamingWithModel(
+    messages: Message[],
+    model: string,
+    config?: GeminiGenerationConfig,
+    useGrounding: boolean = false
+  ): AsyncGenerator<{ 
+    text?: string; 
+    groundingMetadata?: GroundingMetadata; 
+    urlContextMetadata?: UrlContextMetadata;
+  }, void, unknown> {
+    
+    this.totalRequests++;
+    
+    if (useGrounding) {
+      yield* this.executeGroundingStreamingGeneration(messages, model, config);
+    } else {
+      // Adapt the string-based generator to object-based generator
+      const stringGenerator = this.executeStreamingGeneration(messages, model, config);
+      for await (const textChunk of stringGenerator) {
+        yield { text: textChunk };
+      }
+    }
+    
+    // Track success for the current key
+    this.trackKeySuccess(this.currentKeyIndex);
+  }
+
+  /**
    * Generate streaming response with Google Search Grounding support
    * Enhanced for 2025 with grounding and URL context capabilities
    * @param messages - Array of conversation messages
-   * @param model - Model to use (defaults to gemini-2.5-flash)
+   * @param model - Model to use (defaults to gemini-2.0-flash)
    * @param config - Optional conversation configuration
    * @returns AsyncGenerator yielding chunks and final grounding metadata
    */
   async* generateStreamingResponseWithGrounding(
     messages: Message[],
-    model: string = 'gemini-2.5-flash',
+    model: string = 'gemini-2.0-flash',
     config?: GeminiGenerationConfig
   ): AsyncGenerator<{ text?: string; groundingMetadata?: GroundingMetadata; urlContextMetadata?: UrlContextMetadata }, void, unknown> {
     // Validate prerequisites
@@ -375,7 +592,7 @@ export class GeminiService {
   }
   async* generateStreamingResponse(
     messages: Message[],
-    model: string = 'gemini-2.5-flash',
+    model: string = 'gemini-2.0-flash',
     config?: GeminiGenerationConfig
   ): AsyncGenerator<string, void, unknown> {
     // Validate prerequisites
@@ -960,16 +1177,24 @@ export class GeminiService {
   }
 
   /**
-   * Generate response from Gemini AI with comprehensive error handling and multiple API key support
+   * Generate response with intelligent model switching
+   * Automatically switches to alternative models when quota is exhausted
    * @param messages - Array of conversation messages
-   * @param model - Model to use (defaults to gemini-2.5-flash)
-   * @returns Promise<string> - The AI response
+   * @param preferredModel - Preferred model to start with
+   * @param config - Optional conversation configuration
+   * @returns Promise with response and model switch information
    */
-  async generateResponse(
+  async generateResponseWithModelSwitch(
     messages: Message[],
-    model: string = 'gemini-2.5-flash',
+    preferredModel: string = 'gemini-2.0-flash',
     config?: GeminiGenerationConfig
-  ): Promise<string | GeminiResponse> {
+  ): Promise<{
+    response: string | GeminiResponse;
+    modelUsed: string;
+    modelSwitched?: boolean;
+    switchReason?: string;
+  }> {
+    
     // Validate prerequisites
     if (this.apiKeys.length === 0) {
       const error = new Error('No API keys available. Please set API keys first.');
@@ -983,57 +1208,80 @@ export class GeminiService {
       throw error;
     }
 
-    console.log(`🚀 Starting content generation with model: ${model}`);
+    console.log(`🚀 Starting intelligent generation with preferred model: ${preferredModel}`);
     console.log(`📝 Processing ${messages.length} messages`);
-    console.log(`🔑 Using ${this.apiKeys.length} API keys in round-robin mode`);
 
-    let lastError: Error | null = null;
-    const initialKeyIndex = this.currentKeyIndex;
+    let currentModel = preferredModel;
+    let hasTriedAlternatives = false;
 
-    // Try each API key until one succeeds
-    do {
+    // Try preferred model first, then alternatives if needed
+    while (true) {
       try {
-        console.log(`🔄 Attempting with API key ${this.currentKeyIndex + 1}/${this.apiKeys.length}`);
+        console.log(`🔄 Attempting generation with model: ${currentModel}`);
         this.totalRequests++;
-        const result = await this.executeGenerationWithRetries(messages, model, config);
+        
+        const response = await this.executeGenerationWithRetries(messages, currentModel, config);
         
         // Track success
         this.trackKeySuccess(this.currentKeyIndex);
         
-        console.log('✅ Content generation successful');
-        console.log(`📊 Response length: ${result.length} characters`);
-        return result;
+        console.log(`✅ Generation successful with model: ${currentModel}`);
+        return {
+          response,
+          modelUsed: currentModel,
+          modelSwitched: currentModel !== preferredModel,
+          switchReason: currentModel !== preferredModel ? `Switched from ${preferredModel} due to quota limits` : undefined
+        };
+        
       } catch (error) {
-        lastError = error as Error;
-        this.totalErrors++;
+        const errorAnalysis = this.categorizeApiError(error as Error);
         
-        // Track error for current key
-        this.trackKeyError(this.currentKeyIndex, (error as Error).message);
-        
-        console.error(`❌ API key ${this.currentKeyIndex + 1} failed:`, {
+        console.error(`❌ Model ${currentModel} failed:`, {
           error: error instanceof Error ? error.message : 'Unknown error',
-          type: error instanceof Error ? error.constructor.name : 'Unknown'
+          category: errorAnalysis.category,
+          isQuotaExhausted: errorAnalysis.isQuotaExhausted
         });
 
-        // Check if this is a non-retryable error for this specific key
-        if (this.isNonRetryableError(error as Error)) {
-          console.log('🚫 Non-retryable error detected, trying next API key');
+        // Only try model switching for quota exhaustion errors
+        if (errorAnalysis.isQuotaExhausted && !hasTriedAlternatives) {
+          const nextModel = getNextBestModel(currentModel);
+          
+          if (nextModel) {
+            const switchReason = getModelSwitchExplanation(currentModel, nextModel);
+            this.recordModelSwitch(currentModel, nextModel, `Quota exhausted: ${switchReason}`);
+            
+            currentModel = nextModel;
+            hasTriedAlternatives = true;
+            continue; // Try again with new model
+          } else {
+            // No alternative model available
+            console.log(`💥 No alternative model available for ${currentModel}`);
+            throw new Error(`Quota exhausted for model ${currentModel} and no suitable alternatives available. Please wait for quota reset or upgrade your plan.`);
+          }
         }
-
-        // Move to next key
-        this.moveToNextKey();
-
-        // If we've tried all keys, break
-        if (this.currentKeyIndex === initialKeyIndex) {
-          console.log('💥 All API keys have been tried');
-          break;
-        }
+        
+        // For non-quota errors or if we've already tried alternatives, give up
+        console.error(`💥 All model options exhausted for generation`);
+        throw error;
       }
-    } while (this.currentKeyIndex !== initialKeyIndex);
+    }
+  }
 
-    // All API keys exhausted
-    console.error('💥 All API keys failed');
-    throw lastError || new Error('Failed to generate response with any API key');
+  /**
+   * Generate response from Gemini AI with comprehensive error handling and multiple API key support
+   * @deprecated Use generateResponseWithModelSwitch for intelligent model switching
+   * @param messages - Array of conversation messages
+   * @param model - Model to use (defaults to gemini-2.0-flash)
+   * @returns Promise<string> - The AI response
+   */
+  async generateResponse(
+    messages: Message[],
+    model: string = 'gemini-2.0-flash',
+    config?: GeminiGenerationConfig
+  ): Promise<string | GeminiResponse> {
+    // For backward compatibility, just use the model switch version but only return the response
+    const result = await this.generateResponseWithModelSwitch(messages, model, config);
+    return result.response;
   }
 
   /**
@@ -1531,6 +1779,12 @@ export class GeminiService {
       recommendations.push('Specialized for high-quality image generation');
     }
 
+    if (modelId.includes('gemma-3')) {
+      recommendations.push('Open-source model optimized for instruction-following');
+      recommendations.push('Excellent for coding and technical tasks');
+      recommendations.push('High-performance with 27 billion parameters');
+    }
+
     if (capabilities.maxContextTokens > 500000) {
       recommendations.push('Supports very long conversations and documents');
     }
@@ -1988,7 +2242,7 @@ export class GeminiService {
     try {
       const ai = new GoogleGenAI({ apiKey });
       const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-2.0-flash',
         contents: [{ role: 'user', parts: [{ text: 'Test validation' }] }],
         generationConfig: {
           maxOutputTokens: 10,
@@ -2014,7 +2268,7 @@ export class GeminiService {
    * Uses experimental URL Context tool for deep web content analysis
    * @param urls - Array of URLs to analyze
    * @param query - Analysis query or question about the URLs
-   * @param model - Model to use (defaults to gemini-2.5-flash)
+   * @param model - Model to use (defaults to gemini-2.0-flash)
    * @returns Promise<{ text: string; urlContextMetadata?: UrlContextMetadata }>
    */
   async analyzeUrls(
@@ -2188,7 +2442,7 @@ Please provide a comprehensive analysis based on the content of these URLs.`;
 
       const ai = this.createGenAI();
       const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-2.0-flash',
         contents: [{ role: 'user', parts: [{ text: 'Hello, this is a connection test.' }] }]
       });
       

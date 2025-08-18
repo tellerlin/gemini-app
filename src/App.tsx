@@ -6,6 +6,7 @@ import { ChatArea } from './components/ChatArea';
 import { ApiKeyModal } from './components/ApiKeyModal';
 import { AdvancedSettingsModal } from './components/AdvancedSettingsModal';
 import { PerformanceMonitor } from './components/PerformanceMonitor';
+import { ModelSwitchIndicator } from './components/ModelSwitchIndicator';
 import { useChat } from './hooks/useChat';
 import { useResponsive } from './hooks/useLocalStorage';
 import { Button } from './components/ui/Button';
@@ -173,6 +174,9 @@ function App() {
             onClose={() => setPerformanceMonitorOpen(false)}
             getMetrics={getPerformanceMetrics}
           />
+          
+          {/* Model Switch Indicator */}
+          <ModelSwitchIndicator />
         </>
       </div>
     </GlobalErrorBoundary>

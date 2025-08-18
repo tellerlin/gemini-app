@@ -30,7 +30,7 @@ export function useChat() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingMessage, setStreamingMessage] = useState('');
   const [apiKeys, setApiKeys] = useLocalStorage<string[]>('gemini-api-keys', []);
-  const [selectedModel, setSelectedModel] = useLocalStorage('selected-model', 'gemini-2.5-flash');
+  const [selectedModel, setSelectedModel] = useLocalStorage('selected-model', 'gemini-2.0-flash');
   
   // Enhanced default configurations with grounding and URL context
   const [defaultConversationConfig, setDefaultConversationConfig] = useLocalStorage<ConversationConfig>('default-conversation-config', {
@@ -115,6 +115,14 @@ export function useChat() {
     }
 
     geminiService.setApiKeys(apiKeys);
+    
+    // Set up model switch callback to notify user
+    geminiService.setModelSwitchCallback((fromModel: string, toModel: string, reason: string) => {
+      toast.success(`🔄 Switched to ${toModel}: ${reason}`, {
+        duration: 6000,
+        icon: '🤖',
+      });
+    });
 
     // Ensure we have a current conversation
     let conversation = currentConversation;
@@ -180,6 +188,7 @@ export function useChat() {
       let fullResponse = '';
       let groundingMetadata = null;
       let urlContextMetadata = null;
+      let actualModelUsed = selectedModel; // Track the actual model used (may change due to switching)
       
       // Create placeholder assistant message
       const placeholderMessage: Message = {
@@ -226,7 +235,7 @@ export function useChat() {
       if (useStreaming) {
         setIsStreaming(true);
         if (useGrounding) {
-          console.log('🔍 Using grounding-enabled streaming generation');
+          console.log('🔍 Using grounding-enabled streaming generation with model switching');
           const stream = geminiService.generateStreamingResponseWithGrounding(
             optimizedMessages, 
             selectedModel,
@@ -250,23 +259,51 @@ export function useChat() {
             }
           }
         } else {
-          // Use standard streaming
-          console.log('⚡ Using standard streaming generation');
-          const stream = geminiService.generateStreamingResponse(
+          // Use intelligent streaming with model switching
+          console.log('⚡ Using intelligent streaming generation with model switching');
+          const stream = geminiService.generateStreamingResponseWithModelSwitch(
             optimizedMessages, 
             selectedModel,
             enhancedConfig
           );
 
+          let actualModelUsed = selectedModel;
           for await (const chunk of stream) {
-            fullResponse += chunk;
-            setStreamingMessage(fullResponse);
-            // Don't update conversations during streaming - only update streamingMessage
+            if (chunk.text) {
+              fullResponse += chunk.text;
+              setStreamingMessage(fullResponse);
+            }
+            
+            // Handle model switch notifications
+            if (chunk.modelSwitched && chunk.newModel) {
+              actualModelUsed = chunk.newModel;
+              console.log(`🔄 Model switched during streaming: ${selectedModel} → ${chunk.newModel}`);
+              
+              // Update selected model for future messages
+              setSelectedModel(chunk.newModel);
+              
+              // Show user notification about model switch
+              toast.success(`🔄 ${chunk.switchReason}`, {
+                duration: 8000,
+                icon: '⚠️',
+              });
+            }
+            
+            // Capture grounding metadata
+            if (chunk.groundingMetadata) {
+              groundingMetadata = chunk.groundingMetadata;
+            }
+            
+            if (chunk.urlContextMetadata) {
+              urlContextMetadata = chunk.urlContextMetadata;
+            }
           }
         }
       } else {
         // Non-streaming mode - get complete response at once
-        console.log('🎯 Using non-streaming generation');
+        console.log('🎯 Using intelligent non-streaming generation with model switching');
+        
+        let actualModelUsed = selectedModel;
         if (useGrounding) {
           const response = await geminiService.generateResponseWithGrounding(
             optimizedMessages,
@@ -277,11 +314,29 @@ export function useChat() {
           groundingMetadata = response.groundingMetadata;
           urlContextMetadata = response.urlContextMetadata;
         } else {
-          const response = await geminiService.generateResponse(
+          // Use intelligent generation with model switching
+          const result = await geminiService.generateResponseWithModelSwitch(
             optimizedMessages,
             selectedModel,
             enhancedConfig
           );
+          
+          const response = result.response;
+          actualModelUsed = result.modelUsed;
+          
+          // Handle model switch for non-streaming
+          if (result.modelSwitched && result.switchReason) {
+            console.log(`🔄 Model switched during generation: ${selectedModel} → ${actualModelUsed}`);
+            
+            // Update selected model for future messages
+            setSelectedModel(actualModelUsed);
+            
+            // Show user notification about model switch
+            toast.success(`🔄 ${result.switchReason}`, {
+              duration: 8000,
+              icon: '⚠️',
+            });
+          }
           
           // Handle both string and GeminiResponse types
           if (typeof response === 'string') {
@@ -307,11 +362,11 @@ export function useChat() {
               const imageMessage: Message = {
                 id: assistantMessageId,
                 role: 'assistant',
-                content: fullResponse || `Generated ${response.images.length} image${response.images.length > 1 ? 's' : ''} using ${selectedModel}`,
+                content: fullResponse || `Generated ${response.images.length} image${response.images.length > 1 ? 's' : ''} using ${actualModelUsed}`,
                 timestamp: new Date(),
                 files: generatedImages,
                 metadata: {
-                  modelUsed: selectedModel,
+                  modelUsed: actualModelUsed,
                   thinkingEnabled: optimalThinking.enabled,
                   ...(response.groundingMetadata && { groundingMetadata: response.groundingMetadata }),
                   ...(response.urlContextMetadata && { urlContextMetadata: response.urlContextMetadata }),
@@ -326,10 +381,6 @@ export function useChat() {
               };
               
               await saveConversation(finalConversationWithImages);
-              setConversations(prev => ({
-                ...prev,
-                [conversationId]: finalConversationWithImages,
-              }));
               
               return;
             }
@@ -349,7 +400,7 @@ export function useChat() {
         content: fullResponse,
         timestamp: new Date(),
         metadata: {
-          modelUsed: selectedModel,
+          modelUsed: actualModelUsed || selectedModel,
           thinkingEnabled: optimalThinking.enabled,
           ...(groundingMetadata && { groundingMetadata }),
           ...(urlContextMetadata && { urlContextMetadata }),

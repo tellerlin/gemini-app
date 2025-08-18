@@ -15,7 +15,7 @@ export const GEMINI_MODELS: Array<{
 }> = [
   {
     id: 'gemini-2.5-pro',
-    name: 'Gemini 2.5 Pro (GA)',
+    name: 'Gemini 2.5 Pro',
     description: 'Enhanced thinking and reasoning, multimodal understanding, advanced coding, and more - now in General Availability with thinking capability',
     supportsVision: true,
     supportsAudio: true,
@@ -29,7 +29,7 @@ export const GEMINI_MODELS: Array<{
   },
   {
     id: 'gemini-2.5-flash',
-    name: 'Gemini 2.5 Flash (GA)',
+    name: 'Gemini 2.5 Flash',
     description: 'Adaptive thinking with cost efficiency - General Availability version with thinking budgets',
     supportsVision: true,
     supportsAudio: true,
@@ -54,20 +54,63 @@ export const GEMINI_MODELS: Array<{
     costTier: 'low',
   },
   {
-    id: 'gemini-2.5-flash-live',
-    name: 'Gemini 2.5 Flash Live',
-    description: 'Low-latency bidirectional voice and video interactions with real-time processing',
+    id: 'gemini-2.0-flash',
+    name: 'Gemini 2.0 Flash',
+    description: 'Advanced multimodal model with enhanced reasoning and performance capabilities',
     supportsVision: true,
     supportsAudio: true,
     supportsVideo: true,
-    supportsLive: true,
     supportsThinking: true,
+    supportsGrounding: true,
+    supportsUrlContext: true,
+    maxTokens: 1000000,
+    costTier: 'medium',
+  },
+  {
+    id: 'gemma-3-27b-it',
+    name: 'Gemma 3 27B IT',
+    description: 'High-performance open-source model with 27 billion parameters, optimized for instruction-following and coding tasks',
+    supportsVision: false,
+    supportsAudio: false,
+    supportsVideo: false,
+    supportsThinking: false,
+    supportsGrounding: false,
+    supportsUrlContext: false,
     maxTokens: 8192,
-    costTier: 'high',
+    costTier: 'low',
   },
 ];
 
-export const DEFAULT_MODEL = 'gemini-2.5-flash';
+export const DEFAULT_MODEL = 'gemini-2.0-flash';
+
+// Model fallback chain for intelligent switching when quota is exhausted
+export const MODEL_FALLBACK_CHAINS: Record<string, string[]> = {
+  'gemini-2.5-pro': [
+    'gemini-2.5-flash', // Same generation, faster and cheaper
+    'gemini-2.5-flash-lite', // Even more cost-effective
+    'gemma-3-27b-it', // Open-source fallback
+  ],
+  'gemini-2.5-flash': [
+    'gemini-2.5-flash-lite', // More cost-effective alternative
+    'gemma-3-27b-it', // Open-source alternative
+    'gemini-2.5-pro', // Upgrade if lite doesn't work
+  ],
+  'gemini-2.5-flash-lite': [
+    'gemma-3-27b-it', // Similar cost tier, different capabilities
+    'gemini-2.5-flash', // Upgrade to better performance
+    'gemini-2.5-pro', // Premium fallback
+  ],
+  'gemini-2.0-flash': [
+    'gemini-2.5-flash', // Alternative with similar capabilities
+    'gemma-3-27b-it', // Open-source alternative
+    'gemini-2.5-pro', // Premium alternative
+  ],
+  'gemma-3-27b-it': [
+    'gemini-2.5-flash-lite', // Similar cost tier
+    'gemini-2.5-flash', // Better multimodal support
+    'gemini-2.0-flash', // Advanced features
+  ],
+};
 
 // Model capability helper
 export const getModelCapabilities = (modelId: string) => {
@@ -88,6 +131,40 @@ export const getModelCapabilities = (modelId: string) => {
     supportsUrlContext: model.supportsUrlContext || false,
     maxContextTokens: model.maxTokens || 32768,
   };
+};
+
+// Get the next best model when current model fails
+export const getNextBestModel = (currentModel: string): string | null => {
+  const fallbackChain = MODEL_FALLBACK_CHAINS[currentModel];
+  if (!fallbackChain || fallbackChain.length === 0) {
+    return null;
+  }
+  return fallbackChain[0]; // Return the best alternative
+};
+
+// Get user-friendly explanation for model switch
+export const getModelSwitchExplanation = (fromModel: string, toModel: string): string => {
+  const fromModelInfo = GEMINI_MODELS.find(m => m.id === fromModel);
+  const toModelInfo = GEMINI_MODELS.find(m => m.id === toModel);
+  
+  if (!fromModelInfo || !toModelInfo) {
+    return `Switched from ${fromModel} to ${toModel} due to quota exhaustion.`;
+  }
+  
+  const fromTier = fromModelInfo.costTier || 'medium';
+  const toTier = toModelInfo.costTier || 'medium';
+  
+  if (fromTier === 'high' && toTier === 'medium') {
+    return `Switched from ${fromModelInfo.name} to ${toModelInfo.name} for better cost efficiency while maintaining quality.`;
+  } else if (fromTier === 'medium' && toTier === 'low') {
+    return `Switched from ${fromModelInfo.name} to ${toModelInfo.name} for maximum cost efficiency.`;
+  } else if (fromTier === 'low' && toTier === 'medium') {
+    return `Upgraded from ${fromModelInfo.name} to ${toModelInfo.name} for better performance and capabilities.`;
+  } else if (fromTier === 'medium' && toTier === 'high') {
+    return `Upgraded to ${toModelInfo.name} for premium quality and advanced capabilities.`;
+  } else {
+    return `Switched to ${toModelInfo.name} for optimal performance.`;
+  }
 };
 
 // Smart thinking configuration based on task type

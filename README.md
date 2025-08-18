@@ -32,9 +32,14 @@ A modern, feature-rich chat interface for Google's Gemini AI models built with R
 
 ### Technical Features
 - **TypeScript**: Full type safety and IntelliSense support
-- **Modern React**: Functional components with hooks
+- **Modern React**: Functional components with hooks and React 19 features
+- **State Management**: Zustand for lightweight, optimized state management
+- **Virtual Scrolling**: Efficient handling of large message lists
+- **Performance Monitoring**: Real-time performance tracking and optimization
+- **Security**: Encrypted API key storage with Web Crypto API
+- **Error Boundaries**: Comprehensive error handling and recovery
 - **Tailwind CSS**: Utility-first styling
-- **Vite**: Fast development and build tooling
+- **Vite**: Fast development and build tooling with advanced optimization
 - **ESLint**: Code quality and consistency
 
 ## 🛠️ Technology Stack
@@ -57,6 +62,10 @@ A modern, feature-rich chat interface for Google's Gemini AI models built with R
 - **ReactFlow 11.11.4** - Node-based flow diagrams
 - **KaTeX 0.16.22** - Mathematical expression rendering
 - **React KaTeX 3.1.0** - React wrapper for KaTeX
+
+### State Management & Performance
+- **Zustand 5.0.7** - Lightweight state management with persistence
+- **Immer 10.1.1** - Immutable state updates
 
 ### UI/UX
 - **React Hot Toast 2.5.2** - Toast notifications
@@ -238,8 +247,10 @@ src/
 │   ├── EnhancedTable.tsx # Interactive data tables with sorting and export
 │   ├── ExportRenderer.tsx # Content export functionality
 │   ├── FileUpload.tsx  # Drag-and-drop file upload component
+│   ├── GlobalErrorBoundary.tsx # Global error handling and recovery
 │   ├── MermaidDiagram.tsx # Flowchart and diagram rendering
 │   ├── MessageBubble.tsx # Basic message display component
+│   ├── ModelSwitchIndicator.tsx # Model switching visual feedback
 │   ├── ModernMarkdownRenderer.tsx # Enhanced markdown rendering
 │   ├── OptimizedMermaidDiagram.tsx # Performance-optimized Mermaid rendering
 │   ├── PerformanceMonitor.tsx # Real-time performance monitoring
@@ -247,7 +258,8 @@ src/
 │   ├── Sidebar.tsx     # Conversation sidebar with navigation
 │   ├── SmartLoadingIndicator.tsx # Intelligent loading states
 │   ├── StreamingMessage.tsx # Real-time streaming message display
-│   └── UserManager.tsx # User profile and settings management
+│   ├── UserManager.tsx # User profile and settings management
+│   └── VirtualizedChatList.tsx # Virtualized chat list for performance
 ├── config/             # Configuration files
 │   └── gemini.ts       # Gemini model configurations and capabilities
 ├── hooks/              # Custom React hooks
@@ -255,6 +267,8 @@ src/
 │   └── useLocalStorage.ts # Local storage utilities and conversation management
 ├── services/           # External service integrations
 │   └── gemini.ts       # Gemini AI service layer with advanced error handling
+├── stores/             # State management
+│   └── appStore.ts     # Zustand-based global state management
 ├── types/              # TypeScript type definitions
 │   └── chat.ts         # Chat-related interfaces and types
 ├── utils/              # Utility functions
@@ -263,6 +277,9 @@ src/
 │   ├── contextManager.ts # Context optimization and summarization
 │   ├── conversationDB.ts # IndexedDB conversation storage
 │   ├── env.ts          # Environment variable utilities
+│   ├── lazyComponents.ts # Lazy loading utilities for performance
+│   ├── performanceTracker.ts # Performance monitoring and metrics
+│   ├── security.ts     # Security utilities and API key encryption
 │   ├── storageStrategy.ts # Storage strategy implementation
 │   └── userManager.ts  # User data management
 ├── App.tsx             # Main application component
@@ -284,6 +301,15 @@ The core service layer provides comprehensive AI integration:
 - **Content Generation**: Support for both streaming and non-streaming responses
 - **Advanced Features**: Grounding, URL context, and thinking capabilities
 
+### State Management Architecture
+The application uses **Zustand** for lightweight, efficient state management:
+
+- **App Store**: Global state management with persistence
+- **Performance Tracking**: Real-time metrics and monitoring
+- **Immutable Updates**: Immer integration for safe state mutations
+- **Selective Subscriptions**: Optimized re-rendering with targeted selectors
+- **Batch Updates**: Efficient handling of multiple state changes
+
 ### Key Methods
 - `generateResponse()`: Main content generation with comprehensive error handling
 - `generateStreamingResponse()`: Real-time streaming with performance optimization
@@ -298,11 +324,13 @@ The core service layer provides comprehensive AI integration:
 ## 🎨 UI Components
 
 ### Core Components
-- **ChatArea**: Main conversation interface with message display
+- **ChatArea**: Main conversation interface with virtualized message display
 - **ChatInput**: Message composition with file upload
 - **Sidebar**: Conversation management and settings
 - **EnhancedMessageBubble**: Advanced message rendering with rich content support
-- **ApiKeyModal**: API key configuration interface
+- **VirtualizedChatList**: High-performance message list with virtualization
+- **GlobalErrorBoundary**: Application-wide error handling and recovery
+- **PerformanceMonitor**: Real-time performance metrics and monitoring
 
 ### Enhanced Content Components
 - **MermaidDiagram**: Interactive flowchart and diagram rendering
@@ -311,25 +339,29 @@ The core service layer provides comprehensive AI integration:
 - **ContentParser**: AI response content parsing and categorization
 
 ### UI Features
-- **Responsive Design**: Mobile-first approach
-- **Dark/Light Mode**: Theme support (configurable)
-- **Loading States**: Visual feedback during API calls
-- **Error States**: User-friendly error messages
-- **File Upload**: Drag-and-drop image support
+- **Responsive Design**: Mobile-first approach with adaptive layouts
+- **Performance Optimization**: Virtual scrolling for large message lists
+- **Error Boundaries**: Comprehensive error handling with graceful recovery
+- **Loading States**: Smart loading indicators with performance tracking
+- **Security**: Encrypted API key storage with secure display
+- **File Upload**: Drag-and-drop image support with validation
 
 ## 🔒 Security & Privacy
 
 ### Data Handling
-- **Local Storage**: All data stored locally in browser
-- **No Server**: No data transmitted to external servers
-- **API Keys**: Stored securely in browser local storage
-- **File Processing**: Images processed client-side
+- **Local Storage**: All data stored locally in browser using IndexedDB
+- **No Server**: No data transmitted to external servers except Gemini API
+- **API Keys**: Encrypted storage using Web Crypto API with browser fingerprinting
+- **File Processing**: Images processed client-side with secure validation
+- **State Persistence**: Zustand persistence with secure storage strategies
 
 ### Best Practices
-- API keys are never logged or transmitted unnecessarily
-- File uploads are validated for type and size
+- API keys are encrypted and never logged or transmitted unnecessarily
+- File uploads are validated for type, size, and security
 - Error messages don't expose sensitive information
 - Secure HTTPS communication with Google AI API
+- Input sanitization prevents XSS attacks
+- Comprehensive error boundaries prevent data leaks
 
 ## 🚀 Deployment
 
@@ -441,11 +473,14 @@ docker run -d \
 ### Performance Optimization
 
 **Build Optimizations:**
-- Code splitting and lazy loading
-- Asset optimization (images, fonts)
-- Gzip compression
+- Code splitting and lazy loading for optimal performance
+- Virtual scrolling for large data sets
+- Optimized bundle chunking with vendor separation
+- Asset optimization (images, fonts) with compression
+- Gzip compression with terser optimization
 - Tree shaking for smaller bundles
 - Browser caching strategies
+- Performance monitoring and tracking
 
 **CDN Benefits:**
 - Global edge distribution
@@ -481,9 +516,40 @@ npm run lint     # Run ESLint
 ```
 
 ### Code Quality
-- **ESLint**: Code linting and formatting
-- **TypeScript**: Static type checking
-- **React Hooks**: Custom hook validation
+- **ESLint**: Code linting and formatting with modern rules
+- **TypeScript**: Static type checking with strict configuration
+- **React Hooks**: Custom hook validation and dependency tracking
+- **Performance**: Virtual scrolling and optimized re-rendering
+- **Error Handling**: Comprehensive error boundaries and recovery
+
+## ⚡ Performance Optimizations
+
+### Recent Performance Improvements
+The application has undergone comprehensive optimization to deliver exceptional performance:
+
+### Bundle Optimization
+- **Code Splitting**: Intelligent vendor chunk separation (React, Gemini, UI, Markdown, Diagrams)
+- **Lazy Loading**: Dynamic imports for heavy components with Suspense boundaries
+- **Tree Shaking**: Unused code elimination with terser optimization
+- **Asset Optimization**: Compressed images, fonts, and static assets
+
+### Runtime Performance
+- **Virtual Scrolling**: Efficient rendering of large message lists with `VirtualizedChatList`
+- **React.memo**: Optimized components prevent unnecessary re-renders
+- **State Management**: Zustand with selective subscriptions and batch updates
+- **Memory Management**: Proper cleanup and garbage collection strategies
+
+### Security Enhancements
+- **API Key Encryption**: Web Crypto API with browser fingerprinting
+- **Input Sanitization**: XSS protection and secure file validation
+- **Error Boundaries**: Comprehensive error handling with graceful recovery
+- **Secure Storage**: Encrypted persistence for sensitive data
+
+### Monitoring & Metrics
+- **Performance Tracking**: Real-time Core Web Vitals monitoring
+- **Bundle Analysis**: Size tracking and optimization metrics
+- **Error Reporting**: Comprehensive error boundaries with recovery options
+- **Memory Usage**: Performance tracker for memory and FPS monitoring
 
 ## 🤝 Contributing
 
