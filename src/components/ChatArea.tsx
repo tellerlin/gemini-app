@@ -38,7 +38,7 @@ export function ChatArea({
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, streamingMessage || '']); // 确保依赖数组大小稳定
+  }, [messages.length, streamingMessage]); // 使用 messages.length 代替 messages 数组引用
 
   if (!hasApiKey) {
     return (

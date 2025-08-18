@@ -333,20 +333,142 @@ The core service layer provides comprehensive AI integration:
 
 ## 🚀 Deployment
 
-### Build for Production
+### Quick Deploy
+
+#### Cloudflare Pages (Recommended)
+[![Deploy to Cloudflare Pages](https://deploy.workers.cloudflare.com/button)](https://dash.cloudflare.com/sign-up/pages/from/github?template_url=https://github.com/tellerlin/gemini-app)
+
+**One-click deployment to Cloudflare Pages:**
+1. Click the deploy button above
+2. Connect your GitHub account
+3. Configure environment variables:
+   - `VITE_GEMINI_API_KEYS`: Your Gemini API keys (comma-separated)
+   - `VITE_PROXY_URL`: Optional proxy URL
+4. Deploy automatically
+
+#### Docker Deployment
+```bash
+# Quick start with Docker
+docker run -d \
+  --name gemini-app \
+  -p 80:80 \
+  -e NODE_ENV=production \
+  gemini-app:latest
+
+# Or use Docker Compose
+docker-compose up -d
+```
+
+#### Manual Deployment
+
+**Build for Production**
 ```bash
 npm run build
 ```
 
-### Preview Production Build
+**Preview Production Build**
 ```bash
 npm run preview
 ```
 
 ### Deployment Options
-- **Static Hosting**: Deploy to Vercel, Netlify, or GitHub Pages
-- **Docker**: Containerize for cloud deployment
-- **CDN**: Serve static assets via CDN
+
+#### 🌐 Cloudflare Pages
+- **Performance**: Global CDN with edge caching
+- **SSL**: Automatic HTTPS certificates
+- **Custom Domains**: Free custom domain support
+- **Build Integration**: Automatic builds from GitHub
+- **Environment Variables**: Secure API key storage
+
+**Configuration:**
+- Build command: `npm run build`
+- Build output directory: `dist`
+- Node.js version: `18`
+
+#### 🐳 Docker & Container Platforms
+- **Dockerfile**: Multi-stage build with nginx
+- **Docker Compose**: Complete container setup
+- **Health Checks**: Built-in health monitoring
+- **Resource Optimization**: Lightweight Alpine Linux base
+
+**Supported Platforms:**
+- Docker Hub
+- Google Cloud Run
+- AWS App Runner
+- Azure Container Instances
+- Railway
+- Fly.io
+
+#### 📦 Static Hosting
+- **Vercel**: `vercel --prod`
+- **Netlify**: Drag & drop `dist` folder
+- **GitHub Pages**: Upload build files
+- **AWS S3**: Static website hosting
+- **Azure Static Web Apps**: GitHub integration
+
+### Environment Configuration
+
+**Required Environment Variables:**
+```env
+# Gemini API Keys (required)
+VITE_GEMINI_API_KEYS=your_api_key_1,your_api_key_2,your_api_key_3
+
+# Optional Proxy Configuration
+VITE_PROXY_URL=http://proxy.example.com:8080
+
+# Build Environment
+NODE_ENV=production
+```
+
+**Cloudflare Pages Environment Variables:**
+1. Go to your Cloudflare Pages project
+2. Navigate to Settings → Environment variables
+3. Add production variables:
+   - `VITE_GEMINI_API_KEYS`: Your API keys
+   - `VITE_PROXY_URL`: Optional proxy URL
+
+**Docker Environment Variables:**
+```bash
+# Docker run with environment
+docker run -d \
+  --name gemini-app \
+  -p 80:80 \
+  -e VITE_GEMINI_API_KEYS="key1,key2,key3" \
+  -e VITE_PROXY_URL="http://proxy:8080" \
+  gemini-app:latest
+```
+
+### Performance Optimization
+
+**Build Optimizations:**
+- Code splitting and lazy loading
+- Asset optimization (images, fonts)
+- Gzip compression
+- Tree shaking for smaller bundles
+- Browser caching strategies
+
+**CDN Benefits:**
+- Global edge distribution
+- Automatic asset optimization
+- DDoS protection
+- SSL/TLS encryption
+
+### Security Considerations
+
+**Production Security:**
+- HTTPS only (automatic with Cloudflare)
+- Content Security Policy headers
+- XSS protection headers
+- API key masking in frontend
+- No server-side data storage
+
+**Recommended Headers:**
+```
+X-Frame-Options: DENY
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 1; mode=block
+Referrer-Policy: strict-origin-when-cross-origin
+```
 
 ## 🧪 Development
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Activity, Clock, CheckCircle, AlertCircle, BarChart3, RefreshCw } from 'lucide-react';
 import { Button } from './ui/Button';
 import type { PerformanceMetrics, KeyHealthStats } from '../types/chat';
@@ -14,14 +14,14 @@ export function PerformanceMonitor({ isOpen, onClose, getMetrics }: PerformanceM
   const [refreshInterval, setRefreshInterval] = useState<NodeJS.Timeout | null>(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
 
-  const refreshMetrics = () => {
+  const refreshMetrics = useCallback(() => {
     try {
       const currentMetrics = getMetrics();
       setMetrics(currentMetrics);
     } catch (error) {
       console.error('Error fetching metrics:', error);
     }
-  };
+  }, [getMetrics]);
 
   useEffect(() => {
     if (isOpen) {
@@ -43,7 +43,7 @@ export function PerformanceMonitor({ isOpen, onClose, getMetrics }: PerformanceM
         setRefreshInterval(null);
       }
     };
-  }, [isOpen, autoRefresh]);
+  }, [isOpen, autoRefresh, refreshMetrics]);
 
   const formatUptime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);

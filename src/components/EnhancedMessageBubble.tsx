@@ -16,7 +16,7 @@ interface MessageBubbleProps {
   streamingContent?: string;
 }
 
-export function EnhancedMessageBubble({ 
+export const EnhancedMessageBubble = React.memo(function EnhancedMessageBubble({ 
   message, 
   isMobile = false, 
   isStreaming = false, 
@@ -32,7 +32,7 @@ export function EnhancedMessageBubble({
       setCopied(true);
       toast.success('已复制消息到剪贴板');
       setTimeout(() => setCopied(false), 2000);
-    } catch (error) {
+    } catch {
       toast.error('复制失败');
     }
   };
@@ -193,4 +193,4 @@ export function EnhancedMessageBubble({
       </div>
     </div>
   );
-} 
+}); 

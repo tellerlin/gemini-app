@@ -9,6 +9,7 @@ import { PerformanceMonitor } from './components/PerformanceMonitor';
 import { useChat } from './hooks/useChat';
 import { useResponsive } from './hooks/useLocalStorage';
 import { Button } from './components/ui/Button';
+import { GlobalErrorBoundary } from './components/GlobalErrorBoundary';
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -80,7 +81,8 @@ function App() {
   }, [currentConversation?.config, defaultConversationConfig]);
 
   return (
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <GlobalErrorBoundary>
+      <div className="flex h-screen bg-gray-50 overflow-hidden">
       <Toaster
         position="top-center"
         toastOptions={{
@@ -172,7 +174,8 @@ function App() {
             getMetrics={getPerformanceMetrics}
           />
         </>
-    </div>
+      </div>
+    </GlobalErrorBoundary>
   );
 }
 

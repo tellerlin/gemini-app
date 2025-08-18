@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, Plus, Trash2, Download, Upload, HardDrive } from 'lucide-react';
+import { User, Plus, Download, Upload, HardDrive } from 'lucide-react';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { toast } from 'react-hot-toast';
@@ -50,7 +50,7 @@ export function UserManager({
       } else {
         toast.error('Failed to create user');
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to create user');
     } finally {
       setIsCreating(false);
@@ -65,7 +65,7 @@ export function UserManager({
       await onSwitchUser(userId);
       const user = users.find(u => u.id === userId);
       toast.success(`Switched to: ${user?.name}`);
-    } catch (error) {
+    } catch {
       toast.error('Failed to switch user');
     } finally {
       setIsLoading(false);
@@ -81,7 +81,7 @@ export function UserManager({
       } else {
         toast.error('Failed to export data');
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to export data');
     } finally {
       setIsLoading(false);
@@ -100,7 +100,7 @@ export function UserManager({
       } else {
         toast.error('Failed to import data');
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to import data');
     } finally {
       setIsLoading(false);
@@ -117,7 +117,7 @@ export function UserManager({
       } else {
         toast.info('No old conversations to clean up');
       }
-    } catch (error) {
+    } catch {
       toast.error('Failed to cleanup data');
     } finally {
       setIsLoading(false);

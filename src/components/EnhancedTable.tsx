@@ -1,14 +1,18 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { Download, ChevronUp, ChevronDown, Search, ArrowUpDown } from 'lucide-react';
+import { Download, ChevronUp, ChevronDown, Search } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
+interface TableRow {
+  [key: string]: string | number | boolean | null | undefined;
+}
+
 interface EnhancedTableProps {
-  data: any[][];
+  data: (string | number | boolean | null | undefined)[][];
   headers: string[];
   title?: string;
 }
 
-export function EnhancedTable({ data, headers, title }: EnhancedTableProps) {
+export const EnhancedTable = React.memo(function EnhancedTable({ data, headers, title }: EnhancedTableProps) {
   const [sortConfig, setSortConfig] = useState<{ key: number; direction: 'asc' | 'desc' } | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
@@ -58,13 +62,6 @@ export function EnhancedTable({ data, headers, title }: EnhancedTableProps) {
     }));
   }, []);
 
-  // Accessibility: Keyboard event handler
-  const handleKeyPress = useCallback((event: React.KeyboardEvent, columnIndex: number) => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      handleSort(columnIndex);
-    }
-  }, [handleSort]);
 
   // Pagination with performance optimization
   const paginatedData = useMemo(() => {
@@ -98,7 +95,7 @@ export function EnhancedTable({ data, headers, title }: EnhancedTableProps) {
     const jsonData = {
       headers,
       data: data.map(row => {
-        const obj: any = {};
+        const obj: Record<string, string | number | boolean | null | undefined> = {};
         headers.forEach((header, index) => {
           obj[header] = row[index];
         });
@@ -301,4 +298,4 @@ export function EnhancedTable({ data, headers, title }: EnhancedTableProps) {
       )}
     </div>
   );
-} 
+}); 

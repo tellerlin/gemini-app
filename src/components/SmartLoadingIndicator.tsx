@@ -14,7 +14,7 @@ interface SmartLoadingIndicatorProps {
 interface LoadingPhase {
   id: string;
   label: string;
-  icon: React.ComponentType<any>;
+  icon: React.ComponentType<{ className?: string }>;
   duration: number;
   description?: string;
 }
@@ -81,7 +81,7 @@ export function SmartLoadingIndicator({
       setCurrentPhase(0);
       setElapsedTime(0);
     }
-  }, [isLoading, requestType, messageContent, Boolean(enableSmartIndicators)]);
+  }, [isLoading, requestType, messageContent, enableSmartIndicators]);
 
   useEffect(() => {
     if (!isLoading || !enableSmartIndicators) return;
@@ -91,7 +91,7 @@ export function SmartLoadingIndicator({
     }, 100);
 
     return () => clearInterval(interval);
-  }, [isLoading, Boolean(enableSmartIndicators)]);
+  }, [isLoading, enableSmartIndicators]);
 
   useEffect(() => {
     if (!isLoading || phases.length === 0) return;

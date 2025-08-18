@@ -172,7 +172,7 @@ export function useConversations() {
       try {
         const existingData = localStorage.getItem('gemini-conversations-emergency') || '[]';
         const conversations = JSON.parse(existingData);
-        const updated = conversations.filter((c: any) => c.id !== conversation.id);
+        const updated = conversations.filter((c: Conversation) => c.id !== conversation.id);
         updated.unshift(conversation);
         localStorage.setItem('gemini-conversations-emergency', JSON.stringify(updated.slice(0, 5))); // 只保留最近5个
         console.warn('Saved to emergency localStorage backup');

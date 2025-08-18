@@ -180,6 +180,76 @@ export class GeminiService {
   }
 
   /**
+   * Analyze and categorize API errors with user-friendly explanations
+   * @private
+   */
+  private categorizeApiError(error: any): { category: string; explanation: string; suggestion: string } {
+    const errorMessage = error?.message || '';
+    const errorCode = error?.status || error?.code;
+
+    // Quota exhausted
+    if (errorCode === 429 || errorMessage.includes('quota') || errorMessage.includes('RESOURCE_EXHAUSTED')) {
+      return {
+        category: 'QUOTA_EXCEEDED',
+        explanation: 'API quota limit reached. You have exceeded the daily free tier limit (100 requests per day).',
+        suggestion: 'Wait 24 hours for quota reset or upgrade to a paid plan at https://makersuite.google.com/'
+      };
+    }
+
+    // API key expired or invalid
+    if (errorCode === 400 && (errorMessage.includes('API key expired') || errorMessage.includes('API_KEY_INVALID'))) {
+      return {
+        category: 'API_KEY_EXPIRED',
+        explanation: 'Your API key has expired and needs to be renewed.',
+        suggestion: 'Generate a new API key at https://makersuite.google.com/app/apikey'
+      };
+    }
+
+    // API not enabled
+    if (errorCode === 403 && errorMessage.includes('SERVICE_DISABLED')) {
+      return {
+        category: 'API_NOT_ENABLED',
+        explanation: 'The Generative Language API is not enabled for your Google Cloud project.',
+        suggestion: 'Enable the API in the Google Cloud Console at the URL provided in the error message'
+      };
+    }
+
+    // Thinking mode budget issue
+    if (errorCode === 400 && errorMessage.includes('Budget 0 is invalid')) {
+      return {
+        category: 'THINKING_MODE_REQUIRED',
+        explanation: 'The gemini-2.5-pro model requires thinking mode to be enabled with a budget > 0.',
+        suggestion: 'This has been automatically fixed. Please try again.'
+      };
+    }
+
+    // Authentication/Permission issues
+    if (errorCode === 401 || errorCode === 403) {
+      return {
+        category: 'AUTHENTICATION_ERROR',
+        explanation: 'Authentication failed. Your API key may be invalid or lacking permissions.',
+        suggestion: 'Check your API key and ensure it has the necessary permissions'
+      };
+    }
+
+    // Network/Timeout issues
+    if (errorMessage.includes('timeout') || errorMessage.includes('network')) {
+      return {
+        category: 'NETWORK_ERROR',
+        explanation: 'Network connectivity issue or request timeout.',
+        suggestion: 'Check your internet connection and proxy settings'
+      };
+    }
+
+    // Default fallback
+    return {
+      category: 'UNKNOWN_ERROR',
+      explanation: `Unexpected error: ${errorMessage}`,
+      suggestion: 'Please check the error details and try again'
+    };
+  }
+
+  /**
    * Get the current API key
    * @private
    */
@@ -451,7 +521,7 @@ export class GeminiService {
       }),
       ...(model.includes('2.5') && {
         thinkingConfig: {
-          thinkingBudget: config?.thinkingConfig?.enabled === false ? 0 : (config?.thinkingConfig?.budget ?? 10000),
+          thinkingBudget: model.includes('2.5-pro') ? (config?.thinkingConfig?.budget ?? 10000) : (config?.thinkingConfig?.enabled === false ? 0 : (config?.thinkingConfig?.budget ?? 10000)),
         }
       }),
     };
@@ -607,7 +677,7 @@ export class GeminiService {
       }),
       ...(model.includes('2.5') && {
         thinkingConfig: {
-          thinkingBudget: config?.thinkingConfig?.enabled === false ? 0 : (config?.thinkingConfig?.budget ?? 10000),
+          thinkingBudget: model.includes('2.5-pro') ? (config?.thinkingConfig?.budget ?? 10000) : (config?.thinkingConfig?.enabled === false ? 0 : (config?.thinkingConfig?.budget ?? 10000)),
         }
       }),
     };
@@ -797,7 +867,7 @@ export class GeminiService {
       // Thinking configuration for 2.5 models
       ...(model.includes('2.5') && {
         thinkingConfig: {
-          thinkingBudget: config?.thinkingConfig?.enabled === false ? 0 : (config?.thinkingConfig?.budget ?? 10000),
+          thinkingBudget: model.includes('2.5-pro') ? (config?.thinkingConfig?.budget ?? 10000) : (config?.thinkingConfig?.enabled === false ? 0 : (config?.thinkingConfig?.budget ?? 10000)),
         }
       }),
     };
@@ -842,7 +912,7 @@ export class GeminiService {
       ...(config?.systemInstruction && { systemInstruction: config.systemInstruction }),
       ...(model.includes('2.5') && {
         thinkingConfig: {
-          thinkingBudget: config?.thinkingConfig?.enabled === false ? 0 : (config?.thinkingConfig?.budget ?? 10000),
+          thinkingBudget: model.includes('2.5-pro') ? (config?.thinkingConfig?.budget ?? 10000) : (config?.thinkingConfig?.enabled === false ? 0 : (config?.thinkingConfig?.budget ?? 10000)),
         }
       }),
     };
@@ -1269,13 +1339,18 @@ export class GeminiService {
       { pattern: /safety|blocked/i, type: 'SAFETY', emoji: '🛡️', retryable: false }
     ];
 
+    // Enhanced error categorization
+    const errorCategory = this.categorizeApiError(error);
+    
     const errorType = errorTypes.find(et => et.pattern.test(error.message)) || 
-      { type: 'UNKNOWN', emoji: '❓', retryable: true };
+      { type: errorCategory.category, emoji: '❓', retryable: true };
 
-    // Concise logging pattern from examples
+    // Detailed logging with user guidance
     console.error(`${errorType.emoji} ${errorType.type} ERROR:`, {
       ...errorContext,
-      retryable: errorType.retryable
+      retryable: errorType.retryable,
+      explanation: errorCategory.explanation,
+      suggestion: errorCategory.suggestion
     });
   }
 

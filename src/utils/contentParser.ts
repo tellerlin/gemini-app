@@ -1,6 +1,7 @@
 export function fixMermaidSyntax(mermaidCode: string): string {
-  // Fix Chinese characters in Mermaid diagrams using official best practices
-  // Based on GitHub issues: #687, #1925, #5597 - the solution is double quotes
+  // Enhanced Mermaid syntax fixer with optimal fault tolerance
+  // Based on Context7 research and official Mermaid.js best practices
+  // Handles Chinese characters, comments, syntax errors, and edge cases
   
   let fixed = mermaidCode.trim();
   
@@ -9,94 +10,189 @@ export function fixMermaidSyntax(mermaidCode: string): string {
   
   console.log('Fixing Mermaid syntax using official best practices, input:', fixed);
   
-  // Check if code is already properly formatted to avoid double-processing
-  if (fixed.includes('["') && fixed.includes('{"') && !fixed.includes(';')) {
-    console.log('Mermaid code appears already fixed, returning as-is');
-    return fixed;
-  }
-  
-  // First, remove comments and clean up the code
-  // Remove block comments /* ... */
-  fixed = fixed.replace(/\/\*[\s\S]*?\*\//g, '');
-  
-  // Remove line comments // ...
-  fixed = fixed.replace(/\/\/.*$/gm, '');
-  
-  // Fix each line independently
-  const lines = fixed.split('\n');
-  const processedLines = lines.map(line => {
-    const trimmedLine = line.trim();
+  try {
+    // Step 1: Handle comments properly - Mermaid expects comments on separate lines
+    // Remove inline comments that cause "UNICODE_TEXT" parse errors
+    const lines = fixed.split('\n');
+    const processedLines: string[] = [];
     
-    // Skip empty lines, graph declarations, style statements, and accessibility statements
-    if (!trimmedLine || 
-        trimmedLine.startsWith('graph ') || 
-        trimmedLine.startsWith('flowchart ') ||
-        trimmedLine.startsWith('style ') ||
-        trimmedLine.startsWith('accTitle:') ||
-        trimmedLine.startsWith('accDescr:')) {
-      return trimmedLine;
+    for (let i = 0; i < lines.length; i++) {
+      let line = lines[i].trim();
+      
+      // Skip empty lines
+      if (!line) {
+        continue;
+      }
+      
+      // Handle Mermaid comment syntax (% comment)
+      if (line.includes('%')) {
+        const parts = line.split('%');
+        const codePart = parts[0].trim();
+        const commentPart = parts.slice(1).join('%').trim();
+        
+        // If there's code before the comment, keep it
+        if (codePart) {
+          processedLines.push(codePart);
+        }
+        
+        // Add comment on separate line if it exists and isn't empty
+        if (commentPart) {
+          processedLines.push(`%% ${commentPart}`);
+        }
+        continue;
+      }
+      
+      // Remove C-style comments that can interfere with parsing
+      line = line.replace(/\/\*[\s\S]*?\*\//g, '');
+      line = line.replace(/\/\/.*$/g, '');
+      
+      // Skip if line became empty after comment removal
+      if (!line.trim()) {
+        continue;
+      }
+      
+      processedLines.push(line);
     }
     
-    let processedLine = trimmedLine;
-    
-    // Remove trailing semicolons which cause parsing issues
-    processedLine = processedLine.replace(/;+$/g, '');
-    
-    // Fix Chinese punctuation marks that cause issues
-    processedLine = processedLine.replace(/？/g, '?'); // Chinese question mark to ASCII
-    processedLine = processedLine.replace(/：/g, ':'); // Chinese colon to ASCII
-    processedLine = processedLine.replace(/，/g, ','); // Chinese comma to ASCII
-    processedLine = processedLine.replace(/。/g, '.'); // Chinese period to ASCII
-    
-    // The key fix: wrap any text containing Chinese characters in double quotes
-    // This handles ALL Chinese character issues according to official docs
-    
-    // Pattern for node definitions with Chinese characters: A[中文] -> A["中文"]
-    processedLine = processedLine.replace(
-      /([A-Za-z0-9_]+)\[([^\]]*[\u4e00-\u9fff][^\]]*)\]/g, 
-      (match, nodeId, text) => {
-        // Only add quotes if not already quoted
-        if (text.startsWith('"') && text.endsWith('"')) {
-          return match; // Already quoted
-        }
-        return `${nodeId}["${text}"]`;
+    // Step 2: Process each line for syntax fixes
+    const finalLines = processedLines.map(line => {
+      let processedLine = line.trim();
+      
+      // Skip diagram type declarations and directives
+      if (processedLine.startsWith('graph ') || 
+          processedLine.startsWith('flowchart ') ||
+          processedLine.startsWith('sequenceDiagram') ||
+          processedLine.startsWith('classDiagram') ||
+          processedLine.startsWith('stateDiagram') ||
+          processedLine.startsWith('gantt') ||
+          processedLine.startsWith('pie') ||
+          processedLine.startsWith('journey') ||
+          processedLine.startsWith('gitgraph') ||
+          processedLine.startsWith('mindmap') ||
+          processedLine.startsWith('timeline') ||
+          processedLine.startsWith('sankey') ||
+          processedLine.startsWith('block') ||
+          processedLine.startsWith('zenuml') ||
+          processedLine.startsWith('style ') ||
+          processedLine.startsWith('class ') ||
+          processedLine.startsWith('click ') ||
+          processedLine.startsWith('accTitle:') ||
+          processedLine.startsWith('accDescr:') ||
+          processedLine.startsWith('%%')) {
+        return processedLine;
       }
-    );
-    
-    // Pattern for decision nodes: A{Chinese} -> A{"Chinese"}
-    processedLine = processedLine.replace(
-      /([A-Za-z0-9_]+)\{([^}]*[\u4e00-\u9fff][^}]*)\}/g, 
-      (match, nodeId, text) => {
-        // Only add quotes if not already quoted
-        if (text.startsWith('"') && text.endsWith('"')) {
-          return match; // Already quoted
+      
+      // Step 3: Remove problematic trailing semicolons
+      processedLine = processedLine.replace(/;+$/g, '');
+      
+      // Step 4: Fix Chinese punctuation marks that cause parsing issues
+      processedLine = processedLine.replace(/？/g, '?');
+      processedLine = processedLine.replace(/：/g, ':');
+      processedLine = processedLine.replace(/，/g, ',');
+      processedLine = processedLine.replace(/。/g, '.');
+      processedLine = processedLine.replace(/（/g, '(');
+      processedLine = processedLine.replace(/）/g, ')');
+      processedLine = processedLine.replace(/【/g, '[');
+      processedLine = processedLine.replace(/】/g, ']');
+      processedLine = processedLine.replace(/｛/g, '{');
+      processedLine = processedLine.replace(/｝/g, '}');
+      
+      // Step 5: The key fix for Chinese characters - use double quotes
+      // This is the official solution from Mermaid.js documentation
+      
+      // Fix rectangular nodes: A[中文] -> A["中文"]
+      processedLine = processedLine.replace(
+        /([A-Za-z0-9_]+)\[([^\]]*[\u4e00-\u9fff][^\]]*)\]/g, 
+        (match, nodeId, text) => {
+          if (text.startsWith('"') && text.endsWith('"')) {
+            return match;
+          }
+          // Escape any internal quotes
+          const escapedText = text.replace(/"/g, '#quot;');
+          return `${nodeId}["${escapedText}"]`;
         }
-        return `${nodeId}{"${text}"}`;
-      }
-    );
-    
-    // Pattern for round nodes: A(Chinese) -> A("Chinese")
-    processedLine = processedLine.replace(
-      /([A-Za-z0-9_]+)\(([^)]*[\u4e00-\u9fff][^)]*)\)/g, 
-      (match, nodeId, text) => {
-        // Only add quotes if not already quoted
-        if (text.startsWith('"') && text.endsWith('"')) {
-          return match; // Already quoted
+      );
+      
+      // Fix decision/rhombus nodes: A{中文} -> A{"中文"}
+      processedLine = processedLine.replace(
+        /([A-Za-z0-9_]+)\{([^}]*[\u4e00-\u9fff][^}]*)\}/g, 
+        (match, nodeId, text) => {
+          if (text.startsWith('"') && text.endsWith('"')) {
+            return match;
+          }
+          const escapedText = text.replace(/"/g, '#quot;');
+          return `${nodeId}{"${escapedText}"}`;
         }
-        return `${nodeId}("${text}")`;
-      }
-    );
+      );
+      
+      // Fix round/circular nodes: A(中文) -> A("中文")
+      processedLine = processedLine.replace(
+        /([A-Za-z0-9_]+)\(([^)]*[\u4e00-\u9fff][^)]*)\)/g, 
+        (match, nodeId, text) => {
+          if (text.startsWith('"') && text.endsWith('"')) {
+            return match;
+          }
+          const escapedText = text.replace(/"/g, '#quot;');
+          return `${nodeId}("${escapedText}")`;
+        }
+      );
+      
+      // Fix edge labels with Chinese: -->|中文| -> -->|"中文"|
+      processedLine = processedLine.replace(
+        /(-->|---|===|==>|\.-\.|\.-.->)\|([^|]*[\u4e00-\u9fff][^|]*)\|/g,
+        (match, arrow, text) => {
+          if (text.startsWith('"') && text.endsWith('"')) {
+            return match;
+          }
+          const escapedText = text.replace(/"/g, '#quot;');
+          return `${arrow}|"${escapedText}"|`;
+        }
+      );
+      
+      // Step 6: Fix common syntax issues
+      // Ensure proper spacing around arrows
+      processedLine = processedLine.replace(/([A-Za-z0-9_]+)(-->|---|===|==>|\.-\.|\.-.->)([A-Za-z0-9_]+)/g, '$1 $2 $3');
+      
+      // Clean up excessive whitespace
+      processedLine = processedLine.replace(/\s+/g, ' ').trim();
+      
+      return processedLine;
+    });
     
-    // Clean up any remaining whitespace issues
-    processedLine = processedLine.replace(/\s+/g, ' ').trim();
+    // Step 7: Final assembly and validation
+    const result = finalLines.filter(line => line.length > 0).join('\n');
     
-    return processedLine;
-  });
-  
-  const result = processedLines.filter(line => line.length > 0).join('\n');
-  console.log('Fixed Mermaid syntax using official best practices, output:', result);
-  
-  return result;
+    // Basic validation - ensure we have a diagram type
+    const hasValidDiagramType = /^(graph|flowchart|sequenceDiagram|classDiagram|stateDiagram|gantt|pie|journey|gitgraph|mindmap|timeline|sankey|block|zenuml)/m.test(result);
+    
+    if (!hasValidDiagramType && result.length > 0) {
+      console.warn('No valid diagram type found, prepending graph TD');
+      const withDiagramType = `graph TD\n${result}`;
+      console.log('Fixed Mermaid syntax using official best practices, output:', withDiagramType);
+      return withDiagramType;
+    }
+    
+    console.log('Fixed Mermaid syntax using official best practices, output:', result);
+    return result;
+    
+  } catch (error) {
+    console.error('Error in fixMermaidSyntax:', error);
+    // Fallback: return original with minimal fixes
+    const fallback = mermaidCode
+      .replace(/[\u4e00-\u9fff：？，。（）【】｛｝]/g, (char) => {
+        const charMap: { [key: string]: string } = {
+          '：': ':', '？': '?', '，': ',', '。': '.',
+          '（': '(', '）': ')', '【': '[', '】': ']',
+          '｛': '{', '｝': '}'
+        };
+        return charMap[char] || char;
+      })
+      .replace(/;+$/gm, '')
+      .trim();
+    
+    console.log('Fallback Mermaid syntax fix applied:', fallback);
+    return fallback;
+  }
 }
 
 export interface ParsedSection {

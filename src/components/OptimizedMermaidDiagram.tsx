@@ -39,6 +39,8 @@ export function OptimizedMermaidDiagram({
           theme: 'default',
           securityLevel: 'loose',
           fontFamily: '"Inter", "Noto Sans CJK SC", "Microsoft YaHei", system-ui, sans-serif',
+          // Enhanced error handling based on Context7 research
+          suppressErrorRendering: false, // Allow custom error handling
           // Accessibility best practices
           accessibility: {
             enabled: true,
@@ -65,6 +67,18 @@ export function OptimizedMermaidDiagram({
         // Clean and fix common Mermaid syntax issues using our enhanced fix function
         const cleanedCode = fixMermaidSyntax(code);
         
+        // Step 1: Validate syntax before rendering using mermaid.parse
+        // This prevents render errors and provides better error messages
+        try {
+          const parseResult = await mermaid.parse(cleanedCode, { suppressErrors: true });
+          if (!parseResult) {
+            throw new Error('Invalid Mermaid syntax detected');
+          }
+        } catch (parseError) {
+          console.error('Mermaid parse validation failed:', parseError);
+          throw new Error(`Syntax validation failed: ${parseError instanceof Error ? parseError.message : 'Unknown parse error'}`);
+        }
+        
         // Temporarily disable accessibility features to avoid parsing conflicts
         // TODO: Re-enable once Mermaid accessibility syntax is stabilized
         // const accessibleCode = addAccessibilityFeatures(cleanedCode, title);
@@ -72,6 +86,7 @@ export function OptimizedMermaidDiagram({
         // Generate unique ID to avoid conflicts
         const chartId = `mermaid-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
         
+        // Step 2: Attempt rendering with error recovery
         const { svg: renderedSvg } = await mermaid.render(chartId, cleanedCode);
         
         if (!isCancelled) {
@@ -81,21 +96,28 @@ export function OptimizedMermaidDiagram({
       } catch (err) {
         if (!isCancelled) {
           const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+          console.error('Mermaid rendering error:', err);
           
-          // Provide more specific error messages
-          if (errorMessage.includes('Parse error')) {
+          // Enhanced error messaging based on Context7 research
+          let userFriendlyError = '';
+          
+          if (errorMessage.includes('Parse error') || errorMessage.includes('Syntax validation failed')) {
             if (/[\u4e00-\u9fff]/.test(code)) {
-              setError('中文语法解析错误 - 请检查边缘标签格式 (使用 -->|标签| 格式)');
+              userFriendlyError = '中文语法解析错误 - 请检查边缘标签格式 (使用 -->|标签| 格式)';
             } else {
-              setError('语法解析错误 - 请检查Mermaid语法');
+              userFriendlyError = '语法解析错误 - 请检查Mermaid语法是否正确';
             }
-          } else if (errorMessage.includes('Lexical error')) {
-            setError('词法错误 - 请检查图表定义语法');
+          } else if (errorMessage.includes('Lexical error') || errorMessage.includes('UNICODE_TEXT')) {
+            userFriendlyError = '词法错误 - 可能是注释格式错误，请将注释放在单独行';
+          } else if (errorMessage.includes('Expecting')) {
+            userFriendlyError = '语法错误 - 可能缺少分隔符或使用了不支持的字符';
+          } else if (errorMessage.includes('timeout') || errorMessage.includes('Time limit')) {
+            userFriendlyError = '渲染超时 - 图表过于复杂，请简化';
           } else {
-            setError(`渲染失败: ${errorMessage}`);
+            userFriendlyError = `渲染失败: ${errorMessage}`;
           }
           
-          console.error('Mermaid rendering error:', err);
+          setError(userFriendlyError);
         }
       } finally {
         if (!isCancelled) {
