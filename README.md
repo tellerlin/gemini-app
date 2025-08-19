@@ -12,6 +12,7 @@ A modern, feature-rich chat interface for Google's Gemini AI models built with R
 - **File Upload Support**: Upload images, PDFs, and documents for multimodal conversations
 - **Real-time Chat**: Instant messaging with streaming AI responses
 - **Persistent Storage**: Local IndexedDB storage for conversations and settings
+- **URL Context Analysis**: 🌐 Directly analyze and understand web page content - NEW!
 
 ### Enhanced AI Response Support
 - **Interactive Flowcharts**: Mermaid diagram rendering with zoom and download capabilities
@@ -20,6 +21,8 @@ A modern, feature-rich chat interface for Google's Gemini AI models built with R
 - **Mathematical Expressions**: Support for inline and block math notation using KaTeX
 - **Advanced Code Highlighting**: Syntax highlighting with copy functionality
 - **Content Summary**: Visual indicators for different content types in AI responses
+- **Google Search Grounding**: Enhanced responses with real-time web search capabilities
+- **Intelligent URL Detection**: Automatic URL context enabling and smart content analysis
 
 ### Advanced Features
 - **Error Handling**: Comprehensive error categorization and recovery
@@ -225,6 +228,35 @@ Support for both inline (`$formula$`) and block (`$$formula$$`) mathematical not
 - Inline: The quadratic formula is $x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$
 - Block: $$\int_{-\infty}^{\infty} e^{-x^2} dx = \sqrt{\pi}$$
 
+### 🌐 URL Context Analysis (NEW!)
+Directly analyze and understand web page content by including URLs in your messages.
+
+**Usage Examples**:
+```
+Analyze this article: https://example.com/news/tech-trends
+```
+
+```
+Compare these two sources:
+https://site1.com/research
+https://site2.com/analysis
+```
+
+```
+Summarize key points from https://docs.example.com/guide
+```
+
+**Features**:
+- 🔍 **Auto-detection**: Automatically enables when URLs are found in messages
+- 📊 **Multi-URL support**: Analyze up to 10 URLs simultaneously  
+- ✅ **Smart parsing**: Extracts content from news, docs, blogs, and research papers
+- 🎯 **Contextual analysis**: Provides insights based on URL content and your questions
+- 📈 **Success tracking**: Shows retrieval status for each URL
+
+**Configuration**: Access via Settings → "URL 分析" tab to configure maximum URLs, preset URLs, and enable/disable the feature.
+
+**Supported Content**: News articles, documentation, blog posts, research papers, product pages, and publicly accessible web content.
+
 ### Available Models
 - **Gemini 2.5 Pro**: Enhanced thinking, reasoning, and multimodal understanding
 - **Gemini 2.5 Flash**: Adaptive thinking with cost efficiency
@@ -314,12 +346,12 @@ The application uses **Zustand** for lightweight, efficient state management:
 - `generateResponse()`: Main content generation with comprehensive error handling
 - `generateStreamingResponse()`: Real-time streaming with performance optimization
 - `generateStreamingResponseWithGrounding()`: Enhanced streaming with search grounding
+- `analyzeUrls()`: URL content analysis with intelligent context understanding 🌐 NEW!
 - `testConnection()`: API connectivity verification with detailed diagnostics
 - `getAvailableModelsWithCapabilities()`: Model information with real-time capability detection
 - `setApiKeys()`: Multi-key configuration with health tracking initialization
 - `batchValidateApiKeys()`: Comprehensive key validation with retry logic
 - `getOptimalModelForTask()`: AI-powered model selection based on task analysis
-- `analyzeUrls()`: URL content analysis with context understanding
 
 ## 🎨 UI Components
 
@@ -610,6 +642,13 @@ SOFTWARE.
 - Visit the [GitHub repository](https://github.com/tellerlin/gemini-app) for issues and discussions
 
 ## 🔄 Changelog
+
+### Version 2.0.0 (Latest)
+- 🌐 **NEW: URL Context Analysis** - Direct web page content analysis
+- ✅ **Enhanced Grounding** - Improved Google Search integration  
+- 🎯 **Smart Auto-Detection** - Automatic feature enabling based on content
+- ⚙️ **Advanced Settings** - Comprehensive configuration options
+- 🔧 **Performance Improvements** - Optimized streaming and response handling
 
 ### Version 1.0.0
 - Initial release with core chat functionality

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { X, Settings, Brain, Sliders, Image } from 'lucide-react';
+import { X, Settings, Brain, Sliders, Image, Search, Link, Globe } from 'lucide-react';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { Select } from './ui/Select';
-import type { ConversationConfig, ThinkingConfig, GenerationConfig, ImageGenerationConfig } from '../types/chat';
+import type { ConversationConfig, ThinkingConfig, GenerationConfig, ImageGenerationConfig, GroundingConfig, UrlContextConfig } from '../types/chat';
 
 interface AdvancedSettingsModalProps {
   isOpen: boolean;
@@ -22,7 +22,7 @@ export function AdvancedSettingsModal({
   imageConfig,
   onImageConfigSave,
 }: AdvancedSettingsModalProps) {
-  const [activeTab, setActiveTab] = useState<'thinking' | 'generation' | 'image' | 'system' | 'interface'>('thinking');
+  const [activeTab, setActiveTab] = useState<'thinking' | 'generation' | 'image' | 'grounding' | 'urlcontext' | 'system' | 'interface'>('thinking');
   const [localConfig, setLocalConfig] = useState<ConversationConfig>(conversationConfig);
   const [localImageConfig, setLocalImageConfig] = useState<ImageGenerationConfig>(imageConfig);
 
@@ -73,10 +73,38 @@ export function AdvancedSettingsModal({
     }));
   };
 
+  const updateGroundingConfig = (updates: Partial<GroundingConfig>) => {
+    setLocalConfig(prev => ({
+      ...prev,
+      groundingConfig: {
+        ...prev.groundingConfig,
+        enabled: prev.groundingConfig?.enabled ?? false,
+        useGoogleSearch: prev.groundingConfig?.useGoogleSearch ?? true,
+        maxResults: prev.groundingConfig?.maxResults ?? 5,
+        ...updates,
+      },
+    }));
+  };
+
+  const updateUrlContextConfig = (updates: Partial<UrlContextConfig>) => {
+    setLocalConfig(prev => ({
+      ...prev,
+      urlContextConfig: {
+        ...prev.urlContextConfig,
+        enabled: prev.urlContextConfig?.enabled ?? false,
+        maxUrls: prev.urlContextConfig?.maxUrls ?? 3,
+        urls: prev.urlContextConfig?.urls ?? [],
+        ...updates,
+      },
+    }));
+  };
+
   const tabs = [
     { id: 'thinking' as const, label: '思考配置', icon: Brain },
     { id: 'generation' as const, label: '生成参数', icon: Sliders },
     { id: 'image' as const, label: '图片生成', icon: Image },
+    { id: 'grounding' as const, label: '搜索增强', icon: Search },
+    { id: 'urlcontext' as const, label: 'URL 分析', icon: Globe },
     { id: 'system' as const, label: '系统指令', icon: Settings },
     { id: 'interface' as const, label: '界面设置', icon: Settings },
   ];
@@ -455,6 +483,200 @@ export function AdvancedSettingsModal({
                     >
                       📲 手机壁纸
                     </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'grounding' && (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Google 搜索增强</h3>
+                  <p className="text-sm text-gray-600 mb-6">
+                    启用后AI可以通过Google搜索获取最新信息来增强回答质量。
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <label className="text-sm font-medium text-gray-700">启用搜索增强</label>
+                      <p className="text-xs text-gray-500 mt-1">
+                        自动检测需要最新信息的问题并使用Google搜索
+                      </p>
+                    </div>
+                    <Button
+                      variant={localConfig.groundingConfig?.enabled ? 'primary' : 'outline'}
+                      size="sm"
+                      onClick={() => updateGroundingConfig({ enabled: !localConfig.groundingConfig?.enabled })}
+                    >
+                      {localConfig.groundingConfig?.enabled ? '已启用' : '已禁用'}
+                    </Button>
+                  </div>
+
+                  {localConfig.groundingConfig?.enabled && (
+                    <>
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <label className="text-sm font-medium text-gray-700">使用Google搜索</label>
+                          <p className="text-xs text-gray-500 mt-1">
+                            通过Google搜索获取网页内容
+                          </p>
+                        </div>
+                        <Button
+                          variant={localConfig.groundingConfig?.useGoogleSearch ? 'primary' : 'outline'}
+                          size="sm"
+                          onClick={() => updateGroundingConfig({ useGoogleSearch: !localConfig.groundingConfig?.useGoogleSearch })}
+                        >
+                          {localConfig.groundingConfig?.useGoogleSearch ? '已启用' : '已禁用'}
+                        </Button>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          最大搜索结果数量
+                        </label>
+                        <Select
+                          value={localConfig.groundingConfig?.maxResults?.toString() || '5'}
+                          onChange={(value) => updateGroundingConfig({ maxResults: parseInt(value) })}
+                          options={[
+                            { value: '3', label: '3个结果 (快速)' },
+                            { value: '5', label: '5个结果 (推荐)' },
+                            { value: '8', label: '8个结果 (详细)' },
+                            { value: '10', label: '10个结果 (全面)' },
+                          ]}
+                        />
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <h4 className="font-medium text-blue-900 mb-2">搜索增强提示</h4>
+                  <ul className="text-sm text-blue-800 space-y-1">
+                    <li>• 询问最新新闻、事件或数据时自动启用</li>
+                    <li>• 包含"最新"、"当前"、"今天"等关键词时自动触发</li>
+                    <li>• 搜索结果将显示来源链接供参考</li>
+                    <li>• 启用后会增加响应时间和token消耗</li>
+                  </ul>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'urlcontext' && (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">URL 内容分析</h3>
+                  <p className="text-sm text-gray-600 mb-6">
+                    配置AI对网页URL内容的分析功能，可以直接分析指定网页的内容。
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <label className="text-sm font-medium text-gray-700">启用URL分析</label>
+                      <p className="text-xs text-gray-500 mt-1">
+                        允许AI直接读取和分析网页内容
+                      </p>
+                    </div>
+                    <Button
+                      variant={localConfig.urlContextConfig?.enabled ? 'primary' : 'outline'}
+                      size="sm"
+                      onClick={() => updateUrlContextConfig({ enabled: !localConfig.urlContextConfig?.enabled })}
+                    >
+                      {localConfig.urlContextConfig?.enabled ? '已启用' : '已禁用'}
+                    </Button>
+                  </div>
+
+                  {localConfig.urlContextConfig?.enabled && (
+                    <>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          最大URL数量
+                        </label>
+                        <Select
+                          value={localConfig.urlContextConfig?.maxUrls?.toString() || '3'}
+                          onChange={(value) => updateUrlContextConfig({ maxUrls: parseInt(value) })}
+                          options={[
+                            { value: '1', label: '1个URL (单页分析)' },
+                            { value: '3', label: '3个URL (推荐)' },
+                            { value: '5', label: '5个URL (多页对比)' },
+                            { value: '10', label: '10个URL (深度分析)' },
+                          ]}
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          预设URL列表
+                        </label>
+                        <div className="space-y-2">
+                          {(localConfig.urlContextConfig?.urls || []).map((url, index) => (
+                            <div key={index} className="flex gap-2">
+                              <Input
+                                type="url"
+                                value={url}
+                                onChange={(e) => {
+                                  const newUrls = [...(localConfig.urlContextConfig?.urls || [])];
+                                  newUrls[index] = e.target.value;
+                                  updateUrlContextConfig({ urls: newUrls });
+                                }}
+                                placeholder="https://example.com"
+                                className="flex-1"
+                              />
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  const newUrls = (localConfig.urlContextConfig?.urls || []).filter((_, i) => i !== index);
+                                  updateUrlContextConfig({ urls: newUrls });
+                                }}
+                              >
+                                删除
+                              </Button>
+                            </div>
+                          ))}
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              const currentUrls = localConfig.urlContextConfig?.urls || [];
+                              if (currentUrls.length < (localConfig.urlContextConfig?.maxUrls || 3)) {
+                                updateUrlContextConfig({ urls: [...currentUrls, ''] });
+                              }
+                            }}
+                            disabled={(localConfig.urlContextConfig?.urls?.length || 0) >= (localConfig.urlContextConfig?.maxUrls || 3)}
+                          >
+                            <Link className="h-4 w-4 mr-2" />
+                            添加URL
+                          </Button>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                <div className="bg-green-50 p-4 rounded-lg">
+                  <h4 className="font-medium text-green-900 mb-2">URL分析功能</h4>
+                  <ul className="text-sm text-green-800 space-y-1">
+                    <li>• 支持分析网页文本内容、结构和数据</li>
+                    <li>• 可对比多个网页的信息差异</li>
+                    <li>• 自动提取关键信息和摘要</li>
+                    <li>• 支持新闻、文档、博客等各类网页</li>
+                    <li>• 会显示URL检索状态和来源信息</li>
+                  </ul>
+                </div>
+
+                <div className="bg-yellow-50 p-4 rounded-lg">
+                  <h4 className="font-medium text-yellow-900 mb-2">使用说明</h4>
+                  <div className="text-sm text-yellow-800 space-y-2">
+                    <p>要使用URL分析功能，请在对话中：</p>
+                    <ul className="list-disc list-inside space-y-1 ml-2">
+                      <li>直接发送包含URL的消息</li>
+                      <li>或询问"分析这个网页：[URL]"</li>
+                      <li>或使用"对比这些网站：[URL1], [URL2]"</li>
+                    </ul>
                   </div>
                 </div>
               </div>

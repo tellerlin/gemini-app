@@ -13,6 +13,13 @@ import { loadApiKeysFromEnv } from '../utils/env';
 import { ContextManager, type ContextConfig } from '../utils/contextManager';
 import { getOptimalThinkingConfig, getModelCapabilities } from '../config/gemini';
 
+// Helper function to extract URLs from message content
+function extractUrlsFromMessage(content: string, maxUrls: number = 3): string[] {
+  const urlRegex = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/g;
+  const matches = content.match(urlRegex) || [];
+  return matches.slice(0, maxUrls);
+}
+
 export function useChat() {
   // Use new IndexedDB storage system
   const {
@@ -165,6 +172,13 @@ export function useChat() {
            content.toLowerCase().includes('today') ||
            content.toLowerCase().includes('2024') ||
            content.toLowerCase().includes('2025')),
+      },
+      // Auto-enable URL context when URLs are detected in the message
+      urlContextConfig: {
+        ...conversation.config?.urlContextConfig,
+        enabled: conversation.config?.urlContextConfig?.enabled || 
+          /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/g.test(content),
+        urls: extractUrlsFromMessage(content, conversation.config?.urlContextConfig?.maxUrls || 3),
       }
     };
 
@@ -228,13 +242,64 @@ export function useChat() {
 
       // Use grounding-enabled streaming if available and enabled
       const useGrounding = enhancedConfig.groundingConfig?.enabled && modelCapabilities.supportsGrounding;
+      const useUrlContext = enhancedConfig.urlContextConfig?.enabled && modelCapabilities.supportsUrlContext;
       
       // Disable streaming for some models as they don't support it
       const useStreaming = enhancedConfig.streamingEnabled !== false;
       
       if (useStreaming) {
         setIsStreaming(true);
-        if (useGrounding) {
+        
+        // Special handling for URL context only (without grounding)
+        if (useUrlContext && !useGrounding && enhancedConfig.urlContextConfig?.urls?.length) {
+          console.log('🌐 Using URL context analysis with streaming');
+          try {
+            // For URL context, we use the analyzeUrls method instead of streaming
+            const urlAnalysisResult = await geminiService.analyzeUrls(
+              enhancedConfig.urlContextConfig.urls.filter(url => url.trim() !== ''),
+              content,
+              selectedModel
+            );
+            
+            fullResponse = urlAnalysisResult.text;
+            urlContextMetadata = urlAnalysisResult.urlContextMetadata;
+            
+            // Simulate streaming for consistent UX
+            let currentIndex = 0;
+            const streamingInterval = setInterval(() => {
+              if (currentIndex < fullResponse.length) {
+                const chunk = fullResponse.slice(0, currentIndex + 50);
+                setStreamingMessage(chunk);
+                currentIndex += 50;
+              } else {
+                clearInterval(streamingInterval);
+              }
+            }, 50);
+            
+          } catch (error) {
+            console.error('URL context analysis failed:', error);
+            // Fallback to regular streaming
+            const stream = geminiService.generateStreamingResponseWithModelSwitch(
+              optimizedMessages, 
+              selectedModel,
+              enhancedConfig
+            );
+
+            for await (const chunk of stream) {
+              if (chunk.text) {
+                fullResponse += chunk.text;
+                setStreamingMessage(fullResponse);
+              }
+              if (chunk.modelSwitched && chunk.newModel) {
+                actualModelUsed = chunk.newModel;
+                setSelectedModel(chunk.newModel);
+                toast.success(`🔄 ${chunk.switchReason}`, { duration: 8000, icon: '⚠️' });
+              }
+              if (chunk.groundingMetadata) groundingMetadata = chunk.groundingMetadata;
+              if (chunk.urlContextMetadata) urlContextMetadata = chunk.urlContextMetadata;
+            }
+          }
+        } else if (useGrounding || useUrlContext) {
           console.log('🔍 Using grounding-enabled streaming generation with model switching');
           const stream = geminiService.generateStreamingResponseWithGrounding(
             optimizedMessages, 
@@ -304,7 +369,43 @@ export function useChat() {
         console.log('🎯 Using intelligent non-streaming generation with model switching');
         
         let actualModelUsed = selectedModel;
-        if (useGrounding) {
+        
+        // Special handling for URL context only
+        if (useUrlContext && !useGrounding && enhancedConfig.urlContextConfig?.urls?.length) {
+          console.log('🌐 Using URL context analysis (non-streaming)');
+          try {
+            const urlAnalysisResult = await geminiService.analyzeUrls(
+              enhancedConfig.urlContextConfig.urls.filter(url => url.trim() !== ''),
+              content,
+              selectedModel
+            );
+            fullResponse = urlAnalysisResult.text;
+            urlContextMetadata = urlAnalysisResult.urlContextMetadata;
+          } catch (error) {
+            console.error('URL context analysis failed, falling back to regular generation:', error);
+            // Fallback to regular generation
+            const result = await geminiService.generateResponseWithModelSwitch(
+              optimizedMessages,
+              selectedModel,
+              enhancedConfig
+            );
+            const response = result.response;
+            actualModelUsed = result.modelUsed;
+            
+            if (result.modelSwitched) {
+              setSelectedModel(actualModelUsed);
+              toast.success(`🔄 ${result.switchReason}`, { duration: 8000, icon: '⚠️' });
+            }
+            
+            if (typeof response === 'string') {
+              fullResponse = response;
+            } else {
+              fullResponse = response.text || '';
+              groundingMetadata = response.groundingMetadata;
+              urlContextMetadata = response.urlContextMetadata;
+            }
+          }
+        } else if (useGrounding) {
           const response = await geminiService.generateResponseWithGrounding(
             optimizedMessages,
             selectedModel,
@@ -421,6 +522,18 @@ export function useChat() {
       // Show grounding info if available
       if (groundingMetadata?.webSearchQueries?.length > 0) {
         toast.success(`🔍 Found information from ${groundingMetadata.groundingChunks?.length || 0} sources`);
+      }
+      
+      // Show URL context info if available
+      if (urlContextMetadata?.urlMetadata?.length > 0) {
+        const successfulUrls = urlContextMetadata.urlMetadata.filter(url => 
+          url.urlRetrievalStatus === 'URL_RETRIEVAL_STATUS_SUCCESS'
+        ).length;
+        if (successfulUrls > 0) {
+          toast.success(`🌐 Successfully analyzed ${successfulUrls} URL${successfulUrls > 1 ? 's' : ''}`);
+        } else {
+          toast.warning(`⚠️ Could not access some URLs - check if they are publicly available`);
+        }
       }
     } catch (error) {
       console.error('Error generating response:', error);
