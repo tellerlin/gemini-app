@@ -100,13 +100,12 @@ export function AdvancedSettingsModal({
   };
 
   const tabs = [
-    { id: 'thinking' as const, label: '思考配置', icon: Brain },
-    { id: 'generation' as const, label: '生成参数', icon: Sliders },
-    { id: 'image' as const, label: '图片生成', icon: Image },
-    { id: 'grounding' as const, label: '搜索增强', icon: Search },
-    { id: 'urlcontext' as const, label: 'URL 分析', icon: Globe },
-    { id: 'system' as const, label: '系统指令', icon: Settings },
-    { id: 'interface' as const, label: '界面设置', icon: Settings },
+    { id: 'thinking' as const, label: 'Thinking Config', icon: Brain },
+    { id: 'generation' as const, label: 'Generation Parameters', icon: Sliders },
+    { id: 'grounding' as const, label: 'Search Enhancement', icon: Search },
+    { id: 'urlcontext' as const, label: 'URL Analysis', icon: Globe },
+    { id: 'system' as const, label: 'System Instructions', icon: Settings },
+    { id: 'interface' as const, label: 'Interface Settings', icon: Settings },
   ];
 
   return (
@@ -116,7 +115,7 @@ export function AdvancedSettingsModal({
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
             <Settings className="h-6 w-6 text-blue-600" />
-            <h2 className="text-xl font-semibold text-gray-900">高级设置</h2>
+            <h2 className="text-xl font-semibold text-gray-900">Advanced Settings</h2>
           </div>
           <Button variant="ghost" size="sm" onClick={onClose}>
             <X className="h-5 w-5" />
@@ -152,21 +151,21 @@ export function AdvancedSettingsModal({
             {activeTab === 'thinking' && (
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">思考功能配置</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Thinking Function Configuration</h3>
                   <p className="text-sm text-gray-600 mb-6">
-                    Gemini 2.5 模型支持思考功能，可以提高回答质量但会增加响应时间和token消耗。
+                    Gemini 2.5 models support thinking function, which can improve response quality but will increase response time and token consumption.
                   </p>
                 </div>
 
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <label className="text-sm font-medium text-gray-700">启用思考功能</label>
+                    <label className="text-sm font-medium text-gray-700">Enable Thinking Function</label>
                     <Button
                       variant={localConfig.thinkingConfig?.enabled ? 'primary' : 'outline'}
                       size="sm"
                       onClick={() => updateThinkingConfig({ enabled: !localConfig.thinkingConfig?.enabled })}
                     >
-                      {localConfig.thinkingConfig?.enabled ? '已启用' : '已禁用'}
+                      {localConfig.thinkingConfig?.enabled ? 'Enabled' : 'Disabled'}
                     </Button>
                   </div>
 
@@ -174,7 +173,7 @@ export function AdvancedSettingsModal({
                     <>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          思考预算 (Token数量)
+                          Thinking Budget (Token Count)
                         </label>
                         <Input
                           type="number"
@@ -186,12 +185,12 @@ export function AdvancedSettingsModal({
                           placeholder="10000"
                         />
                         <p className="text-xs text-gray-500 mt-1">
-                          设置为0可完全禁用思考功能。推荐值：10000-20000
+                          Set to 0 to completely disable thinking function. Recommended: 10000-20000
                         </p>
                       </div>
 
                       <div className="flex items-center justify-between">
-                        <label className="text-sm font-medium text-gray-700">显示思考过程</label>
+                        <label className="text-sm font-medium text-gray-700">Show Thinking Process</label>
                         <Button
                           variant={localConfig.thinkingConfig?.showThinkingProcess ? 'primary' : 'outline'}
                           size="sm"
@@ -199,7 +198,7 @@ export function AdvancedSettingsModal({
                             showThinkingProcess: !localConfig.thinkingConfig?.showThinkingProcess 
                           })}
                         >
-                          {localConfig.thinkingConfig?.showThinkingProcess ? '显示' : '隐藏'}
+                          {localConfig.thinkingConfig?.showThinkingProcess ? 'Show' : 'Hide'}
                         </Button>
                       </div>
                     </>
@@ -207,35 +206,35 @@ export function AdvancedSettingsModal({
                 </div>
 
                 <div className="bg-blue-50 p-4 rounded-lg">
-                  <h4 className="font-medium text-blue-900 mb-2">快速预设</h4>
+                  <h4 className="font-medium text-blue-900 mb-2">Quick Presets</h4>
                   <div className="grid grid-cols-2 gap-2">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => updateThinkingConfig({ enabled: false, budget: 0 })}
                     >
-                      🚀 极速模式
+                      🚀 Speed Mode
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => updateThinkingConfig({ enabled: true, budget: 5000 })}
                     >
-                      ⚡ 平衡模式
+                      ⚡ Balanced Mode
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => updateThinkingConfig({ enabled: true, budget: 15000 })}
                     >
-                      🧠 深度思考
+                      🧠 Deep Thinking
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => updateThinkingConfig({ enabled: true, budget: 30000 })}
                     >
-                      🎯 专家模式
+                      🎯 Expert Mode
                     </Button>
                   </div>
                 </div>
@@ -245,16 +244,16 @@ export function AdvancedSettingsModal({
             {activeTab === 'generation' && (
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">生成参数配置</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Generation Parameters</h3>
                   <p className="text-sm text-gray-600 mb-6">
-                    调整这些参数可以控制AI回答的创造性和一致性。
+                    Adjust these parameters to control AI response creativity and consistency.
                   </p>
                 </div>
 
                 <div className="space-y-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      温度 (Temperature): {localConfig.generationConfig?.temperature || 0.7}
+                      Temperature: {localConfig.generationConfig?.temperature || 0.7}
                     </label>
                     <input
                       type="range"
@@ -266,7 +265,7 @@ export function AdvancedSettingsModal({
                       className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      较低值更保守和一致，较高值更富创造性
+                      Lower values are more conservative and consistent, higher values are more creative
                     </p>
                   </div>
 
@@ -284,7 +283,7 @@ export function AdvancedSettingsModal({
                       className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      考虑前K个最可能的词汇
+                      Consider the top K most likely tokens
                     </p>
                   </div>
 
@@ -302,33 +301,33 @@ export function AdvancedSettingsModal({
                       className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
                     />
                     <p className="text-xs text-gray-500 mt-1">
-                      核采样概率阈值
+                      Nucleus sampling probability threshold
                     </p>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      最大输出Token数
+                      Maximum Output Tokens
                     </label>
                     <Select
                       value={localConfig.generationConfig?.maxOutputTokens?.toString() || '1000000'}
                       onChange={(value) => updateGenerationConfig({ maxOutputTokens: parseInt(value) })}
                       options={[
-                        { value: '1024', label: '1,024 (短回答)' },
-                        { value: '2048', label: '2,048 (中等回答)' },
-                        { value: '4096', label: '4,096 (长回答)' },
-                        { value: '8192', label: '8,192 (详细回答)' },
-                        { value: '16384', label: '16,384 (超长回答)' },
-                        { value: '32768', label: '32,768 (极长回答)' },
-                        { value: '100000', label: '100,000 (无限制级别)' },
-                        { value: '1000000', label: '1,000,000 (最大无限制)' },
+                        { value: '1024', label: '1,024 (Short Response)' },
+                        { value: '2048', label: '2,048 (Medium Response)' },
+                        { value: '4096', label: '4,096 (Long Response)' },
+                        { value: '8192', label: '8,192 (Detailed Response)' },
+                        { value: '16384', label: '16,384 (Very Long Response)' },
+                        { value: '32768', label: '32,768 (Extra Long Response)' },
+                        { value: '100000', label: '100,000 (Unlimited Level)' },
+                        { value: '1000000', label: '1,000,000 (Maximum Unlimited)' },
                       ]}
                     />
                   </div>
                 </div>
 
                 <div className="bg-green-50 p-4 rounded-lg">
-                  <h4 className="font-medium text-green-900 mb-2">预设配置</h4>
+                  <h4 className="font-medium text-green-900 mb-2">Preset Configurations</h4>
                   <div className="grid grid-cols-2 gap-2">
                     <Button
                       variant="outline"
@@ -337,7 +336,7 @@ export function AdvancedSettingsModal({
                         temperature: 0.3, topK: 20, topP: 0.8, maxOutputTokens: 4096 
                       })}
                     >
-                      📚 精确模式
+                      📚 Precise Mode
                     </Button>
                     <Button
                       variant="outline"
@@ -346,7 +345,7 @@ export function AdvancedSettingsModal({
                         temperature: 0.7, topK: 40, topP: 0.95, maxOutputTokens: 1000000 
                       })}
                     >
-                      ⚖️ 平衡模式
+⚖️ Balanced Mode
                     </Button>
                     <Button
                       variant="outline"
@@ -355,7 +354,7 @@ export function AdvancedSettingsModal({
                         temperature: 0.9, topK: 60, topP: 0.98, maxOutputTokens: 8192 
                       })}
                     >
-                      🎨 创意模式
+                      🎨 Creative Mode
                     </Button>
                     <Button
                       variant="outline"
@@ -364,145 +363,29 @@ export function AdvancedSettingsModal({
                         temperature: 0.1, topK: 10, topP: 0.7, maxOutputTokens: 2048 
                       })}
                     >
-                      🔒 保守模式
+                      🔒 Conservative Mode
                     </Button>
                   </div>
                 </div>
               </div>
             )}
 
-            {activeTab === 'image' && (
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">图片生成配置</h3>
-                  <p className="text-sm text-gray-600 mb-6">
-                    配置Imagen模型的图片生成参数。
-                  </p>
-                </div>
-
-                <div className="space-y-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      生成图片数量
-                    </label>
-                    <Select
-                      value={localImageConfig.numberOfImages.toString()}
-                      onChange={(value) => updateImageConfig({ numberOfImages: parseInt(value) })}
-                      options={[
-                        { value: '1', label: '1张图片' },
-                        { value: '2', label: '2张图片' },
-                        { value: '3', label: '3张图片' },
-                        { value: '4', label: '4张图片' },
-                      ]}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      图片尺寸
-                    </label>
-                    <Select
-                      value={localImageConfig.sampleImageSize}
-                      onChange={(value) => updateImageConfig({ sampleImageSize: value as '1K' | '2K' })}
-                      options={[
-                        { value: '1K', label: '1K (1024x1024)' },
-                        { value: '2K', label: '2K (2048x2048)' },
-                      ]}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      纵横比
-                    </label>
-                    <Select
-                      value={localImageConfig.aspectRatio}
-                      onChange={(value) => updateImageConfig({ aspectRatio: value as any })}
-                      options={[
-                        { value: '1:1', label: '1:1 (正方形)' },
-                        { value: '3:4', label: '3:4 (竖屏)' },
-                        { value: '4:3', label: '4:3 (横屏)' },
-                        { value: '9:16', label: '9:16 (手机竖屏)' },
-                        { value: '16:9', label: '16:9 (宽屏)' },
-                      ]}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      人物生成
-                    </label>
-                    <Select
-                      value={localImageConfig.personGeneration}
-                      onChange={(value) => updateImageConfig({ personGeneration: value as any })}
-                      options={[
-                        { value: 'dont_allow', label: '禁止生成人物' },
-                        { value: 'allow_adult', label: '允许成人 (默认)' },
-                        { value: 'allow_all', label: '允许所有人物' },
-                      ]}
-                    />
-                  </div>
-                </div>
-
-                <div className="bg-purple-50 p-4 rounded-lg">
-                  <h4 className="font-medium text-purple-900 mb-2">快速预设</h4>
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => updateImageConfig({ 
-                        numberOfImages: 1, sampleImageSize: '1K', aspectRatio: '1:1' 
-                      })}
-                    >
-                      📱 社交媒体
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => updateImageConfig({ 
-                        numberOfImages: 4, sampleImageSize: '2K', aspectRatio: '16:9' 
-                      })}
-                    >
-                      🖥️ 桌面壁纸
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => updateImageConfig({ 
-                        numberOfImages: 2, sampleImageSize: '1K', aspectRatio: '3:4' 
-                      })}
-                    >
-                      📄 文档插图
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => updateImageConfig({ 
-                        numberOfImages: 1, sampleImageSize: '2K', aspectRatio: '9:16' 
-                      })}
-                    >
-                      📲 手机壁纸
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            )}
 
             {activeTab === 'grounding' && (
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Google 搜索增强</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Google Search Enhancement</h3>
                   <p className="text-sm text-gray-600 mb-6">
-                    启用后AI可以通过Google搜索获取最新信息来增强回答质量。
+                    When enabled, AI can obtain the latest information through Google search to enhance response quality.
                   </p>
                 </div>
 
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
-                      <label className="text-sm font-medium text-gray-700">启用搜索增强</label>
+                      <label className="text-sm font-medium text-gray-700">Enable Search Enhancement</label>
                       <p className="text-xs text-gray-500 mt-1">
-                        自动检测需要最新信息的问题并使用Google搜索
+                        Automatically detect questions that need latest information and use Google search
                       </p>
                     </div>
                     <Button
@@ -510,7 +393,7 @@ export function AdvancedSettingsModal({
                       size="sm"
                       onClick={() => updateGroundingConfig({ enabled: !localConfig.groundingConfig?.enabled })}
                     >
-                      {localConfig.groundingConfig?.enabled ? '已启用' : '已禁用'}
+                      {localConfig.groundingConfig?.enabled ? 'Enabled' : 'Disabled'}
                     </Button>
                   </div>
 
@@ -518,9 +401,9 @@ export function AdvancedSettingsModal({
                     <>
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
-                          <label className="text-sm font-medium text-gray-700">使用Google搜索</label>
+                          <label className="text-sm font-medium text-gray-700">Use Google Search</label>
                           <p className="text-xs text-gray-500 mt-1">
-                            通过Google搜索获取网页内容
+                            Obtain web content through Google search
                           </p>
                         </div>
                         <Button
@@ -528,22 +411,22 @@ export function AdvancedSettingsModal({
                           size="sm"
                           onClick={() => updateGroundingConfig({ useGoogleSearch: !localConfig.groundingConfig?.useGoogleSearch })}
                         >
-                          {localConfig.groundingConfig?.useGoogleSearch ? '已启用' : '已禁用'}
+                          {localConfig.groundingConfig?.useGoogleSearch ? 'Enabled' : 'Disabled'}
                         </Button>
                       </div>
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          最大搜索结果数量
+                          Maximum Search Results
                         </label>
                         <Select
                           value={localConfig.groundingConfig?.maxResults?.toString() || '5'}
                           onChange={(value) => updateGroundingConfig({ maxResults: parseInt(value) })}
                           options={[
-                            { value: '3', label: '3个结果 (快速)' },
-                            { value: '5', label: '5个结果 (推荐)' },
-                            { value: '8', label: '8个结果 (详细)' },
-                            { value: '10', label: '10个结果 (全面)' },
+                            { value: '3', label: '3 Results (Fast)' },
+                            { value: '5', label: '5 Results (Recommended)' },
+                            { value: '8', label: '8 Results (Detailed)' },
+                            { value: '10', label: '10 Results (Comprehensive)' },
                           ]}
                         />
                       </div>
@@ -552,12 +435,12 @@ export function AdvancedSettingsModal({
                 </div>
 
                 <div className="bg-blue-50 p-4 rounded-lg">
-                  <h4 className="font-medium text-blue-900 mb-2">搜索增强提示</h4>
+                  <h4 className="font-medium text-blue-900 mb-2">Search Enhancement Tips</h4>
                   <ul className="text-sm text-blue-800 space-y-1">
-                    <li>• 询问最新新闻、事件或数据时自动启用</li>
-                    <li>• 包含"最新"、"当前"、"今天"等关键词时自动触发</li>
-                    <li>• 搜索结果将显示来源链接供参考</li>
-                    <li>• 启用后会增加响应时间和token消耗</li>
+                    <li>• Automatically enabled when asking for latest news, events or data</li>
+                    <li>• Triggered by keywords like "latest", "current", "today"</li>
+                    <li>• Search results will show source links for reference</li>
+                    <li>• Enabling will increase response time and token consumption</li>
                   </ul>
                 </div>
               </div>
@@ -566,18 +449,18 @@ export function AdvancedSettingsModal({
             {activeTab === 'urlcontext' && (
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">URL 内容分析</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">URL Content Analysis</h3>
                   <p className="text-sm text-gray-600 mb-6">
-                    配置AI对网页URL内容的分析功能，可以直接分析指定网页的内容。
+                    Configure AI's ability to analyze web page content from URLs directly.
                   </p>
                 </div>
 
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
-                      <label className="text-sm font-medium text-gray-700">启用URL分析</label>
+                      <label className="text-sm font-medium text-gray-700">Enable URL Analysis</label>
                       <p className="text-xs text-gray-500 mt-1">
-                        允许AI直接读取和分析网页内容
+                        Allow AI to directly read and analyze web page content
                       </p>
                     </div>
                     <Button
@@ -585,7 +468,7 @@ export function AdvancedSettingsModal({
                       size="sm"
                       onClick={() => updateUrlContextConfig({ enabled: !localConfig.urlContextConfig?.enabled })}
                     >
-                      {localConfig.urlContextConfig?.enabled ? '已启用' : '已禁用'}
+                      {localConfig.urlContextConfig?.enabled ? 'Enabled' : 'Disabled'}
                     </Button>
                   </div>
 
@@ -593,23 +476,23 @@ export function AdvancedSettingsModal({
                     <>
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          最大URL数量
+                          Maximum URL Count
                         </label>
                         <Select
                           value={localConfig.urlContextConfig?.maxUrls?.toString() || '3'}
                           onChange={(value) => updateUrlContextConfig({ maxUrls: parseInt(value) })}
                           options={[
-                            { value: '1', label: '1个URL (单页分析)' },
-                            { value: '3', label: '3个URL (推荐)' },
-                            { value: '5', label: '5个URL (多页对比)' },
-                            { value: '10', label: '10个URL (深度分析)' },
+                            { value: '1', label: '1 URL (Single Page Analysis)' },
+                            { value: '3', label: '3 URLs (Recommended)' },
+                            { value: '5', label: '5 URLs (Multi-page Comparison)' },
+                            { value: '10', label: '10 URLs (Deep Analysis)' },
                           ]}
                         />
                       </div>
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          预设URL列表
+                          Preset URL List
                         </label>
                         <div className="space-y-2">
                           {(localConfig.urlContextConfig?.urls || []).map((url, index) => (
@@ -633,7 +516,7 @@ export function AdvancedSettingsModal({
                                   updateUrlContextConfig({ urls: newUrls });
                                 }}
                               >
-                                删除
+                                Remove
                               </Button>
                             </div>
                           ))}
@@ -649,7 +532,7 @@ export function AdvancedSettingsModal({
                             disabled={(localConfig.urlContextConfig?.urls?.length || 0) >= (localConfig.urlContextConfig?.maxUrls || 3)}
                           >
                             <Link className="h-4 w-4 mr-2" />
-                            添加URL
+                            Add URL
                           </Button>
                         </div>
                       </div>
@@ -658,24 +541,24 @@ export function AdvancedSettingsModal({
                 </div>
 
                 <div className="bg-green-50 p-4 rounded-lg">
-                  <h4 className="font-medium text-green-900 mb-2">URL分析功能</h4>
+                  <h4 className="font-medium text-green-900 mb-2">URL Analysis Features</h4>
                   <ul className="text-sm text-green-800 space-y-1">
-                    <li>• 支持分析网页文本内容、结构和数据</li>
-                    <li>• 可对比多个网页的信息差异</li>
-                    <li>• 自动提取关键信息和摘要</li>
-                    <li>• 支持新闻、文档、博客等各类网页</li>
-                    <li>• 会显示URL检索状态和来源信息</li>
+                    <li>• Support analysis of web page text content, structure and data</li>
+                    <li>• Compare information differences between multiple web pages</li>
+                    <li>• Automatically extract key information and summaries</li>
+                    <li>• Support news, documents, blogs and various web pages</li>
+                    <li>• Display URL retrieval status and source information</li>
                   </ul>
                 </div>
 
                 <div className="bg-yellow-50 p-4 rounded-lg">
-                  <h4 className="font-medium text-yellow-900 mb-2">使用说明</h4>
+                  <h4 className="font-medium text-yellow-900 mb-2">Usage Instructions</h4>
                   <div className="text-sm text-yellow-800 space-y-2">
-                    <p>要使用URL分析功能，请在对话中：</p>
+                    <p>To use URL analysis feature, in the conversation:</p>
                     <ul className="list-disc list-inside space-y-1 ml-2">
-                      <li>直接发送包含URL的消息</li>
-                      <li>或询问"分析这个网页：[URL]"</li>
-                      <li>或使用"对比这些网站：[URL1], [URL2]"</li>
+                      <li>Send messages containing URLs directly</li>
+                      <li>Or ask "Analyze this webpage: [URL]"</li>
+                      <li>Or use "Compare these websites: [URL1], [URL2]"</li>
                     </ul>
                   </div>
                 </div>
@@ -685,18 +568,18 @@ export function AdvancedSettingsModal({
             {activeTab === 'interface' && (
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">界面设置</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Interface Settings</h3>
                   <p className="text-sm text-gray-600 mb-6">
-                    配置应用界面行为和用户体验设置。
+                    Configure application interface behavior and user experience settings.
                   </p>
                 </div>
 
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
-                      <label className="text-sm font-medium text-gray-700">流式响应</label>
+                      <label className="text-sm font-medium text-gray-700">Streaming Response</label>
                       <p className="text-xs text-gray-500 mt-1">
-                        启用后回答将逐字显示，提供更好的反馈体验但可能增加延迟
+                        When enabled, responses will display word by word, providing better feedback experience but may increase latency
                       </p>
                     </div>
                     <Button
@@ -704,15 +587,15 @@ export function AdvancedSettingsModal({
                       size="sm"
                       onClick={() => setLocalConfig(prev => ({ ...prev, streamingEnabled: !prev.streamingEnabled }))}
                     >
-                      {localConfig.streamingEnabled !== false ? '已启用' : '已禁用'}
+                      {localConfig.streamingEnabled !== false ? 'Enabled' : 'Disabled'}
                     </Button>
                   </div>
 
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
-                      <label className="text-sm font-medium text-gray-700">打字效果</label>
+                      <label className="text-sm font-medium text-gray-700">Typewriter Effect</label>
                       <p className="text-xs text-gray-500 mt-1">
-                        为流式响应添加打字机效果，使回答显示更自然
+                        Add typewriter effect to streaming responses for more natural display
                       </p>
                     </div>
                     <Button
@@ -720,15 +603,15 @@ export function AdvancedSettingsModal({
                       size="sm"
                       onClick={() => setLocalConfig(prev => ({ ...prev, typewriterEffect: !prev.typewriterEffect }))}
                     >
-                      {localConfig.typewriterEffect !== false ? '已启用' : '已禁用'}
+                      {localConfig.typewriterEffect !== false ? 'Enabled' : 'Disabled'}
                     </Button>
                   </div>
 
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
-                      <label className="text-sm font-medium text-gray-700">智能加载提示</label>
+                      <label className="text-sm font-medium text-gray-700">Smart Loading Indicators</label>
                       <p className="text-xs text-gray-500 mt-1">
-                        根据请求类型显示不同的加载提示信息
+                        Display different loading messages based on request type
                       </p>
                     </div>
                     <Button
@@ -736,15 +619,15 @@ export function AdvancedSettingsModal({
                       size="sm"
                       onClick={() => setLocalConfig(prev => ({ ...prev, smartLoadingIndicators: !prev.smartLoadingIndicators }))}
                     >
-                      {localConfig.smartLoadingIndicators !== false ? '已启用' : '已禁用'}
+                      {localConfig.smartLoadingIndicators !== false ? 'Enabled' : 'Disabled'}
                     </Button>
                   </div>
 
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
-                      <label className="text-sm font-medium text-gray-700">实时反馈</label>
+                      <label className="text-sm font-medium text-gray-700">Real-time Feedback</label>
                       <p className="text-xs text-gray-500 mt-1">
-                        在处理过程中显示详细的状态信息和进度提示
+                        Display detailed status information and progress hints during processing
                       </p>
                     </div>
                     <Button
@@ -752,13 +635,13 @@ export function AdvancedSettingsModal({
                       size="sm"
                       onClick={() => setLocalConfig(prev => ({ ...prev, realtimeFeedback: !prev.realtimeFeedback }))}
                     >
-                      {localConfig.realtimeFeedback !== false ? '已启用' : '已禁用'}
+                      {localConfig.realtimeFeedback !== false ? 'Enabled' : 'Disabled'}
                     </Button>
                   </div>
                 </div>
 
                 <div className="bg-gray-50 p-4 rounded-lg">
-                  <h4 className="font-medium text-gray-900 mb-2">用户体验预设</h4>
+                  <h4 className="font-medium text-gray-900 mb-2">User Experience Presets</h4>
                   <div className="grid grid-cols-2 gap-2">
                     <Button
                       variant="outline"
@@ -771,7 +654,7 @@ export function AdvancedSettingsModal({
                         realtimeFeedback: true
                       }))}
                     >
-                      ✨ 最佳体验
+                      ✨ Best Experience
                     </Button>
                     <Button
                       variant="outline"
@@ -784,7 +667,7 @@ export function AdvancedSettingsModal({
                         realtimeFeedback: false
                       }))}
                     >
-                      ⚡ 极速模式
+                      ⚡ Speed Mode
                     </Button>
                     <Button
                       variant="outline"
@@ -797,7 +680,7 @@ export function AdvancedSettingsModal({
                         realtimeFeedback: true
                       }))}
                     >
-                      ⚖️ 平衡模式
+⚖️ Balanced Mode
                     </Button>
                     <Button
                       variant="outline"
@@ -810,7 +693,7 @@ export function AdvancedSettingsModal({
                         realtimeFeedback: false
                       }))}
                     >
-                      🎯 专注模式
+                      🎯 Focus Mode
                     </Button>
                   </div>
                 </div>
@@ -820,84 +703,84 @@ export function AdvancedSettingsModal({
             {activeTab === 'system' && (
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">系统指令</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">System Instructions</h3>
                   <p className="text-sm text-gray-600 mb-6">
-                    系统指令可以定义AI的角色和行为风格，将在每次对话开始时应用。
+                    System instructions can define AI's role and behavior style, applied at the beginning of each conversation.
                   </p>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    自定义系统指令
+                    Custom System Instructions
                   </label>
                   <textarea
                     value={localConfig.systemInstruction || ''}
                     onChange={(e) => setLocalConfig(prev => ({ ...prev, systemInstruction: e.target.value }))}
-                    placeholder="例如：你是一个专业的编程助手，擅长解释复杂的技术概念..."
+                    placeholder="For example: You are a professional programming assistant, skilled at explaining complex technical concepts..."
                     className="w-full h-32 px-3 py-2 border border-gray-300 rounded-lg resize-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                   <p className="text-xs text-gray-500 mt-1">
-                    留空将使用默认的通用助手指令
+                    Leave blank to use default general assistant instructions
                   </p>
                 </div>
 
                 <div className="bg-yellow-50 p-4 rounded-lg">
-                  <h4 className="font-medium text-yellow-900 mb-3">预设角色</h4>
+                  <h4 className="font-medium text-yellow-900 mb-3">Preset Roles</h4>
                   <div className="grid grid-cols-1 gap-2">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => setLocalConfig(prev => ({ 
                         ...prev, 
-                        systemInstruction: '你是一个专业的编程助手，擅长解释复杂的技术概念，提供代码示例，并帮助调试问题。请用清晰、结构化的方式回答，包含具体的代码示例。' 
+                        systemInstruction: 'You are a professional programming assistant, skilled at explaining complex technical concepts, providing code examples, and helping debug issues. Please answer in a clear, structured manner with specific code examples.' 
                       }))}
                       className="text-left justify-start"
                     >
-                      👨‍💻 编程助手
+                      👨‍💻 Programming Assistant
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => setLocalConfig(prev => ({ 
                         ...prev, 
-                        systemInstruction: '你是一个专业的写作助手，擅长帮助用户改进文章结构、语言表达和内容组织。请提供具体的修改建议和解释。' 
+                        systemInstruction: 'You are a professional writing assistant, skilled at helping users improve article structure, language expression and content organization. Please provide specific modification suggestions and explanations.' 
                       }))}
                       className="text-left justify-start"
                     >
-                      ✍️ 写作助手
+                      ✍️ Writing Assistant
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => setLocalConfig(prev => ({ 
                         ...prev, 
-                        systemInstruction: '你是一个数据分析专家，擅长解读数据、创建图表和提供洞察。请用数据驱动的方式回答问题，并提供可视化建议。' 
+                        systemInstruction: 'You are a data analysis expert, skilled at interpreting data, creating charts and providing insights. Please answer questions in a data-driven manner and provide visualization suggestions.' 
                       }))}
                       className="text-left justify-start"
                     >
-                      📊 数据分析师
+                      📊 Data Analyst
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => setLocalConfig(prev => ({ 
                         ...prev, 
-                        systemInstruction: '你是一个耐心的教师，擅长用简单易懂的方式解释复杂概念。请一步步引导学习，提供练习建议。' 
+                        systemInstruction: 'You are a patient teacher, skilled at explaining complex concepts in simple and understandable ways. Please guide learning step by step and provide practice suggestions.' 
                       }))}
                       className="text-left justify-start"
                     >
-                      🎓 教师
+                      🎓 Teacher
                     </Button>
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => setLocalConfig(prev => ({ 
                         ...prev, 
-                        systemInstruction: '你是一个创意助手，擅长头脑风暴、创意设计和内容创作。请提供多种创新想法和实现方案。' 
+                        systemInstruction: 'You are a creative assistant, skilled at brainstorming, creative design and content creation. Please provide multiple innovative ideas and implementation solutions.' 
                       }))}
                       className="text-left justify-start"
                     >
-                      💡 创意助手
+                      💡 Creative Assistant
                     </Button>
                     <Button
                       variant="outline"
@@ -908,7 +791,7 @@ export function AdvancedSettingsModal({
                       }))}
                       className="text-left justify-start"
                     >
-                      🤖 默认助手
+                      🤖 Default Assistant
                     </Button>
                   </div>
                 </div>
@@ -920,10 +803,10 @@ export function AdvancedSettingsModal({
         {/* Footer */}
         <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50">
           <Button variant="outline" onClick={onClose}>
-            取消
+            Cancel
           </Button>
           <Button onClick={handleSave}>
-            保存设置
+            Save Settings
           </Button>
         </div>
       </div>

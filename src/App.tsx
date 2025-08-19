@@ -38,8 +38,6 @@ function App() {
     exportConversation,
     defaultConversationConfig,
     setDefaultConversationConfig,
-    defaultImageConfig,
-    setDefaultImageConfig,
     getPerformanceMetrics,
   } = useChat();
 
@@ -165,8 +163,6 @@ function App() {
             onClose={() => setAdvancedSettingsOpen(false)}
             conversationConfig={defaultConversationConfig}
             onSave={setDefaultConversationConfig}
-            imageConfig={defaultImageConfig}
-            onImageConfigSave={setDefaultImageConfig}
           />
           {/* Performance Monitor */}
           <PerformanceMonitor

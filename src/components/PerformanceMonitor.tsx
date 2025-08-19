@@ -76,7 +76,7 @@ export function PerformanceMonitor({ isOpen, onClose, getMetrics }: PerformanceM
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div className="flex items-center gap-3">
             <Activity className="h-6 w-6 text-blue-600" />
-            <h2 className="text-xl font-semibold text-gray-900">性能监控</h2>
+            <h2 className="text-xl font-semibold text-gray-900">Performance Monitor</h2>
           </div>
           <div className="flex items-center gap-3">
             <Button
@@ -86,11 +86,11 @@ export function PerformanceMonitor({ isOpen, onClose, getMetrics }: PerformanceM
               className={autoRefresh ? 'text-green-600' : 'text-gray-500'}
             >
               <RefreshCw className={`h-4 w-4 mr-1 ${autoRefresh ? 'animate-spin' : ''}`} />
-              自动刷新
+              Auto Refresh
             </Button>
             <Button variant="ghost" size="sm" onClick={refreshMetrics}>
               <RefreshCw className="h-4 w-4 mr-1" />
-              手动刷新
+              Manual Refresh
             </Button>
             <Button variant="ghost" size="sm" onClick={onClose}>
               ✕
@@ -106,7 +106,7 @@ export function PerformanceMonitor({ isOpen, onClose, getMetrics }: PerformanceM
                 <div className="bg-blue-50 p-4 rounded-lg">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-blue-600">总请求数</p>
+                      <p className="text-sm font-medium text-blue-600">Total Requests</p>
                       <p className="text-2xl font-bold text-blue-900">{metrics.totalRequests}</p>
                     </div>
                     <BarChart3 className="h-8 w-8 text-blue-600" />
@@ -116,7 +116,7 @@ export function PerformanceMonitor({ isOpen, onClose, getMetrics }: PerformanceM
                 <div className="bg-green-50 p-4 rounded-lg">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-green-600">成功率</p>
+                      <p className="text-sm font-medium text-green-600">Success Rate</p>
                       <p className="text-2xl font-bold text-green-900">{metrics.successRate}</p>
                     </div>
                     <CheckCircle className="h-8 w-8 text-green-600" />
@@ -126,7 +126,7 @@ export function PerformanceMonitor({ isOpen, onClose, getMetrics }: PerformanceM
                 <div className="bg-yellow-50 p-4 rounded-lg">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-yellow-600">错误总数</p>
+                      <p className="text-sm font-medium text-yellow-600">Total Errors</p>
                       <p className="text-2xl font-bold text-yellow-900">{metrics.totalErrors}</p>
                     </div>
                     <AlertCircle className="h-8 w-8 text-yellow-600" />
@@ -136,7 +136,7 @@ export function PerformanceMonitor({ isOpen, onClose, getMetrics }: PerformanceM
                 <div className="bg-purple-50 p-4 rounded-lg">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-purple-600">运行时间</p>
+                      <p className="text-sm font-medium text-purple-600">Uptime</p>
                       <p className="text-2xl font-bold text-purple-900">{formatUptime(metrics.uptime)}</p>
                     </div>
                     <Clock className="h-8 w-8 text-purple-600" />
@@ -146,11 +146,11 @@ export function PerformanceMonitor({ isOpen, onClose, getMetrics }: PerformanceM
 
               {/* API Keys Health */}
               <div className="bg-white border rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">API密钥健康状态</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">API Key Health Status</h3>
                 <div className="space-y-3">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">当前使用密钥: {metrics.currentKeyIndex}/{metrics.totalKeys}</span>
-                    <span className="text-gray-600">健康密钥: {metrics.healthyKeys}/{metrics.totalKeys}</span>
+                    <span className="text-gray-600">Current Key: {metrics.currentKeyIndex}/{metrics.totalKeys}</span>
+                    <span className="text-gray-600">Healthy Keys: {metrics.healthyKeys}/{metrics.totalKeys}</span>
                   </div>
                   
                   <div className="grid grid-cols-1 gap-3">
@@ -163,16 +163,16 @@ export function PerformanceMonitor({ isOpen, onClose, getMetrics }: PerformanceM
                             <div>
                               <p className="font-medium text-gray-900">API Key {keyStats.keyIndex}</p>
                               <p className="text-sm text-gray-500">
-                                成功率: {keyStats.successRate}% | 连续错误: {keyStats.consecutiveErrors}
+                                Success Rate: {keyStats.successRate}% | Consecutive Errors: {keyStats.consecutiveErrors}
                               </p>
                             </div>
                           </div>
                           <div className="text-right">
                             <p className="text-sm font-medium text-gray-900">
-                              {keyStats.successCount}成功 / {keyStats.errorCount}错误
+                              {keyStats.successCount} Success / {keyStats.errorCount} Errors
                             </p>
                             <p className="text-xs text-gray-500">
-                              最后使用: {new Date(keyStats.lastUsed).toLocaleTimeString()}
+                              Last Used: {new Date(keyStats.lastUsed).toLocaleTimeString()}
                             </p>
                           </div>
                         </div>
@@ -185,7 +185,7 @@ export function PerformanceMonitor({ isOpen, onClose, getMetrics }: PerformanceM
               {/* Error Details */}
               {metrics.keyStats && metrics.keyStats.some((k: KeyHealthStats) => k.lastError) && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-                  <h3 className="text-lg font-semibold text-red-900 mb-4">最近错误</h3>
+                  <h3 className="text-lg font-semibold text-red-900 mb-4">Recent Errors</h3>
                   <div className="space-y-2">
                     {metrics.keyStats
                       .filter((k: KeyHealthStats) => k.lastError)
@@ -201,19 +201,19 @@ export function PerformanceMonitor({ isOpen, onClose, getMetrics }: PerformanceM
 
               {/* Performance Tips */}
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-blue-900 mb-4">性能建议</h3>
+                <h3 className="text-lg font-semibold text-blue-900 mb-4">Performance Suggestions</h3>
                 <div className="space-y-2 text-sm text-blue-800">
                   {metrics.successRate && parseFloat(metrics.successRate) < 90 && (
-                    <p>• 成功率较低，建议检查API密钥有效性</p>
+                    <p>• Low success rate, suggest checking API key validity</p>
                   )}
                   {metrics.healthyKeys < metrics.totalKeys && (
-                    <p>• 有不健康的API密钥，建议更换或检查</p>
+                    <p>• Unhealthy API keys detected, suggest replacement or inspection</p>
                   )}
                   {metrics.totalErrors > 10 && (
-                    <p>• 错误次数较多，建议检查网络连接和密钥配额</p>
+                    <p>• High error count, suggest checking network connection and key quotas</p>
                   )}
                   {metrics.healthyKeys === metrics.totalKeys && parseFloat(metrics.successRate) > 95 && (
-                    <p>• 所有指标正常，系统运行良好！</p>
+                    <p>• All metrics normal, system running well!</p>
                   )}
                 </div>
               </div>
@@ -221,7 +221,7 @@ export function PerformanceMonitor({ isOpen, onClose, getMetrics }: PerformanceM
               {/* Technical Details */}
               <div className="bg-gray-50 rounded-lg p-4">
                 <details className="cursor-pointer">
-                  <summary className="font-medium text-gray-900 mb-2">技术详情</summary>
+                  <summary className="font-medium text-gray-900 mb-2">Technical Details</summary>
                   <pre className="text-xs text-gray-600 overflow-auto">
                     {JSON.stringify(metrics, null, 2)}
                   </pre>
@@ -232,7 +232,7 @@ export function PerformanceMonitor({ isOpen, onClose, getMetrics }: PerformanceM
             <div className="flex items-center justify-center h-64">
               <div className="text-center">
                 <RefreshCw className="h-8 w-8 text-gray-400 animate-spin mx-auto mb-4" />
-                <p className="text-gray-500">加载性能数据...</p>
+                <p className="text-gray-500">Loading performance data...</p>
               </div>
             </div>
           )}
