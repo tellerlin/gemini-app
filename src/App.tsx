@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, Suspense } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { Menu } from 'lucide-react';
 import { Sidebar } from './components/Sidebar';
@@ -8,14 +8,9 @@ import { AdvancedSettingsModal } from './components/AdvancedSettingsModal';
 import { PerformanceMonitor } from './components/PerformanceMonitor';
 import { ModelSwitchIndicator } from './components/ModelSwitchIndicator';
 import { useChat } from './hooks/useChat';
-import { useConcurrentChat } from './hooks/useConcurrentChat';
-import { useContentProcessor } from './hooks/useWebWorker';
 import { useResponsive } from './hooks/useLocalStorage';
 import { Button } from './components/ui/Button';
 import { GlobalErrorBoundary } from './components/GlobalErrorBoundary';
-
-// Lazy load heavy components for better performance
-const LazyOptimizedChatList = React.lazy(() => import('./components/OptimizedChatList'));
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
