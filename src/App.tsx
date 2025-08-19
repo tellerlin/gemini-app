@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { Menu } from 'lucide-react';
 import { Sidebar } from './components/Sidebar';
@@ -8,9 +8,14 @@ import { AdvancedSettingsModal } from './components/AdvancedSettingsModal';
 import { PerformanceMonitor } from './components/PerformanceMonitor';
 import { ModelSwitchIndicator } from './components/ModelSwitchIndicator';
 import { useChat } from './hooks/useChat';
+import { useConcurrentChat } from './hooks/useConcurrentChat';
+import { useContentProcessor } from './hooks/useWebWorker';
 import { useResponsive } from './hooks/useLocalStorage';
 import { Button } from './components/ui/Button';
 import { GlobalErrorBoundary } from './components/GlobalErrorBoundary';
+
+// Lazy load heavy components for better performance
+const LazyOptimizedChatList = React.lazy(() => import('./components/OptimizedChatList'));
 
 function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -79,6 +84,19 @@ function App() {
     return currentConversation?.config || defaultConversationConfig;
   }, [currentConversation?.config, defaultConversationConfig]);
 
+  // Memoize handlers to prevent unnecessary re-renders
+  const memoizedHandlers = useMemo(() => ({
+    handleSaveApiKeys: (newApiKeys: string[]) => {
+      setApiKeys(newApiKeys);
+    },
+    handleConversationSelect: (id: string) => {
+      selectConversation(id);
+      if (isMobile) {
+        setSidebarOpen(false);
+      }
+    },
+  }), [setApiKeys, selectConversation, isMobile]);
+
   return (
     <GlobalErrorBoundary>
       <div className="flex h-screen bg-gray-50 overflow-hidden">
@@ -103,7 +121,7 @@ function App() {
             onClose={() => setSidebarOpen(false)}
             conversations={conversations}
             currentConversationId={currentConversation?.id || null}
-            onSelectConversation={handleConversationSelect}
+            onSelectConversation={memoizedHandlers.handleConversationSelect}
             onNewConversation={createNewConversation}
             onDeleteConversation={deleteConversation}
             onExportConversation={exportConversation}
@@ -155,7 +173,7 @@ function App() {
             isOpen={apiKeyModalOpen}
             onClose={() => setApiKeyModalOpen(false)}
             currentApiKeys={apiKeys}
-            onSave={handleSaveApiKeys}
+            onSave={memoizedHandlers.handleSaveApiKeys}
           />
           {/* Advanced Settings Modal */}
           <AdvancedSettingsModal

@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useMemo, memo, useCallback } from 'react';
 import { EnhancedMessageBubble } from './EnhancedMessageBubble';
 import { ChatInput } from './ChatInput';
 import { SmartLoadingIndicator } from './SmartLoadingIndicator';
@@ -18,7 +18,7 @@ interface ChatAreaProps {
   conversationConfig?: ConversationConfig;
 }
 
-export function ChatArea({ 
+export const ChatArea = memo(function ChatArea({ 
   messages, 
   onSendMessage, 
   onGenerateImage, 
@@ -32,13 +32,33 @@ export function ChatArea({
 }: ChatAreaProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  // Memoized scroll function with debouncing for better performance
+  const scrollToBottom = useCallback(() => {
+    const element = messagesEndRef.current;
+    if (element) {
+      // Use requestAnimationFrame for smoother scrolling
+      requestAnimationFrame(() => {
+        element.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      });
+    }
+  }, []);
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages.length, streamingMessage]); // 使用 messages.length 代替 messages 数组引用
+  }, [messages.length, streamingMessage, scrollToBottom]);
+
+  // Memoize messages list to prevent unnecessary re-renders
+  const memoizedMessages = useMemo(() => messages, [messages]);
+
+  // Memoize last message check for streaming
+  const lastMessageId = useMemo(() => {
+    return messages.length > 0 ? messages[messages.length - 1]?.id : null;
+  }, [messages]);
+
+  // Memoized streaming check
+  const isMessageStreaming = useCallback((messageId: string, role: string) => {
+    return isStreaming && messageId === lastMessageId && role === 'assistant';
+  }, [isStreaming, lastMessageId]);
 
   if (!hasApiKey) {
     return (
@@ -110,15 +130,15 @@ export function ChatArea({
     <div className="flex flex-col h-full">
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-2 sm:p-4 space-y-3 sm:space-y-4">
-        {messages.map((message) => (
+        {memoizedMessages.map((message) => (
           <EnhancedMessageBubble 
             key={message.id} 
             message={message} 
             isMobile={isMobile}
-            isStreaming={isStreaming && message.id === messages[messages.length - 1]?.id && message.role === 'assistant'}
+            isStreaming={isMessageStreaming(message.id, message.role)}
             conversationConfig={conversationConfig}
             onStopGeneration={onStopGeneration}
-            streamingContent={isStreaming && message.id === messages[messages.length - 1]?.id && message.role === 'assistant' ? streamingMessage : undefined}
+            streamingContent={isMessageStreaming(message.id, message.role) ? streamingMessage : undefined}
           />
         ))}
         
@@ -146,4 +166,4 @@ export function ChatArea({
       />
     </div>
   );
-}
+});
