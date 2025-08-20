@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { Menu } from 'lucide-react';
 import { Sidebar } from './components/Sidebar';
@@ -119,7 +119,7 @@ function App() {
             onSelectConversation={memoizedHandlers.handleConversationSelect}
             onNewConversation={createNewConversation}
             onDeleteConversation={deleteConversation}
-            onExportConversation={exportConversation}
+            onExportConversation={(id, format) => exportConversation(id, format)}
             onOpenSettings={() => setApiKeyModalOpen(true)}
             onOpenAdvancedSettings={() => setAdvancedSettingsOpen(true)}
             onOpenPerformanceMonitor={() => setPerformanceMonitorOpen(true)}

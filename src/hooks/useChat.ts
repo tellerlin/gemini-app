@@ -8,16 +8,224 @@ import type {
 } from '../types/chat';
 import { geminiService } from '../services/gemini';
 import type { GeminiResponse } from '../services/gemini';
+import { getModelCapabilities, getOptimalThinkingConfig } from '../config/gemini';
 import { useLocalStorage, useConversations } from './useLocalStorage';
 import { loadApiKeysFromEnv } from '../utils/env';
 import { ContextManager, type ContextConfig } from '../utils/contextManager';
-import { getOptimalThinkingConfig, getModelCapabilities } from '../config/gemini';
+import { generateAdvancedHTMLExport } from '../utils/exportRenderer';
 
 // Helper function to extract URLs from message content
 function extractUrlsFromMessage(content: string, maxUrls: number = 3): string[] {
   const urlRegex = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/g;
   const matches = content.match(urlRegex) || [];
   return matches.slice(0, maxUrls);
+}
+
+// Helper function to escape HTML
+function escapeHtml(unsafe: string): string {
+  return unsafe
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+// Helper function to convert text to HTML with basic formatting
+function textToHtml(text: string): string {
+  return escapeHtml(text)
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/\n/g, '<br>')
+    .replace(/```([^`]+)```/g, '<pre><code>$1</code></pre>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*([^*]+)\*/g, '<em>$1</em>');
+}
+
+// Helper function to generate HTML export
+function generateHTMLExport(conversation: any): string {
+  const htmlContent = conversation.messages.map((message: any) => {
+    const timestamp = new Date(message.timestamp).toLocaleString();
+    const role = message.role === 'user' ? 'User' : 'Assistant';
+    const roleClass = message.role === 'user' ? 'user-message' : 'assistant-message';
+    
+    return `
+      <div class="message ${roleClass}">
+        <div class="message-header">
+          <span class="role">${role}</span>
+          <span class="timestamp">${timestamp}</span>
+        </div>
+        <div class="message-content">
+          <p>${textToHtml(message.content)}</p>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  return `
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${escapeHtml(conversation.title)}</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0 0 10px 0;
+            font-size: 2em;
+        }
+        .header .meta {
+            opacity: 0.9;
+            font-size: 0.9em;
+        }
+        .conversation {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .message {
+            margin-bottom: 25px;
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid #e0e0e0;
+        }
+        .user-message {
+            background-color: #f0f9ff;
+            border-left-color: #3b82f6;
+        }
+        .assistant-message {
+            background-color: #f9fafb;
+            border-left-color: #10b981;
+        }
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 0.9em;
+        }
+        .role {
+            font-weight: 600;
+            color: #374151;
+        }
+        .timestamp {
+            color: #6b7280;
+        }
+        .message-content {
+            font-size: 1em;
+            line-height: 1.7;
+        }
+        .message-content p {
+            margin: 0 0 12px 0;
+        }
+        .message-content p:last-child {
+            margin-bottom: 0;
+        }
+        code {
+            background-color: #f3f4f6;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9em;
+        }
+        pre {
+            background-color: #1f2937;
+            color: #f9fafb;
+            padding: 16px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 12px 0;
+        }
+        pre code {
+            background: none;
+            padding: 0;
+            color: inherit;
+        }
+        strong {
+            font-weight: 600;
+            color: #111827;
+        }
+        em {
+            font-style: italic;
+            color: #374151;
+        }
+        @media print {
+            body {
+                background-color: white;
+            }
+            .header {
+                background: #667eea !important;
+                -webkit-print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>${escapeHtml(conversation.title)}</h1>
+        <div class="meta">
+            <div>Created: ${new Date(conversation.createdAt).toLocaleString()}</div>
+            <div>Updated: ${new Date(conversation.updatedAt).toLocaleString()}</div>
+            <div>Model: ${conversation.model}</div>
+        </div>
+    </div>
+    <div class="conversation">
+        ${htmlContent}
+    </div>
+</body>
+</html>
+  `.trim();
+}
+
+// Helper function to generate PDF export
+function generatePDFExport(conversation: any, filename: string, htmlContent?: string): void {
+  // Use provided HTML content or generate a basic one
+  const exportHtml = htmlContent || generateHTMLExport(conversation);
+  const blob = new Blob([exportHtml], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  
+  // Open in new window for printing to PDF
+  const printWindow = window.open(url, '_blank');
+  if (printWindow) {
+    printWindow.addEventListener('load', () => {
+      setTimeout(() => {
+        printWindow.print();
+      }, 1000); // Increased timeout to allow Mermaid rendering
+    });
+  } else {
+    // Fallback: download HTML and instruct user to print
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${filename}_for_pdf.html`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    // Show toast with instructions
+    import('react-hot-toast').then(({ toast }) => {
+      toast('HTML file downloaded. Open it in your browser and use "Print to PDF" feature.', {
+        duration: 5000,
+      });
+    });
+  }
+  
+  URL.revokeObjectURL(url);
 }
 
 export function useChat() {
@@ -569,34 +777,61 @@ export function useChat() {
     setCurrentConversationId(conversationId);
   }, [setCurrentConversationId]);
 
-  const exportConversation = useCallback((conversationId: string) => {
+  const exportConversation = useCallback((conversationId: string, format: 'txt' | 'html' | 'pdf' = 'txt') => {
     const conversation = conversations.find(conv => conv.id === conversationId);
     if (!conversation) {
       toast.error('Conversation not found');
       return;
     }
 
-    // Create formatted export content
-    const exportContent = conversation.messages.map(message => {
-      const timestamp = new Date(message.timestamp).toLocaleString();
-      const role = message.role === 'user' ? 'User' : 'Assistant';
-      return `[${timestamp}] ${role}:\n${message.content}\n`;
-    }).join('\n---\n\n');
+    // Create safe filename that preserves Chinese characters
+    const safeFilename = conversation.title
+      .replace(/[<>:"/\\|?*]/g, '_') // Only replace problematic filesystem characters
+      .normalize('NFC') // Normalize Unicode
+      .trim();
+    
+    const dateStr = new Date().toISOString().split('T')[0];
+    const baseFilename = `${safeFilename}_${dateStr}`;
 
-    const fullContent = `Conversation: ${conversation.title}\nCreated: ${new Date(conversation.createdAt).toLocaleString()}\nUpdated: ${new Date(conversation.updatedAt).toLocaleString()}\nModel: ${conversation.model}\n\n${exportContent}`;
-
-    // Create and download file
-    const blob = new Blob([fullContent], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${conversation.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${new Date().toISOString().split('T')[0]}.txt`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-
-    toast.success('Conversation exported successfully');
+    if (format === 'txt') {
+      // Create formatted export content for TXT
+      const exportContent = conversation.messages.map(message => {
+        const timestamp = new Date(message.timestamp).toLocaleString();
+        const role = message.role === 'user' ? 'User' : 'Assistant';
+        return `[${timestamp}] ${role}:\n${message.content}\n`;
+      }).join('\n---\n\n');
+      
+      const fullContent = `Conversation: ${conversation.title}\nCreated: ${new Date(conversation.createdAt).toLocaleString()}\nUpdated: ${new Date(conversation.updatedAt).toLocaleString()}\nModel: ${conversation.model}\n\n${exportContent}`;
+      
+      // Create and download file
+      const blob = new Blob([fullContent], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${baseFilename}.txt`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      toast.success('Conversation exported as TXT successfully');
+    } else if (format === 'html') {
+      // Create HTML export using advanced renderer that supports Mermaid, KaTeX, and code highlighting
+      const htmlContent = generateAdvancedHTMLExport(conversation);
+      const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${baseFilename}.html`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      toast.success('Conversation exported as HTML successfully');
+    } else if (format === 'pdf') {
+      // Create PDF export using the advanced HTML renderer
+      const htmlContent = generateAdvancedHTMLExport(conversation);
+      generatePDFExport(conversation, baseFilename, htmlContent);
+    }
   }, [conversations]);
 
   const updateConversationConfig = useCallback(async (conversationId: string, config: ConversationConfig) => {

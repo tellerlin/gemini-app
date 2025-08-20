@@ -163,9 +163,16 @@ export function fixMermaidSyntax(mermaidCode: string): string {
     const result = finalLines.filter(line => line.length > 0).join('\n');
     
     // Basic validation - ensure we have a diagram type
-    const hasValidDiagramType = /^(graph|flowchart|sequenceDiagram|classDiagram|stateDiagram|gantt|pie|journey|gitgraph|mindmap|timeline|sankey|block|zenuml)/m.test(result);
+    const hasValidDiagramType = /^(graph|flowchart|sequenceDiagram|classDiagram|stateDiagram|gantt|pie|journey|gitgraph|mindmap|timeline|sankey|block|zenuml|quadrantChart|gitGraph|requirement|architecture|c4Context|c4Container|c4Component|c4Dynamic)/m.test(result);
     
     if (!hasValidDiagramType && result.length > 0) {
+      // Check if it's a table-like structure that shouldn't be treated as Mermaid
+      if (result.includes('title:') && result.includes('column_') && result.includes('row_')) {
+        console.warn('Table-like structure detected, this is not a valid Mermaid diagram');
+        // Return a special marker to indicate this is an unsupported table
+        return 'UNSUPPORTED_TABLE_SYNTAX';
+      }
+      
       console.warn('No valid diagram type found, prepending graph TD');
       const withDiagramType = `graph TD\n${result}`;
       console.log('Fixed Mermaid syntax using official best practices, output:', withDiagramType);

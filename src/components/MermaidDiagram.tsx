@@ -3,6 +3,7 @@ import mermaid from 'mermaid';
 import { Download, ZoomIn, ZoomOut } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { fixMermaidSyntax } from '../utils/contentParser';
+import '../styles/mermaid-responsive.css';
 
 interface MermaidDiagramProps {
   code: string;
@@ -15,11 +16,90 @@ export function MermaidDiagram({ code, title }: MermaidDiagramProps) {
   const [scale, setScale] = useState(1);
   const [diagramType, setDiagramType] = useState<string>('');
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
+  const [autoScale, setAutoScale] = useState(1); // 自动缩放比例
   const containerRef = useRef<HTMLDivElement>(null);
+  const svgContentRef = useRef<HTMLDivElement>(null);
+
+  // 添加响应式监听器 - 修复无限循环问题
+  useEffect(() => {
+    const handleResize = () => {
+      if (containerRef.current) {
+        const newWidth = containerRef.current.clientWidth;
+        const newHeight = Math.max(window.innerHeight * 0.8, 600);
+        
+        // 只有当尺寸真正发生变化时才更新状态
+        setContainerSize(prev => {
+          if (Math.abs(prev.width - newWidth) > 10 || Math.abs(prev.height - newHeight) > 10) {
+            return { width: newWidth, height: newHeight };
+          }
+          return prev;
+        });
+      }
+    };
+
+    // 使用防抖函数避免频繁触发
+    let timeoutId: NodeJS.Timeout;
+    const debouncedResize = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(handleResize, 150);
+    };
+
+    // 添加resize监听器
+    window.addEventListener('resize', debouncedResize);
+    
+    // 初始设置 - 延迟执行确保DOM已渲染
+    const initialTimeout = setTimeout(handleResize, 100);
+    
+    return () => {
+      window.removeEventListener('resize', debouncedResize);
+      clearTimeout(timeoutId);
+      clearTimeout(initialTimeout);
+    };
+  }, []);
+
+  // 计算自动缩放比例
+  const calculateAutoScale = (svgElement: SVGElement, containerWidth: number, containerHeight: number) => {
+    try {
+      const bbox = svgElement.getBBox();
+      const svgWidth = bbox.width || svgElement.clientWidth || svgElement.scrollWidth;
+      const svgHeight = bbox.height || svgElement.clientHeight || svgElement.scrollHeight;
+      
+      if (svgWidth <= 0 || svgHeight <= 0) return 1;
+      
+      const paddingFactor = 0.9;
+      const availableWidth = containerWidth * paddingFactor;
+      const availableHeight = containerHeight * paddingFactor;
+      
+      const scaleX = availableWidth / svgWidth;
+      const scaleY = availableHeight / svgHeight;
+      const optimalScale = Math.min(scaleX, scaleY, 1);
+      
+      return Math.max(0.1, optimalScale);
+    } catch (error) {
+      console.warn('Auto scale calculation failed:', error);
+      return 1;
+    }
+  };
+
+  // 在SVG渲染完成后计算自动缩放
+  useEffect(() => {
+    if (svg && svgContentRef.current && containerSize.width > 0) {
+      const svgElement = svgContentRef.current.querySelector('svg');
+      if (svgElement) {
+        const timeoutId = setTimeout(() => {
+          const newAutoScale = calculateAutoScale(svgElement, containerSize.width, containerSize.height);
+          setAutoScale(newAutoScale);
+        }, 100);
+        
+        return () => clearTimeout(timeoutId);
+      }
+    }
+  }, [svg, containerSize]);
 
   useEffect(() => {
     const renderDiagram = async () => {
-      if (!code || !code.trim()) {
+      // 只有当code不为空且容器已初始化时才渲染
+      if (!code || !code.trim() || containerSize.width === 0) {
         setSvg('');
         setError('');
         return;
@@ -32,6 +112,13 @@ export function MermaidDiagram({ code, title }: MermaidDiagramProps) {
         
         // Detect diagram type for intelligent sizing
         const cleanedCode = fixMermaidSyntax(code);
+        
+        // Check if the cleaning process returned empty string (invalid diagram)
+        if (!cleanedCode || !cleanedCode.trim()) {
+          setError('Invalid or unsupported diagram format');
+          return;
+        }
+        
         const firstLine = cleanedCode.split('\n')[0].toLowerCase().trim();
         let detectedType = 'flowchart';
         
@@ -49,63 +136,47 @@ export function MermaidDiagram({ code, title }: MermaidDiagramProps) {
         
         setDiagramType(detectedType);
         
-        // Get container dimensions for responsive sizing
-        const containerWidth = containerRef.current?.clientWidth || window.innerWidth * 0.9;
-        const containerHeight = window.innerHeight * 0.6;
-        
-        // Calculate optimal dimensions based on diagram type - never exceed container width
-        let optimalWidth = containerWidth;
-        let optimalHeight = containerHeight;
-        
-        if (detectedType === 'horizontal-flowchart') {
-          // For horizontal flowcharts, use full container width but ensure adequate height
-          optimalWidth = Math.min(containerWidth, containerWidth * 0.95); // Stay within container
-          optimalHeight = Math.max(containerHeight * 0.6, 400); // Minimum 400px height
-        } else if (detectedType === 'vertical-flowchart') {
-          // For vertical flowcharts, prioritize height
-          optimalWidth = Math.min(containerWidth, 600);
-          optimalHeight = Math.max(containerHeight, 500);
-        } else if (detectedType === 'sequence') {
-          optimalWidth = Math.min(containerWidth, containerWidth * 0.9);
-          optimalHeight = Math.max(containerHeight * 0.5, 350);
-        }
-        
-        setContainerSize({ width: optimalWidth, height: optimalHeight });
+        // 使用已设置的容器尺寸，不再触发状态更新
+        const containerWidth = containerSize.width;
+        const containerHeight = containerSize.height;
 
-        // Configure Mermaid with intelligent sizing
+        // Configure Mermaid with adaptive sizing based on Context7 best practices
         mermaid.initialize({
           startOnLoad: false,
           theme: 'default',
           securityLevel: 'loose',
           fontFamily: '"Noto Sans CJK SC", "Microsoft YaHei", "SimHei", sans-serif',
+          // 启用全局自适应最大宽度 - Context7推荐的核心设置
+          useMaxWidth: true,
           flowchart: {
-            useMaxWidth: true, // Re-enable to respect container width
+            useMaxWidth: true, // 始终使用最大可用宽度
             htmlLabels: true,
             curve: 'basis',
-            padding: detectedType === 'horizontal-flowchart' ? 20 : 15,
-            nodeSpacing: detectedType === 'horizontal-flowchart' ? 60 : 50,
-            rankSpacing: detectedType === 'horizontal-flowchart' ? 80 : 50
+            // 基于容器宽度的动态padding
+            padding: Math.max(15, Math.min(containerWidth * 0.025, 30)),
+            nodeSpacing: Math.max(40, Math.min(containerWidth * 0.07, 70)),
+            rankSpacing: Math.max(50, Math.min(containerWidth * 0.09, 90))
           },
           sequence: {
-            diagramMarginX: 30,
+            useMaxWidth: true,
+            diagramMarginX: Math.max(20, Math.min(containerWidth * 0.04, 40)),
             diagramMarginY: 15,
-            actorMargin: 40,
-            width: 150,
+            actorMargin: Math.max(30, Math.min(containerWidth * 0.06, 50)),
+            width: Math.max(120, Math.min(containerWidth * 0.18, 180)),
             height: 65,
             boxMargin: 10,
             boxTextMargin: 5,
             noteMargin: 10,
-            messageMargin: 35,
-            useMaxWidth: true
+            messageMargin: Math.max(25, Math.min(containerWidth * 0.05, 45)),
           },
           gantt: {
+            useMaxWidth: true,
             titleTopMargin: 25,
             barHeight: 20,
-            fontSize: 12,
-            sectionFontSize: 12,
+            fontSize: Math.max(10, Math.min(containerWidth * 0.016, 14)),
+            sectionFontSize: Math.max(12, Math.min(containerWidth * 0.02, 16)),
             gridLineStartPadding: 35,
             bottomPadding: 20,
-            useMaxWidth: true
           }
         });
 
@@ -134,6 +205,8 @@ export function MermaidDiagram({ code, title }: MermaidDiagramProps) {
         // Set the generated SVG
         setSvg(generatedSvg);
         setError('');
+        // 重置自动缩放
+        setAutoScale(1);
         
         console.log('Mermaid diagram rendered successfully');
       } catch (err) {
@@ -159,11 +232,11 @@ export function MermaidDiagram({ code, title }: MermaidDiagramProps) {
       }
     };
 
-    // Add a small delay to ensure DOM is ready
-    const timeoutId = setTimeout(renderDiagram, 100);
+    // Add a small delay to ensure DOM is ready and container size is calculated
+    const timeoutId = setTimeout(renderDiagram, 200);
     
     return () => clearTimeout(timeoutId);
-  }, [code]);
+  }, [code, containerSize]); // 依赖容器尺寸变化
 
   const downloadDiagram = () => {
     if (!svg) return;
@@ -180,8 +253,12 @@ export function MermaidDiagram({ code, title }: MermaidDiagramProps) {
     toast.success('Diagram downloaded as SVG');
   };
 
-  const zoomIn = () => setScale(prev => Math.min(prev + 0.2, 3));
-  const zoomOut = () => setScale(prev => Math.max(prev - 0.2, 0.5));
+  const zoomIn = () => setScale(prev => Math.min(prev + 0.1, 3));
+  const zoomOut = () => setScale(prev => Math.max(prev - 0.1, 0.3));
+  const resetZoom = () => setScale(1);
+  
+  // 计算最终缩放比例
+  const finalScale = scale * autoScale;
 
   if (error) {
     return (
@@ -210,14 +287,19 @@ export function MermaidDiagram({ code, title }: MermaidDiagramProps) {
         <div className="flex items-center space-x-2">
           <button
             onClick={zoomOut}
-            disabled={scale <= 0.5}
+            disabled={scale <= 0.3}
             className="p-1 text-gray-500 hover:text-gray-700 disabled:opacity-50"
             title="Zoom out"
           >
             <ZoomOut className="h-4 w-4" />
           </button>
-          <span className="text-xs text-gray-500 min-w-[3rem] text-center">
-            {Math.round(scale * 100)}%
+          <span className="text-xs text-gray-500 min-w-[4rem] text-center">
+            {Math.round(finalScale * 100)}%
+            {autoScale < 1 && (
+              <span className="block text-[10px] text-blue-600">
+                自适应: {Math.round(autoScale * 100)}%
+              </span>
+            )}
           </span>
           <button
             onClick={zoomIn}
@@ -226,6 +308,13 @@ export function MermaidDiagram({ code, title }: MermaidDiagramProps) {
             title="Zoom in"
           >
             <ZoomIn className="h-4 w-4" />
+          </button>
+          <button
+            onClick={resetZoom}
+            className="p-1 text-gray-500 hover:text-gray-700 text-xs"
+            title="重置缩放"
+          >
+            复位
           </button>
           <div className="flex items-center space-x-1">
             <button
@@ -239,28 +328,42 @@ export function MermaidDiagram({ code, title }: MermaidDiagramProps) {
         </div>
       </div>
 
-      {/* Diagram */}
+      {/* 自适应图表容器 */}
       <div 
         className="w-full overflow-hidden"
         style={{
-          padding: diagramType === 'horizontal-flowchart' ? '16px' : '16px',
-          minHeight: diagramType === 'horizontal-flowchart' ? '400px' : '200px',
-          maxHeight: diagramType === 'horizontal-flowchart' ? '600px' : '80vh'
+          padding: '16px',
+          // 动态最小高度基于图表类型
+          minHeight: containerSize.height ? `${Math.max(containerSize.height * 0.6, 300)}px` : '300px',
+          // 自适应最大高度避免过高
+          maxHeight: '85vh'
         }}
       >
         <div 
           ref={containerRef}
           className="w-full overflow-auto transition-transform duration-200"
           style={{ 
-            transform: `scale(${scale})`, 
-            transformOrigin: diagramType === 'horizontal-flowchart' ? 'center center' : 'center top'
+            transform: `scale(${finalScale})`, 
+            transformOrigin: 'center top',
+            // 确保缩放时不会超出容器
+            maxWidth: '100%',
+            maxHeight: '100%'
           }}
         >
           <div 
+            ref={svgContentRef}
             dangerouslySetInnerHTML={{ __html: svg }} 
             className="w-full"
             style={{
-              minHeight: diagramType === 'horizontal-flowchart' ? '350px' : 'auto'
+              // 让SVG自适应容器尺寸
+              width: 'fit-content',
+              height: 'auto',
+              // 确保SVG不会溢出
+              maxWidth: 'none', // 允许SVG自然尺寸，由缩放控制适应
+              // 对于特定图表类型设置最小高度
+              minHeight: diagramType === 'horizontal-flowchart' ? '350px' : 
+                        diagramType === 'sequence' ? '300px' : 
+                        diagramType === 'gantt' ? '250px' : 'auto'
             }}
           />
         </div>

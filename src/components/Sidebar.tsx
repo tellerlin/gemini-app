@@ -1,5 +1,5 @@
-import React from 'react';
-import { MessageCircle, Plus, Trash2, Settings, X, Download, Sliders, Activity } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { MessageCircle, Plus, Trash2, Settings, X, Download, Sliders, Activity, ChevronDown } from 'lucide-react';
 import { Button } from './ui/Button';
 import { Select } from './ui/Select';
 import type { Conversation } from '../types/chat';
@@ -14,7 +14,7 @@ interface SidebarProps {
   onSelectConversation: (id: string) => void;
   onNewConversation: () => void;
   onDeleteConversation: (id: string) => void;
-  onExportConversation: (id: string) => void;
+  onExportConversation: (id: string, format?: 'txt' | 'html' | 'pdf') => void;
   onOpenSettings: () => void;
   onOpenAdvancedSettings: () => void;
   onOpenPerformanceMonitor: () => void;
@@ -39,6 +39,23 @@ export function Sidebar({
   onModelChange,
   isMobile = false,
 }: SidebarProps) {
+  const [exportDropdownOpen, setExportDropdownOpen] = useState<string | null>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (exportDropdownOpen) {
+        const target = event.target as Element;
+        if (!target.closest('.export-dropdown')) {
+          setExportDropdownOpen(null);
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [exportDropdownOpen]);
+
   const formatDate = (date: Date) => {
     const now = new Date();
     const diff = now.getTime() - new Date(date).getTime();
@@ -142,16 +159,56 @@ export function Sidebar({
                       </p>
                     </div>
                     <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-all">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onExportConversation(conversation.id);
-                        }}
-                        className="p-1.5 text-gray-400 hover:text-blue-500 transition-all rounded"
-                        title="Export conversation"
-                      >
-                        <Download className="h-3 w-3" />
-                      </button>
+                      <div className="relative export-dropdown">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setExportDropdownOpen(
+                              exportDropdownOpen === conversation.id ? null : conversation.id
+                            );
+                          }}
+                          className="p-1.5 text-gray-400 hover:text-blue-500 transition-all rounded flex items-center"
+                          title="Export conversation"
+                        >
+                          <Download className="h-3 w-3" />
+                          <ChevronDown className="h-2 w-2 ml-0.5" />
+                        </button>
+                        
+                        {exportDropdownOpen === conversation.id && (
+                          <div className="absolute right-0 mt-1 w-28 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onExportConversation(conversation.id, 'txt');
+                                setExportDropdownOpen(null);
+                              }}
+                              className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 first:rounded-t-lg"
+                            >
+                              TXT
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onExportConversation(conversation.id, 'html');
+                                setExportDropdownOpen(null);
+                              }}
+                              className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100"
+                            >
+                              HTML
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onExportConversation(conversation.id, 'pdf');
+                                setExportDropdownOpen(null);
+                              }}
+                              className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 last:rounded-b-lg"
+                            >
+                              PDF
+                            </button>
+                          </div>
+                        )}
+                      </div>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();

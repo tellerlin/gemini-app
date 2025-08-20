@@ -29,6 +29,7 @@
     "babel-plugin-react-compiler": "^19.1.0-rc.2",
     "clsx": "^2.1.1",
     "comlink": "^4.4.2",
+    "file-saver": "^2.0.5",
     "immer": "^10.1.1",
     "jsdom": "^26.1.0",
     "katex": "^0.16.22",
@@ -36,6 +37,7 @@
     "mermaid": "^11.9.0",
     "prismjs": "^1.30.0",
     "react": "^19.1.1",
+    "react-csv": "^2.2.2",
     "react-dom": "^19.1.1",
     "react-hot-toast": "^2.5.2",
     "react-katex": "^3.1.0",
@@ -52,10 +54,12 @@
     "remark-parse": "^11.0.0",
     "remark-rehype": "^11.1.2",
     "unified": "^11.0.5",
+    "xlsx": "^0.18.5",
     "zustand": "^5.0.7"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",
+    "@types/file-saver": "^2.0.7",
     "@types/react": "^19.1.10",
     "@types/react-dom": "^19.1.7",
     "@types/react-syntax-highlighter": "^15.5.13",
