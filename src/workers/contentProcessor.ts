@@ -37,7 +37,7 @@ class ContentProcessor {
         .use(remarkMath)
         .use(remarkRehype, { allowDangerousHtml: false })
         .use(rehypeSanitize)
-        .use(rehypeKatex)
+        .use(rehypeKatex, { output: 'html' })
         .use(rehypeStringify);
 
       const result = await processor.process(content);

@@ -1,6 +1,7 @@
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import type { Conversation, Message } from '../types/chat';
+import { fixMermaidSyntax } from './contentParser';
 
 // Server-side safe Markdown renderer for export
 function ExportMarkdownRenderer({ content }: { content: string }) {
@@ -16,7 +17,16 @@ function ExportMarkdownRenderer({ content }: { content: string }) {
         // Skip invalid or table-like structures
         return `<div class="invalid-diagram">Invalid diagram format (possibly a table): <pre>${escapeHtml(trimmedCode)}</pre></div>`;
       }
-      return `<div class="mermaid-diagram" data-diagram="${encodeURIComponent(trimmedCode)}">${trimmedCode}</div>`;
+      
+      // Apply Mermaid syntax fixes using the same logic as the main app
+      const fixedCode = fixMermaidSyntax(trimmedCode);
+      
+      // Check if the fixed code indicates an unsupported format
+      if (!fixedCode || fixedCode === 'UNSUPPORTED_TABLE_SYNTAX') {
+        return `<div class="invalid-diagram">不支持的图表格式: <pre>${escapeHtml(trimmedCode)}</pre></div>`;
+      }
+      
+      return `<div class="mermaid-diagram" data-diagram="${encodeURIComponent(fixedCode)}">${escapeHtml(fixedCode)}</div>`;
     });
 
     // Handle code blocks with syntax highlighting placeholder
@@ -25,12 +35,32 @@ function ExportMarkdownRenderer({ content }: { content: string }) {
       return `<pre class="code-block" data-language="${language}"><code>${escapeHtml(code.trim())}</code></pre>`;
     });
 
-    // Handle inline code
+    // Handle math expressions BEFORE inline code to avoid conflicts
+    // Create placeholders for processed math blocks to avoid double processing
+    const mathBlockPlaceholders: string[] = [];
+    
+    // Process block math FIRST 
+    processed = processed.replace(/\$\$\n?([\s\S]*?)\n?\$\$/g, (match, content) => {
+      const placeholder = `__MATH_BLOCK_${mathBlockPlaceholders.length}__`;
+      mathBlockPlaceholders.push(`<div class="math-block">$$${content.trim()}$$</div>`);
+      return placeholder;
+    });
+    
+    // Then process inline math
+    processed = processed.replace(/\$([^$\n]+)\$/g, (match, content) => {
+      return `<span class="math-inline">$${content}$</span>`;
+    });
+    
+    // Restore math block placeholders
+    mathBlockPlaceholders.forEach((html, index) => {
+      processed = processed.replace(`__MATH_BLOCK_${index}__`, html);
+    });
+
+    // Handle inline code AFTER math expressions
     processed = processed.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>');
 
-    // Handle math expressions
-    processed = processed.replace(/\$\$([\s\S]*?)\$\$/g, '<div class="math-block">$$1$</div>');
-    processed = processed.replace(/\$([^$]+)\$/g, '<span class="math-inline">$1$</span>');
+    // Handle markdown tables with proper parsing BEFORE other formatting
+    processed = parseMarkdownTables(processed);
 
     // Handle markdown formatting
     processed = processed
@@ -38,9 +68,6 @@ function ExportMarkdownRenderer({ content }: { content: string }) {
       .replace(/\*([^*]+)\*/g, '<em>$1</em>')
       .replace(/\n\n/g, '</p><p>')
       .replace(/\n/g, '<br>');
-
-    // Handle markdown tables with proper parsing
-    processed = parseMarkdownTables(processed);
 
     return processed;
   };
@@ -199,8 +226,8 @@ function parseMarkdownTables(content: string): string {
         .map(cell => cell.trim());
     }).filter(row => row.length > 0);
     
-    // Generate HTML table
-    let tableHtml = '<table class="markdown-table">';
+    // Generate HTML table with wrapper
+    let tableHtml = '<div class="table-wrapper"><table class="markdown-table">';
     
     // Header
     tableHtml += '<thead><tr>';
@@ -225,7 +252,7 @@ function parseMarkdownTables(content: string): string {
       tableHtml += '</tbody>';
     }
     
-    tableHtml += '</table>';
+    tableHtml += '</table></div>';
     return tableHtml;
   });
 }
@@ -357,9 +384,23 @@ function getExportStyles(): string {
       margin: 16px 0;
       text-align: center;
       font-size: 1.1em;
+      overflow-x: auto;
+      max-width: 100%;
+    }
+    .math-block .katex-display {
+      margin: 0;
+      overflow-x: auto;
+      max-width: 100%;
     }
     .math-inline {
       font-size: 1em;
+      max-width: 100%;
+      display: inline-block;
+      overflow-x: auto;
+    }
+    .math-inline .katex {
+      max-width: 100%;
+      overflow-x: auto;
     }
     strong {
       font-weight: 600;
@@ -369,28 +410,54 @@ function getExportStyles(): string {
       font-style: italic;
       color: #374151;
     }
+    .table-wrapper {
+      overflow-x: auto;
+      margin: 16px 0;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
     table, .markdown-table {
       width: 100%;
       border-collapse: collapse;
-      margin: 16px 0;
+      margin: 0;
       font-size: 0.9em;
+      min-width: 500px;
     }
     td, th {
       border: 1px solid #e5e7eb;
-      padding: 8px 12px;
+      padding: 12px 16px;
       text-align: left;
       vertical-align: top;
+      line-height: 1.5;
     }
     th {
-      background-color: #f9fafb;
+      background-color: #f8fafc;
       font-weight: 600;
       color: #374151;
+      border-bottom: 2px solid #d1d5db;
+      position: sticky;
+      top: 0;
     }
     .markdown-table tbody tr:nth-child(even) {
       background-color: #fafafa;
     }
     .markdown-table tbody tr:hover {
       background-color: #f0f9ff;
+    }
+    .markdown-table tbody tr {
+      transition: background-color 0.15s ease;
+    }
+    .markdown-table td:first-child,
+    .markdown-table th:first-child {
+      border-left: none;
+    }
+    .markdown-table td:last-child,
+    .markdown-table th:last-child {
+      border-right: none;
+    }
+    .markdown-table tbody tr:last-child td {
+      border-bottom: none;
     }
     @media print {
       body {
@@ -406,7 +473,7 @@ function getExportStyles(): string {
 
 function getInitScript(): string {
   return `
-    // Initialize Mermaid diagrams
+    // Initialize Mermaid diagrams, KaTeX math, and Prism syntax highlighting
     document.addEventListener('DOMContentLoaded', function() {
       // Configure Mermaid
       if (typeof mermaid !== 'undefined') {
@@ -414,51 +481,130 @@ function getInitScript(): string {
           startOnLoad: false,
           theme: 'default',
           securityLevel: 'loose',
-          fontFamily: '"Noto Sans CJK SC", "Microsoft YaHei", "SimHei", sans-serif'
+          fontFamily: '"Inter", "Noto Sans CJK SC", "Microsoft YaHei", "SimHei", system-ui, sans-serif',
+          useMaxWidth: true,
+          flowchart: {
+            useMaxWidth: true,
+            htmlLabels: true,
+            curve: 'basis',
+            padding: 20
+          },
+          sequence: {
+            useMaxWidth: true,
+            diagramMarginX: 20,
+            diagramMarginY: 10
+          },
+          gantt: {
+            useMaxWidth: true
+          }
         });
 
         // Render Mermaid diagrams
         const diagrams = document.querySelectorAll('.mermaid-diagram');
         diagrams.forEach(async (element, index) => {
           try {
-            const code = decodeURIComponent(element.getAttribute('data-diagram'));
-            const elementId = 'mermaid-' + index;
-            const { svg } = await mermaid.render(elementId, code);
-            element.innerHTML = svg;
+            const codeAttr = element.getAttribute('data-diagram');
+            if (!codeAttr) {
+              throw new Error('No diagram data found');
+            }
+            
+            const code = decodeURIComponent(codeAttr);
+            
+            // The code has already been processed by fixMermaidSyntax on the server side
+            const processedCode = code.trim();
+            
+            // Basic validation
+            if (!processedCode) {
+              throw new Error('No diagram content found');
+            }
+            
+            await mermaid.parse(processedCode);
+            const elementId = 'mermaid-export-' + index + '-' + Math.random().toString(36).substr(2, 9);
+            const renderResult = await mermaid.render(elementId, processedCode);
+            
+            if (renderResult && renderResult.svg) {
+              element.innerHTML = renderResult.svg;
+              element.style.textAlign = 'center';
+              element.style.padding = '20px';
+            } else {
+              throw new Error('渲染失败：未返回SVG内容');
+            }
           } catch (error) {
             console.error('Mermaid rendering error:', error);
-            element.innerHTML = '<div style="color: red; padding: 10px;">图表渲染失败: ' + error.message + '</div>';
+            const errorMessage = error.message || 'Unknown error';
+            let userFriendlyError = '';
+            
+            if (errorMessage.includes('Parse error') || errorMessage.includes('Syntax validation failed')) {
+              userFriendlyError = '语法解析错误 - 可能是中文字符导致，请检查边缘标签是否用引号包围';
+            } else if (errorMessage.includes('Lexical error')) {
+              userFriendlyError = '词法错误 - 可能是注释格式错误';
+            } else if (errorMessage.includes('Unsupported table syntax')) {
+              userFriendlyError = '不支持的表格语法 - 请使用正确的Mermaid表格格式';
+            } else {
+              userFriendlyError = '图表渲染失败: ' + errorMessage;
+            }
+            
+            element.innerHTML = '<div style="color: #dc2626; padding: 20px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px;">' + 
+                               '<strong>图表渲染失败</strong><br>' + userFriendlyError + 
+                               '<details style="margin-top: 10px;"><summary style="cursor: pointer;">查看原始代码</summary>' +
+                               '<pre style="background: #fee2e2; padding: 10px; border-radius: 4px; margin-top: 10px; overflow-x: auto;">' + 
+                               element.textContent + '</pre></details></div>';
           }
         });
       }
 
-      // Initialize KaTeX math rendering
+      // Initialize KaTeX math rendering with improved error handling
       if (typeof katex !== 'undefined') {
+        // Block math expressions
         const mathBlocks = document.querySelectorAll('.math-block');
         mathBlocks.forEach(block => {
           try {
-            const math = block.textContent.replace(/^\$+|\$+$/g, '');
-            katex.render(math, block, { displayMode: true });
+            const math = block.textContent.replace(/^\\$+|\\$+$/g, '').trim();
+            if (math) {
+              katex.render(math, block, { 
+                displayMode: true,
+                throwOnError: false,
+                errorColor: '#cc0000',
+                strict: false
+              });
+            }
           } catch (error) {
-            console.error('KaTeX rendering error:', error);
+            console.error('KaTeX block rendering error:', error);
+            block.innerHTML = '<span style="color: #cc0000;">数学公式渲染失败: ' + (error.message || 'Unknown error') + '</span>';
           }
         });
 
+        // Inline math expressions
         const mathInlines = document.querySelectorAll('.math-inline');
         mathInlines.forEach(inline => {
           try {
-            const math = inline.textContent.replace(/^\$+|\$+$/g, '');
-            katex.render(math, inline, { displayMode: false });
+            const math = inline.textContent.replace(/^\\$+|\\$+$/g, '').trim();
+            if (math) {
+              katex.render(math, inline, { 
+                displayMode: false,
+                throwOnError: false,
+                errorColor: '#cc0000',
+                strict: false
+              });
+            }
           } catch (error) {
-            console.error('KaTeX rendering error:', error);
+            console.error('KaTeX inline rendering error:', error);
+            inline.innerHTML = '<span style="color: #cc0000;">公式错误</span>';
           }
         });
       }
 
       // Initialize Prism syntax highlighting
       if (typeof Prism !== 'undefined') {
+        // Load additional language components if needed
+        if (typeof Prism.plugins !== 'undefined' && Prism.plugins.autoloader) {
+          Prism.plugins.autoloader.languages_path = 'https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/';
+        }
+        
         Prism.highlightAll();
       }
+      
+      console.log('Export rendering initialized successfully');
     });
   `;
 }

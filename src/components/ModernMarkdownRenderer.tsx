@@ -248,7 +248,7 @@ export const ModernMarkdownRenderer = React.memo(function ModernMarkdownRenderer
           remarkGfm, 
           remarkMath  // 使用默认配置，自动支持 $...$ 和 $$...$$
         ]}
-        rehypePlugins={[rehypeKatex]}
+        rehypePlugins={[[rehypeKatex, { output: 'html' }]]}
         components={components}
       >
         {processedContent}

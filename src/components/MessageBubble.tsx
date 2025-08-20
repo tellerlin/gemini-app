@@ -339,7 +339,7 @@ export function MessageBubble({ message, isMobile = false }: MessageBubbleProps)
               <div className="prose prose-sm sm:prose-base max-w-none">
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm, remarkMath]}
-                  rehypePlugins={[rehypeKatex]}
+                  rehypePlugins={[[rehypeKatex, { output: 'html' }]]}
                   components={{
                     code({ node, inline, className, children, ...props }) {
                       const match = /language-(\w+)/.exec(className || '');
