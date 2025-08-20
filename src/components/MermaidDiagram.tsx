@@ -98,8 +98,8 @@ export function MermaidDiagram({ code, title }: MermaidDiagramProps) {
 
   useEffect(() => {
     const renderDiagram = async () => {
-      // 只有当code不为空时才渲染，移除容器宽度检查避免阻塞渲染
-      if (!code || !code.trim()) {
+      // 只有当code不为空且容器已初始化时才渲染
+      if (!code || !code.trim() || containerSize.width === 0) {
         setSvg('');
         setError('');
         return;
@@ -110,17 +110,11 @@ export function MermaidDiagram({ code, title }: MermaidDiagramProps) {
         setSvg('');
         setError('');
         
-        console.group('🔍 Mermaid Rendering Diagnostics');
-        console.log('📥 Input Code:', code);
-        
         // Detect diagram type for intelligent sizing
         const cleanedCode = fixMermaidSyntax(code);
-        console.log('🧹 Cleaned Code:', cleanedCode);
         
         // Check if the cleaning process returned empty string (invalid diagram)
         if (!cleanedCode || !cleanedCode.trim()) {
-          console.log('❌ Cleaned code is empty');
-          console.groupEnd();
           setError('Invalid or unsupported diagram format');
           return;
         }
@@ -142,14 +136,11 @@ export function MermaidDiagram({ code, title }: MermaidDiagramProps) {
         
         setDiagramType(detectedType);
         
-        // 使用默认容器尺寸进行渲染，避免依赖容器初始化
-        const containerWidth = containerSize.width || 800; // 默认800px宽度
-        const containerHeight = containerSize.height || 600; // 默认600px高度
-        
-        console.log('📐 Container dimensions:', { containerWidth, containerHeight });
+        // 使用已设置的容器尺寸，不再触发状态更新
+        const containerWidth = containerSize.width;
+        const containerHeight = containerSize.height;
 
         // Configure Mermaid with adaptive sizing based on Context7 best practices
-        console.log('⚙️ Initializing Mermaid with config...');
         mermaid.initialize({
           startOnLoad: false,
           theme: 'default',
@@ -189,64 +180,40 @@ export function MermaidDiagram({ code, title }: MermaidDiagramProps) {
           }
         });
 
+        // Use already cleaned code from initialization
+
         // Validate that the cleaned code is not empty
         if (!cleanedCode || !cleanedCode.trim()) {
-          console.log('❌ Cleaned code is empty after processing');
-          console.groupEnd();
           setError('清理后的代码为空，请检查原始图表语法');
           return;
         }
 
         // Generate unique ID for this render
         const elementId = `mermaid-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        console.log('🏷️ Using element ID:', elementId);
         
         // First parse to check for syntax errors
-        console.log('🔍 Validating Mermaid syntax...');
         try {
           await mermaid.parse(cleanedCode);
-          console.log('✅ Syntax validation passed');
         } catch (parseError) {
-          console.error('❌ Mermaid parse error:', parseError);
-          console.error('📝 Error details:', {
-            message: parseError.message,
-            code: cleanedCode
-          });
-          console.groupEnd();
+          console.error('Mermaid parse error:', parseError);
           throw parseError;
         }
         
         // Render the diagram
-        console.log('🎨 Rendering diagram...');
         const { svg: generatedSvg } = await mermaid.render(elementId, cleanedCode);
         
-        console.log('📊 SVG Generation Results:', {
-          svgLength: generatedSvg?.length || 0,
-          hasContent: !!(generatedSvg && generatedSvg.trim()),
-          preview: generatedSvg?.slice(0, 200) + '...'
-        });
-        
         // Set the generated SVG
-        if (generatedSvg && generatedSvg.trim()) {
-          setSvg(generatedSvg);
-          setError('');
-          console.log('✅ SVG successfully set to state');
-        } else {
-          console.log('❌ Generated SVG is empty or invalid');
-          setError('Generated SVG is empty');
-        }
-        
+        setSvg(generatedSvg);
+        setError('');
         // 重置自动缩放
         setAutoScale(1);
         
-        console.log('🎉 Mermaid diagram rendered successfully');
-        console.groupEnd();
+        console.log('Mermaid diagram rendered successfully');
       } catch (err) {
-        console.groupEnd();
         const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-        console.error('❌ Mermaid rendering error:', err);
-        console.error('📝 Error message:', errorMessage);
-        console.error('📄 Original code that failed:', code);
+        console.error('Mermaid rendering error:', err);
+        console.error('Error message:', errorMessage);
+        console.error('Original code that failed:', code);
         
         // Provide more specific error messages
         if (errorMessage.includes('Parse error') || errorMessage.includes('Expecting')) {
@@ -265,11 +232,11 @@ export function MermaidDiagram({ code, title }: MermaidDiagramProps) {
       }
     };
 
-    // 减少延迟，立即开始渲染
-    const timeoutId = setTimeout(renderDiagram, 50);
+    // Add a small delay to ensure DOM is ready and container size is calculated
+    const timeoutId = setTimeout(renderDiagram, 200);
     
     return () => clearTimeout(timeoutId);
-  }, [code]); // 只依赖code变化，移除containerSize依赖避免循环渲染
+  }, [code, containerSize]); // 依赖容器尺寸变化
 
   const downloadDiagram = () => {
     if (!svg) return;

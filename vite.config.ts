@@ -170,34 +170,17 @@ export default defineConfig(({ mode }) => {
   
   // Development server optimizations
   server: {
-    host: '0.0.0.0', // Allow external access
+    host: true,
     port: 5173,
-    cors: true, // Enable CORS for cross-origin requests
     // Enable HMR optimizations
     hmr: {
-      overlay: true,
-      port: 5173
-    },
-    // Proxy configuration for API calls to avoid CORS
-    proxy: {
-      '/api/gemini': {
-        target: 'https://generativelanguage.googleapis.com',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/gemini/, ''),
-        secure: true,
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization'
-        }
-      }
+      overlay: true
     }
   },
   
   preview: {
     port: 4173,
-    host: '0.0.0.0', // Allow external access in preview mode
-    cors: true
+    host: true
   },
   
   // Path aliases for cleaner imports

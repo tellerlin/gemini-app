@@ -424,4 +424,4 @@ export function MessageBubble({ message, isMobile = false }: MessageBubbleProps)
       </div>
     </div>
   );
-});
+}

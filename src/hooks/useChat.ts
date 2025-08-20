@@ -6,7 +6,7 @@ import type {
   FileAttachment, 
   ConversationConfig
 } from '../types/chat';
-import { proxyGeminiService } from '../services/proxyGemini';
+import { geminiService } from '../services/gemini';
 import type { GeminiResponse } from '../services/gemini';
 import { getModelCapabilities, getOptimalThinkingConfig } from '../config/gemini';
 import { useLocalStorage, useConversations } from './useLocalStorage';
@@ -173,7 +173,6 @@ function generateHTMLExport(conversation: any): string {
             .header {
                 background: #667eea !important;
                 -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
             }
         }
     </style>
@@ -330,10 +329,10 @@ export function useChat() {
       return;
     }
 
-    proxyGeminiService.setApiKeys(apiKeys);
+    geminiService.setApiKeys(apiKeys);
     
     // Set up model switch callback to notify user
-    proxyGeminiService.setModelSwitchCallback((fromModel: string, toModel: string, reason: string) => {
+    geminiService.setModelSwitchCallback((fromModel: string, toModel: string, reason: string) => {
       toast.success(`🔄 Switched to ${toModel}: ${reason}`, {
         duration: 6000,
         icon: '🤖',
@@ -464,7 +463,7 @@ export function useChat() {
           console.log('🌐 Using URL context analysis with streaming');
           try {
             // For URL context, we use the analyzeUrls method instead of streaming
-            const urlAnalysisResult = await proxyGeminiService.analyzeUrls(
+            const urlAnalysisResult = await geminiService.analyzeUrls(
               enhancedConfig.urlContextConfig.urls.filter(url => url.trim() !== ''),
               content,
               selectedModel
@@ -488,7 +487,7 @@ export function useChat() {
           } catch (error) {
             console.error('URL context analysis failed:', error);
             // Fallback to regular streaming
-            const stream = proxyGeminiService.generateStreamingResponseWithModelSwitch(
+            const stream = geminiService.generateStreamingResponseWithModelSwitch(
               optimizedMessages, 
               selectedModel,
               enhancedConfig
@@ -510,7 +509,7 @@ export function useChat() {
           }
         } else if (useGrounding || useUrlContext) {
           console.log('🔍 Using grounding-enabled streaming generation with model switching');
-          const stream = proxyGeminiService.generateStreamingResponseWithGrounding(
+          const stream = geminiService.generateStreamingResponseWithGrounding(
             optimizedMessages, 
             selectedModel,
             enhancedConfig
@@ -535,7 +534,7 @@ export function useChat() {
         } else {
           // Use intelligent streaming with model switching
           console.log('⚡ Using intelligent streaming generation with model switching');
-          const stream = proxyGeminiService.generateStreamingResponseWithModelSwitch(
+          const stream = geminiService.generateStreamingResponseWithModelSwitch(
             optimizedMessages, 
             selectedModel,
             enhancedConfig
@@ -583,7 +582,7 @@ export function useChat() {
         if (useUrlContext && !useGrounding && enhancedConfig.urlContextConfig?.urls?.length) {
           console.log('🌐 Using URL context analysis (non-streaming)');
           try {
-            const urlAnalysisResult = await proxyGeminiService.analyzeUrls(
+            const urlAnalysisResult = await geminiService.analyzeUrls(
               enhancedConfig.urlContextConfig.urls.filter(url => url.trim() !== ''),
               content,
               selectedModel
@@ -593,7 +592,7 @@ export function useChat() {
           } catch (error) {
             console.error('URL context analysis failed, falling back to regular generation:', error);
             // Fallback to regular generation
-            const result = await proxyGeminiService.generateResponseWithModelSwitch(
+            const result = await geminiService.generateResponseWithModelSwitch(
               optimizedMessages,
               selectedModel,
               enhancedConfig
@@ -615,7 +614,7 @@ export function useChat() {
             }
           }
         } else if (useGrounding) {
-          const response = await proxyGeminiService.generateResponseWithGrounding(
+          const response = await geminiService.generateResponseWithGrounding(
             optimizedMessages,
             selectedModel,
             enhancedConfig
@@ -625,7 +624,7 @@ export function useChat() {
           urlContextMetadata = response.urlContextMetadata;
         } else {
           // Use intelligent generation with model switching
-          const result = await proxyGeminiService.generateResponseWithModelSwitch(
+          const result = await geminiService.generateResponseWithModelSwitch(
             optimizedMessages,
             selectedModel,
             enhancedConfig
@@ -848,7 +847,7 @@ export function useChat() {
   }, [conversations, saveConversation]);
 
   const stopGeneration = useCallback(() => {
-    proxyGeminiService.stopGeneration();
+    geminiService.stopGeneration();
     setIsStreaming(false);
     setIsLoading(false);
     toast.info('Generation stopped');
@@ -880,7 +879,7 @@ export function useChat() {
   }, [currentConversation, contextManager, contextConfig]);
 
   const getPerformanceMetrics = useCallback(() => {
-    return proxyGeminiService.getStats();
+    return geminiService.getStats();
   }, []);
 
   return {

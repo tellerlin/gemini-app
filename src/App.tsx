@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { Menu } from 'lucide-react';
 import { Sidebar } from './components/Sidebar';
@@ -48,87 +48,49 @@ function App() {
     }
   }, [isDesktop]);
 
-  // Close sidebar when clicking outside on mobile - optimized with useCallback
-  const handleClickOutside = useCallback((event: MouseEvent) => {
-    if (isMobile && sidebarOpen) {
-      const target = event.target as Element;
-      if (!target.closest('.sidebar') && !target.closest('.sidebar-toggle')) {
-        setSidebarOpen(false);
-      }
-    }
-  }, [isMobile, sidebarOpen]);
-
+  // Close sidebar when clicking outside on mobile
   useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isMobile && sidebarOpen) {
+        const target = event.target as Element;
+        if (!target.closest('.sidebar') && !target.closest('.sidebar-toggle')) {
+          setSidebarOpen(false);
+        }
+      }
+    };
+
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [handleClickOutside]);
+  }, [isMobile, sidebarOpen]);
 
-  // Optimized handlers with useCallback to prevent unnecessary re-renders
-  const handleSaveApiKeys = useCallback((newApiKeys: string[]) => {
+  const handleSaveApiKeys = (newApiKeys: string[]) => {
     setApiKeys(newApiKeys);
-  }, [setApiKeys]);
+  };
 
-  const handleConversationSelect = useCallback((id: string) => {
+  const handleConversationSelect = (id: string) => {
     selectConversation(id);
     if (isMobile) {
       setSidebarOpen(false);
     }
-  }, [selectConversation, isMobile]);
+  };
 
-  // Optimize sidebar toggle handlers
-  const handleSidebarOpen = useCallback(() => {
-    setSidebarOpen(true);
-  }, []);
-
-  const handleSidebarClose = useCallback(() => {
-    setSidebarOpen(false);
-  }, []);
-
-  const handleApiKeyModalOpen = useCallback(() => {
-    setApiKeyModalOpen(true);
-  }, []);
-
-  const handleApiKeyModalClose = useCallback(() => {
-    setApiKeyModalOpen(false);
-  }, []);
-
-  const handleAdvancedSettingsOpen = useCallback(() => {
-    setAdvancedSettingsOpen(true);
-  }, []);
-
-  const handleAdvancedSettingsClose = useCallback(() => {
-    setAdvancedSettingsOpen(false);
-  }, []);
-
-  const handlePerformanceMonitorOpen = useCallback(() => {
-    setPerformanceMonitorOpen(true);
-  }, []);
-
-  const handlePerformanceMonitorClose = useCallback(() => {
-    setPerformanceMonitorOpen(false);
-  }, []);
-
-  // Optimized memoization for better performance
+  // 稳定化 conversationConfig 引用以避免不必要的重新渲染
   const stableConversationConfig = useMemo(() => {
     return currentConversation?.config || defaultConversationConfig;
   }, [currentConversation?.config, defaultConversationConfig]);
 
-  // Memoized export handler
-  const handleExportConversation = useCallback((id: string, format: any) => {
-    exportConversation(id, format);
-  }, [exportConversation]);
-
-  // Memoized hasApiKey to prevent array length check on every render
-  const hasApiKey = useMemo(() => {
-    return apiKeys && apiKeys.length > 0;
-  }, [apiKeys]);
-
-  // Memoized current conversation data
-  const currentConversationData = useMemo(() => ({
-    id: currentConversation?.id || null,
-    title: currentConversation?.title || 'New Conversation',
-    messages: currentConversation?.messages || []
-  }), [currentConversation?.id, currentConversation?.title, currentConversation?.messages]);
+  // Memoize handlers to prevent unnecessary re-renders
+  const memoizedHandlers = useMemo(() => ({
+    handleSaveApiKeys: (newApiKeys: string[]) => {
+      setApiKeys(newApiKeys);
+    },
+    handleConversationSelect: (id: string) => {
+      selectConversation(id);
+      if (isMobile) {
+        setSidebarOpen(false);
+      }
+    },
+  }), [setApiKeys, selectConversation, isMobile]);
 
   return (
     <GlobalErrorBoundary>
@@ -151,16 +113,16 @@ function App() {
           {/* Sidebar */}
           <Sidebar
             isOpen={sidebarOpen}
-            onClose={handleSidebarClose}
+            onClose={() => setSidebarOpen(false)}
             conversations={conversations}
-            currentConversationId={currentConversationData.id}
-            onSelectConversation={handleConversationSelect}
+            currentConversationId={currentConversation?.id || null}
+            onSelectConversation={memoizedHandlers.handleConversationSelect}
             onNewConversation={createNewConversation}
             onDeleteConversation={deleteConversation}
-            onExportConversation={handleExportConversation}
-            onOpenSettings={handleApiKeyModalOpen}
-            onOpenAdvancedSettings={handleAdvancedSettingsOpen}
-            onOpenPerformanceMonitor={handlePerformanceMonitorOpen}
+            onExportConversation={(id, format) => exportConversation(id, format)}
+            onOpenSettings={() => setApiKeyModalOpen(true)}
+            onOpenAdvancedSettings={() => setAdvancedSettingsOpen(true)}
+            onOpenPerformanceMonitor={() => setPerformanceMonitorOpen(true)}
             selectedModel={selectedModel}
             onModelChange={setSelectedModel}
             isMobile={isMobile}
@@ -173,14 +135,13 @@ function App() {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={handleSidebarOpen}
-                className="sidebar-toggle p-2 hover:bg-gray-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-                aria-label="Toggle sidebar"
+                onClick={() => setSidebarOpen(true)}
+                className="sidebar-toggle p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <Menu className="h-5 w-5" />
               </Button>
               <h1 className="text-base sm:text-lg font-semibold text-gray-900 truncate px-2">
-                {currentConversationData.title}
+                {currentConversation?.title || 'New Conversation'}
               </h1>
               <div className="w-10" /> {/* Spacer for centering */}
             </div>
@@ -188,14 +149,14 @@ function App() {
             {/* Chat Content */}
             <div className="flex-1 min-h-0 relative">
               <ChatArea
-                messages={currentConversationData.messages}
+                messages={currentConversation?.messages || []}
                 onSendMessage={sendMessage}
                 onGenerateImage={generateImage}
                 onStopGeneration={stopGeneration}
                 isLoading={isLoading}
                 isStreaming={isStreaming}
                 streamingMessage={streamingMessage}
-                hasApiKey={hasApiKey}
+                hasApiKey={apiKeys && apiKeys.length > 0}
                 isMobile={isMobile}
                 conversationConfig={stableConversationConfig}
               />
@@ -205,21 +166,21 @@ function App() {
           {/* API Key Modal */}
           <ApiKeyModal
             isOpen={apiKeyModalOpen}
-            onClose={handleApiKeyModalClose}
+            onClose={() => setApiKeyModalOpen(false)}
             currentApiKeys={apiKeys}
-            onSave={handleSaveApiKeys}
+            onSave={memoizedHandlers.handleSaveApiKeys}
           />
           {/* Advanced Settings Modal */}
           <AdvancedSettingsModal
             isOpen={advancedSettingsOpen}
-            onClose={handleAdvancedSettingsClose}
+            onClose={() => setAdvancedSettingsOpen(false)}
             conversationConfig={defaultConversationConfig}
             onSave={setDefaultConversationConfig}
           />
           {/* Performance Monitor */}
           <PerformanceMonitor
             isOpen={performanceMonitorOpen}
-            onClose={handlePerformanceMonitorClose}
+            onClose={() => setPerformanceMonitorOpen(false)}
             getMetrics={getPerformanceMetrics}
           />
           
