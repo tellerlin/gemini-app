@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { Copy, Check, User, Bot, Image, File, Download, FileText } from 'lucide-react';
@@ -10,6 +12,7 @@ import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import type { Message } from '../types/chat';
 import { cn } from '../utils/cn';
+import 'katex/dist/katex.min.css';
 
 interface MessageBubbleProps {
   message: Message;
@@ -335,7 +338,8 @@ export function MessageBubble({ message, isMobile = false }: MessageBubbleProps)
             ) : (
               <div className="prose prose-sm sm:prose-base max-w-none">
                 <ReactMarkdown
-                  remarkPlugins={[remarkGfm]}
+                  remarkPlugins={[remarkGfm, remarkMath]}
+                  rehypePlugins={[rehypeKatex]}
                   components={{
                     code({ node, inline, className, children, ...props }) {
                       const match = /language-(\w+)/.exec(className || '');

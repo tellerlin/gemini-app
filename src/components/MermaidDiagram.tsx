@@ -1,275 +1,155 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import mermaid from 'mermaid';
-import { Download, ZoomIn, ZoomOut } from 'lucide-react';
+import { Download, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import { fixMermaidSyntax } from '../utils/contentParser';
-import '../styles/mermaid-responsive.css';
 
 interface MermaidDiagramProps {
   code: string;
   title?: string;
+  enableExport?: boolean;
 }
 
-export function MermaidDiagram({ code, title }: MermaidDiagramProps) {
+export function MermaidDiagram({ 
+  code, 
+  title, 
+  enableExport = true 
+}: MermaidDiagramProps) {
   const [svg, setSvg] = useState<string>('');
   const [error, setError] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(true);
   const [scale, setScale] = useState(1);
-  const [diagramType, setDiagramType] = useState<string>('');
-  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
-  const [autoScale, setAutoScale] = useState(1); // 自动缩放比例
   const containerRef = useRef<HTMLDivElement>(null);
-  const svgContentRef = useRef<HTMLDivElement>(null);
 
-  // 添加响应式监听器 - 修复无限循环问题
-  useEffect(() => {
-    const handleResize = () => {
-      if (containerRef.current) {
-        const newWidth = containerRef.current.clientWidth;
-        const newHeight = Math.max(window.innerHeight * 0.8, 600);
-        
-        // 只有当尺寸真正发生变化时才更新状态
-        setContainerSize(prev => {
-          if (Math.abs(prev.width - newWidth) > 10 || Math.abs(prev.height - newHeight) > 10) {
-            return { width: newWidth, height: newHeight };
-          }
-          return prev;
-        });
-      }
-    };
-
-    // 使用防抖函数避免频繁触发
-    let timeoutId: NodeJS.Timeout;
-    const debouncedResize = () => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(handleResize, 150);
-    };
-
-    // 添加resize监听器
-    window.addEventListener('resize', debouncedResize);
-    
-    // 初始设置 - 延迟执行确保DOM已渲染
-    const initialTimeout = setTimeout(handleResize, 100);
-    
-    return () => {
-      window.removeEventListener('resize', debouncedResize);
-      clearTimeout(timeoutId);
-      clearTimeout(initialTimeout);
-    };
-  }, []);
-
-  // 计算自动缩放比例
-  const calculateAutoScale = (svgElement: SVGElement, containerWidth: number, containerHeight: number) => {
+  const renderDiagram = useCallback(async () => {
     try {
-      const bbox = svgElement.getBBox();
-      const svgWidth = bbox.width || svgElement.clientWidth || svgElement.scrollWidth;
-      const svgHeight = bbox.height || svgElement.clientHeight || svgElement.scrollHeight;
-      
-      if (svgWidth <= 0 || svgHeight <= 0) return 1;
-      
-      const paddingFactor = 0.9;
-      const availableWidth = containerWidth * paddingFactor;
-      const availableHeight = containerHeight * paddingFactor;
-      
-      const scaleX = availableWidth / svgWidth;
-      const scaleY = availableHeight / svgHeight;
-      const optimalScale = Math.min(scaleX, scaleY, 1);
-      
-      return Math.max(0.1, optimalScale);
-    } catch (error) {
-      console.warn('Auto scale calculation failed:', error);
-      return 1;
-    }
-  };
+      setIsLoading(true);
+      setError('');
+      setSvg('');
 
-  // 在SVG渲染完成后计算自动缩放
-  useEffect(() => {
-    if (svg && svgContentRef.current && containerSize.width > 0) {
-      const svgElement = svgContentRef.current.querySelector('svg');
-      if (svgElement) {
-        const timeoutId = setTimeout(() => {
-          const newAutoScale = calculateAutoScale(svgElement, containerSize.width, containerSize.height);
-          setAutoScale(newAutoScale);
-        }, 100);
-        
-        return () => clearTimeout(timeoutId);
-      }
-    }
-  }, [svg, containerSize]);
-
-  useEffect(() => {
-    const renderDiagram = async () => {
-      // 只有当code不为空且容器已初始化时才渲染
-      if (!code || !code.trim() || containerSize.width === 0) {
-        setSvg('');
-        setError('');
+      if (!code || !code.trim()) {
+        setIsLoading(false);
         return;
       }
 
-      try {
-        // Clear any existing SVG content first
-        setSvg('');
-        setError('');
-        
-        // Detect diagram type for intelligent sizing
-        const cleanedCode = fixMermaidSyntax(code);
-        
-        // Check if the cleaning process returned empty string (invalid diagram)
-        if (!cleanedCode || !cleanedCode.trim()) {
-          setError('Invalid or unsupported diagram format');
-          return;
-        }
-        
-        const firstLine = cleanedCode.split('\n')[0].toLowerCase().trim();
-        let detectedType = 'flowchart';
-        
-        if (firstLine.includes('graph lr') || firstLine.includes('flowchart lr') || firstLine.includes('graph rl') || firstLine.includes('flowchart rl')) {
-          detectedType = 'horizontal-flowchart';
-        } else if (firstLine.includes('graph td') || firstLine.includes('flowchart td') || firstLine.includes('graph tb') || firstLine.includes('flowchart tb')) {
-          detectedType = 'vertical-flowchart';
-        } else if (firstLine.includes('sequencediagram')) {
-          detectedType = 'sequence';
-        } else if (firstLine.includes('gantt')) {
-          detectedType = 'gantt';
-        } else if (firstLine.includes('pie')) {
-          detectedType = 'pie';
-        }
-        
-        setDiagramType(detectedType);
-        
-        // 使用已设置的容器尺寸，不再触发状态更新
-        const containerWidth = containerSize.width;
-        const containerHeight = containerSize.height;
-
-        // Configure Mermaid with adaptive sizing based on Context7 best practices
-        mermaid.initialize({
-          startOnLoad: false,
-          theme: 'default',
-          securityLevel: 'loose',
-          fontFamily: '"Noto Sans CJK SC", "Microsoft YaHei", "SimHei", sans-serif',
-          // 启用全局自适应最大宽度 - Context7推荐的核心设置
-          useMaxWidth: true,
-          flowchart: {
-            useMaxWidth: true, // 始终使用最大可用宽度
-            htmlLabels: true,
-            curve: 'basis',
-            // 基于容器宽度的动态padding
-            padding: Math.max(15, Math.min(containerWidth * 0.025, 30)),
-            nodeSpacing: Math.max(40, Math.min(containerWidth * 0.07, 70)),
-            rankSpacing: Math.max(50, Math.min(containerWidth * 0.09, 90))
-          },
-          sequence: {
-            useMaxWidth: true,
-            diagramMarginX: Math.max(20, Math.min(containerWidth * 0.04, 40)),
-            diagramMarginY: 15,
-            actorMargin: Math.max(30, Math.min(containerWidth * 0.06, 50)),
-            width: Math.max(120, Math.min(containerWidth * 0.18, 180)),
-            height: 65,
-            boxMargin: 10,
-            boxTextMargin: 5,
-            noteMargin: 10,
-            messageMargin: Math.max(25, Math.min(containerWidth * 0.05, 45)),
-          },
-          gantt: {
-            useMaxWidth: true,
-            titleTopMargin: 25,
-            barHeight: 20,
-            fontSize: Math.max(10, Math.min(containerWidth * 0.016, 14)),
-            sectionFontSize: Math.max(12, Math.min(containerWidth * 0.02, 16)),
-            gridLineStartPadding: 35,
-            bottomPadding: 20,
-          }
-        });
-
-        // Use already cleaned code from initialization
-
-        // Validate that the cleaned code is not empty
-        if (!cleanedCode || !cleanedCode.trim()) {
-          setError('清理后的代码为空，请检查原始图表语法');
-          return;
-        }
-
-        // Generate unique ID for this render
-        const elementId = `mermaid-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        
-        // First parse to check for syntax errors
-        try {
-          await mermaid.parse(cleanedCode);
-        } catch (parseError) {
-          console.error('Mermaid parse error:', parseError);
-          throw parseError;
-        }
-        
-        // Render the diagram
-        const { svg: generatedSvg } = await mermaid.render(elementId, cleanedCode);
-        
-        // Set the generated SVG
-        setSvg(generatedSvg);
-        setError('');
-        // 重置自动缩放
-        setAutoScale(1);
-        
-        console.log('Mermaid diagram rendered successfully');
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Unknown error';
-        console.error('Mermaid rendering error:', err);
-        console.error('Error message:', errorMessage);
-        console.error('Original code that failed:', code);
-        
-        // Provide more specific error messages
-        if (errorMessage.includes('Parse error') || errorMessage.includes('Expecting')) {
-          if (/[\u4e00-\u9fff]/.test(code)) {
-            setError('中文语法解析错误 - 节点标签需要用引号包围，如: A["中文标签"]');
-          } else {
-            setError('语法解析错误 - 请检查图表语法是否正确');
-          }
-        } else if (errorMessage.includes('Lexical error')) {
-          setError('词法分析错误 - 可能存在不支持的字符或格式');
-        } else if (errorMessage.includes('Cannot read')) {
-          setError('渲染错误 - 可能存在无效的节点引用');
-        } else {
-          setError(`渲染失败: ${errorMessage}`);
-        }
+      // Process code
+      const processedCode = fixMermaidSyntax(code.trim());
+      
+      if (!processedCode || processedCode === 'UNSUPPORTED_TABLE_SYNTAX') {
+        setError('不支持的图表格式');
+        setIsLoading(false);
+        return;
       }
-    };
 
-    // Add a small delay to ensure DOM is ready and container size is calculated
-    const timeoutId = setTimeout(renderDiagram, 200);
-    
-    return () => clearTimeout(timeoutId);
-  }, [code, containerSize]); // 依赖容器尺寸变化
+      // Simple Mermaid initialization
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: 'default',
+        securityLevel: 'loose',
+        fontFamily: '"Inter", "Noto Sans CJK SC", system-ui, sans-serif',
+        useMaxWidth: true,
+        flowchart: {
+          useMaxWidth: true,
+          htmlLabels: true,
+          curve: 'basis',
+          padding: 20
+        },
+        sequence: {
+          useMaxWidth: true,
+          diagramMarginX: 20,
+          diagramMarginY: 10
+        },
+        gantt: {
+          useMaxWidth: true
+        }
+      });
 
-  const downloadDiagram = () => {
-    if (!svg) return;
-    
-    const filename = encodeURIComponent(title || 'diagram');
-    
-    const blob = new Blob([svg], { type: 'image/svg+xml' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${filename}.svg`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast.success('Diagram downloaded as SVG');
-  };
+      // Parse and render
+      await mermaid.parse(processedCode);
+      const chartId = `mermaid-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const renderResult = await mermaid.render(chartId, processedCode);
+      
+      if (renderResult && renderResult.svg) {
+        setSvg(renderResult.svg);
+      } else {
+        throw new Error('渲染失败：未返回SVG内容');
+      }
 
-  const zoomIn = () => setScale(prev => Math.min(prev + 0.1, 3));
-  const zoomOut = () => setScale(prev => Math.max(prev - 0.1, 0.3));
-  const resetZoom = () => setScale(1);
-  
-  // 计算最终缩放比例
-  const finalScale = scale * autoScale;
+    } catch (err) {
+      console.error('Mermaid rendering error:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+      
+      // Enhanced error messages
+      let userFriendlyError = '';
+      if (errorMessage.includes('Parse error') || errorMessage.includes('Syntax validation failed')) {
+        if (/[\u4e00-\u9fff]/.test(code)) {
+          userFriendlyError = '中文语法解析错误 - 请检查边缘标签格式';
+        } else {
+          userFriendlyError = '语法解析错误 - 请检查Mermaid语法是否正确';
+        }
+      } else if (errorMessage.includes('Lexical error')) {
+        userFriendlyError = '词法错误 - 可能是注释格式错误';
+      } else {
+        userFriendlyError = `渲染失败: ${errorMessage}`;
+      }
+      
+      setError(userFriendlyError);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [code]);
+
+  useEffect(() => {
+    renderDiagram();
+  }, [renderDiagram]);
+
+  const downloadDiagram = useCallback(async () => {
+    if (!svg) {
+      toast.error('没有可下载的图表');
+      return;
+    }
+    
+    try {
+      const filename = encodeURIComponent(title || 'mermaid-diagram');
+      const blob = new Blob([svg], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${filename}.svg`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success('图表已下载为SVG格式');
+    } catch (error) {
+      console.error('Download error:', error);
+      toast.error('下载失败，请重试');
+    }
+  }, [svg, title]);
+
+  const zoomIn = useCallback(() => setScale(prev => Math.min(prev * 1.2, 3)), []);
+  const zoomOut = useCallback(() => setScale(prev => Math.max(prev / 1.2, 0.3)), []);
+  const resetZoom = useCallback(() => setScale(1), []);
+
+  if (isLoading) {
+    return (
+      <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <p className="text-sm text-gray-600">正在渲染图表...</p>
+      </div>
+    );
+  }
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
-        <p className="text-sm font-medium mb-2">Diagram rendering failed</p>
-        <p className="text-xs text-red-600 mb-3">{error}</p>
+      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+        <h4 className="text-sm font-medium text-red-800 mb-1">图表渲染失败</h4>
+        <p className="text-sm text-red-700 mb-3">{error}</p>
         <details className="text-xs">
-          <summary className="cursor-pointer text-red-600 hover:text-red-800">
-            View Mermaid code
+          <summary className="cursor-pointer text-red-600 hover:text-red-800 mb-2">
+            查看原始代码
           </summary>
-          <pre className="mt-2 bg-red-100 p-2 rounded text-red-800 overflow-x-auto">
+          <pre className="bg-red-100 p-3 rounded text-red-800 overflow-x-auto border border-red-200">
             {code}
           </pre>
         </details>
@@ -282,92 +162,75 @@ export function MermaidDiagram({ code, title }: MermaidDiagramProps) {
       {/* Header */}
       <div className="flex justify-between items-center p-3 border-b border-gray-200 bg-gray-50">
         <h3 className="text-sm font-medium text-gray-700">
-          {title || 'Flowchart Diagram'}
+          {title || 'Mermaid图表'}
         </h3>
         <div className="flex items-center space-x-2">
           <button
             onClick={zoomOut}
             disabled={scale <= 0.3}
-            className="p-1 text-gray-500 hover:text-gray-700 disabled:opacity-50"
-            title="Zoom out"
+            className="p-1.5 text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed rounded hover:bg-gray-100"
+            title="缩小"
           >
             <ZoomOut className="h-4 w-4" />
           </button>
-          <span className="text-xs text-gray-500 min-w-[4rem] text-center">
-            {Math.round(finalScale * 100)}%
-            {autoScale < 1 && (
-              <span className="block text-[10px] text-blue-600">
-                自适应: {Math.round(autoScale * 100)}%
-              </span>
-            )}
+          <span className="text-xs text-gray-500 min-w-[3rem] text-center font-mono">
+            {Math.round(scale * 100)}%
           </span>
           <button
             onClick={zoomIn}
             disabled={scale >= 3}
-            className="p-1 text-gray-500 hover:text-gray-700 disabled:opacity-50"
-            title="Zoom in"
+            className="p-1.5 text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed rounded hover:bg-gray-100"
+            title="放大"
           >
             <ZoomIn className="h-4 w-4" />
           </button>
           <button
             onClick={resetZoom}
-            className="p-1 text-gray-500 hover:text-gray-700 text-xs"
+            className="p-1.5 text-gray-500 hover:text-gray-700 rounded hover:bg-gray-100"
             title="重置缩放"
           >
-            复位
+            <RotateCcw className="h-4 w-4" />
           </button>
-          <div className="flex items-center space-x-1">
-            <button
-              onClick={downloadDiagram}
-              className="p-1 text-gray-500 hover:text-gray-700"
-              title="Download SVG"
-            >
-              <Download className="h-4 w-4" />
-            </button>
-          </div>
+          
+          {enableExport && (
+            <div className="flex items-center space-x-1 ml-2 border-l border-gray-300 pl-2">
+              <button
+                onClick={downloadDiagram}
+                className="p-1.5 text-gray-500 hover:text-gray-700 rounded hover:bg-gray-100"
+                title="下载SVG格式"
+              >
+                <Download className="h-4 w-4" />
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* 自适应图表容器 */}
+      {/* Diagram Container */}
       <div 
-        className="w-full overflow-hidden"
-        style={{
-          padding: '16px',
-          // 动态最小高度基于图表类型
-          minHeight: containerSize.height ? `${Math.max(containerSize.height * 0.6, 300)}px` : '300px',
-          // 自适应最大高度避免过高
-          maxHeight: '85vh'
-        }}
+        ref={containerRef}
+        className="p-4 overflow-auto bg-white"
+        style={{ minHeight: '300px', maxHeight: '80vh' }}
       >
-        <div 
-          ref={containerRef}
-          className="w-full overflow-auto transition-transform duration-200"
-          style={{ 
-            transform: `scale(${finalScale})`, 
-            transformOrigin: 'center top',
-            // 确保缩放时不会超出容器
-            maxWidth: '100%',
-            maxHeight: '100%'
-          }}
-        >
+        {svg ? (
           <div 
-            ref={svgContentRef}
-            dangerouslySetInnerHTML={{ __html: svg }} 
-            className="w-full"
-            style={{
-              // 让SVG自适应容器尺寸
-              width: 'fit-content',
-              height: 'auto',
-              // 确保SVG不会溢出
-              maxWidth: 'none', // 允许SVG自然尺寸，由缩放控制适应
-              // 对于特定图表类型设置最小高度
-              minHeight: diagramType === 'horizontal-flowchart' ? '350px' : 
-                        diagramType === 'sequence' ? '300px' : 
-                        diagramType === 'gantt' ? '250px' : 'auto'
+            className="flex justify-center items-center transition-transform duration-200"
+            style={{ 
+              transform: `scale(${scale})`,
+              transformOrigin: 'center'
             }}
-          />
-        </div>
+          >
+            <div 
+              dangerouslySetInnerHTML={{ __html: svg }}
+              className="mermaid-diagram"
+            />
+          </div>
+        ) : (
+          <div className="flex items-center justify-center h-32 text-gray-500">
+            <p>没有图表内容</p>
+          </div>
+        )}
       </div>
     </div>
   );
-} 
+}

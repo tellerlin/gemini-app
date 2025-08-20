@@ -1,5 +1,5 @@
 import React from 'react';
-import { OptimizedMermaidDiagram } from '../components/OptimizedMermaidDiagram';
+import { MermaidDiagram } from '../components/MermaidDiagram';
 
 const testFlowchart = `graph TD
     A["用户"] --> B{"打开购物网站/App"}
@@ -30,7 +30,7 @@ export function MermaidTestPage() {
           该组件已修复无限循环问题，并添加了响应式防抖功能。
         </p>
         
-        <OptimizedMermaidDiagram
+        <MermaidDiagram
           code={testFlowchart}
           title="购物流程图 - 修复版本"
           enableExport={true}

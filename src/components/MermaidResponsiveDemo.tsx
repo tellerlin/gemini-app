@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { OptimizedMermaidDiagram } from '../components/OptimizedMermaidDiagram';
+import { MermaidDiagram } from '../components/MermaidDiagram';
 
 const testDiagrams = {
   flowchart: `flowchart TD
@@ -104,12 +104,12 @@ export function MermaidResponsiveDemo() {
       {/* 图表展示区域 */}
       <div className="space-y-8">
         <div>
-          <h2 className="text-xl font-semibold mb-4">OptimizedMermaidDiagram 组件</h2>
+          <h2 className="text-xl font-semibold mb-4">MermaidDiagram 组件</h2>
           <div 
             className="border border-gray-200 rounded-lg p-4 transition-all duration-300"
             style={{ width: containerWidth }}
           >
-            <OptimizedMermaidDiagram
+            <MermaidDiagram
               code={testDiagrams[selectedDiagram]}
               title={`${selectedDiagram} 示例`}
               enableExport={true}

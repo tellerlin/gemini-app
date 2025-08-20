@@ -1,14 +1,22 @@
+// Simple cache for processed Mermaid code to prevent unnecessary re-processing
+const mermaidCache = new Map<string, string>();
+
 export function fixMermaidSyntax(mermaidCode: string): string {
   // Enhanced Mermaid syntax fixer with optimal fault tolerance
   // Based on Context7 research and official Mermaid.js best practices
   // Handles Chinese characters, comments, syntax errors, and edge cases
   
+  // Early return if empty
+  if (!mermaidCode?.trim()) return mermaidCode || '';
+
+  // Check cache first to prevent redundant processing
+  if (mermaidCache.has(mermaidCode)) {
+    return mermaidCache.get(mermaidCode)!;
+  }
+
   let fixed = mermaidCode.trim();
   
-  // Early return if empty
-  if (!fixed) return fixed;
-  
-  console.log('Fixing Mermaid syntax using official best practices, input:', fixed);
+  // console.log('Fixing Mermaid syntax using official best practices, input:', fixed);
   
   try {
     // Step 1: Handle comments properly - Mermaid expects comments on separate lines
@@ -175,11 +183,13 @@ export function fixMermaidSyntax(mermaidCode: string): string {
       
       console.warn('No valid diagram type found, prepending graph TD');
       const withDiagramType = `graph TD\n${result}`;
-      console.log('Fixed Mermaid syntax using official best practices, output:', withDiagramType);
+      // console.log('Fixed Mermaid syntax using official best practices, output:', withDiagramType);
+      mermaidCache.set(mermaidCode, withDiagramType);
       return withDiagramType;
     }
     
-    console.log('Fixed Mermaid syntax using official best practices, output:', result);
+    // console.log('Fixed Mermaid syntax using official best practices, output:', result);
+    mermaidCache.set(mermaidCode, result);
     return result;
     
   } catch (error) {
@@ -197,7 +207,8 @@ export function fixMermaidSyntax(mermaidCode: string): string {
       .replace(/;+$/gm, '')
       .trim();
     
-    console.log('Fallback Mermaid syntax fix applied:', fallback);
+    // console.log('Fallback Mermaid syntax fix applied:', fallback);
+    mermaidCache.set(mermaidCode, fallback);
     return fallback;
   }
 }
