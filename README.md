@@ -8,6 +8,9 @@
 ![PWA](https://img.shields.io/badge/PWA-Ready-5A0FC8?style=for-the-badge)
 ![Performance](https://img.shields.io/badge/Performance-Optimized-00D084?style=for-the-badge)
 
+[![Deploy to Cloudflare Pages](https://deploy.cloud.run/button.svg)](https://dash.cloudflare.com/direct-upload)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/tellerlin/gemini-app)
+
 **现代化AI聊天界面 · 基于Google Gemini API · 2025优化版本**
 
 *高性能 · 并发优化 · 智能缓存 · Web Workers · 企业级安全*
@@ -277,12 +280,60 @@ docker-compose up -d
 
 ## 🌐 部署选项
 
+### 🚀 一键部署
+
+[![Deploy to Cloudflare Pages](https://deploy.cloud.run/button.svg)](https://dash.cloudflare.com/direct-upload)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/tellerlin/gemini-app)
+
 ### 推荐平台
-- **Cloudflare Pages**: 一键部署，全球CDN
+- **Cloudflare Pages**: 一键部署，全球CDN，免费域名
 - **Vercel**: 自动构建，边缘函数支持
 - **Netlify**: 静态托管，表单处理
 - **AWS S3**: 静态网站托管
 - **Docker**: 容器化部署
+
+### Cloudflare Pages 部署步骤
+
+#### 方法1: GitHub集成（推荐）
+1. Fork 此项目到你的 GitHub 账户
+2. 登录 [Cloudflare Pages](https://pages.cloudflare.com/)
+3. 点击 "Create a project" → "Connect to Git"
+4. 选择你的 GitHub 仓库
+5. 配置构建设置：
+   - **构建命令**: `npm run build`
+   - **构建输出目录**: `dist`
+   - **环境变量**: `VITE_GEMINI_API_KEYS=your_api_keys`
+6. 点击 "Save and Deploy"
+
+#### 方法2: 直接上传
+1. 本地构建项目：
+   ```bash
+   npm install
+   npm run build
+   ```
+2. 访问 [Cloudflare Pages Direct Upload](https://dash.cloudflare.com/direct-upload)
+3. 上传 `dist` 文件夹
+
+#### 方法3: Wrangler CLI
+```bash
+# 使用一键部署脚本
+./deploy-cloudflare.sh
+
+# 或手动执行：
+# 安装 Wrangler CLI
+npm install -g wrangler
+
+# 登录 Cloudflare
+npx wrangler login
+
+# 构建项目
+npm run build
+
+# 部署到 Cloudflare Pages
+npx wrangler pages deploy dist --project-name=gemini-app
+```
+
+> 📋 **详细部署说明**: 查看 [DEPLOY.md](./DEPLOY.md) 获取完整的部署指南和故障排除
 
 ### 环境配置
 ```env

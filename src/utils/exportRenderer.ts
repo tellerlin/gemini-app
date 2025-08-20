@@ -399,6 +399,7 @@ function getExportStyles(): string {
       .header {
         background: #667eea !important;
         -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
       }
     }
   `;
