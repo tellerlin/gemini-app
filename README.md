@@ -288,13 +288,13 @@ Deploy your Gemini Chat Application to any of these platforms with one click:
 - Global CDN with edge locations worldwide
 - Automatic HTTPS and custom domains
 - Built-in analytics and performance monitoring
-- Serverless functions support
+- Automatic deployments from Git
 - Free tier: 500 builds/month, unlimited bandwidth
 
 **Deployment Steps:**
 1. Click the deploy button above
 2. Connect your GitHub account
-3. Configure environment variables
+3. Configure environment variables (VITE_GEMINI_API_KEYS)
 4. Deploy automatically
 
 #### Vercel
@@ -372,7 +372,7 @@ aws cloudfront create-invalidation --distribution-id YOUR_DISTRIBUTION_ID --path
 ```
 
 #### Railway
-[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/vite-react)
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template?template=https%3A%2F%2Fgithub.com%2Ftellerlin%2Fgemini-app)
 
 **One-Click Setup:**
 1. Click the Railway button
@@ -413,6 +413,9 @@ NODE_ENV=production
 #### Cloudflare Pages
 ```toml
 # wrangler.toml
+name = "gemini-app"
+compatibility_date = "2025-08-21"
+
 [build]
 command = "npm run build"
 publish = "dist"
@@ -639,6 +642,6 @@ MIT License - See [LICENSE](LICENSE) file for details
 
 *Built with ❤️ using React 19, TypeScript, and Google Gemini AI*
 
-**Version**: 2.0.0-optimized | **Last Updated**: 2025-08-19
+**Version**: 2.0.0 | **Last Updated**: 2025-08-21
 
 </div>
