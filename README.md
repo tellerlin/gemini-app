@@ -8,162 +8,162 @@
 ![PWA](https://img.shields.io/badge/PWA-Ready-5A0FC8?style=for-the-badge)
 ![Performance](https://img.shields.io/badge/Performance-Optimized-00D084?style=for-the-badge)
 
-**现代化AI聊天界面 · 基于Google Gemini API · 2025优化版本**
+**Modern AI Chat Interface · Based on Google Gemini API · 2025 Optimized Version**
 
-*高性能 · 并发优化 · 智能缓存 · Web Workers · 企业级安全*
+*High Performance · Concurrency Optimization · Smart Caching · Web Workers · Enterprise Security*
 
 </div>
 
 ---
 
-## 📖 项目概述
+## 📖 Project Overview
 
-这是一个使用最新2025年前端技术栈构建的现代AI聊天应用，集成了Google Gemini AI模型。经过全面性能优化，支持多模态对话、实时流式响应、智能内容渲染和企业级安全特性。
+This is a modern AI chat application built with the latest 2025 frontend technology stack, integrated with Google Gemini AI models. It features comprehensive performance optimization, supports multimodal conversations, real-time streaming responses, intelligent content rendering, and enterprise-level security features.
 
-### ✨ 2025年优化亮点
+### ✨ 2025 Optimization Highlights
 
-- **⚡ React 19编译器**: 自动组件优化，性能提升50-70%
-- **🧠 智能缓存系统**: LRU+TTL混合策略，内存使用减少30-50%  
-- **🔄 并发特性**: useTransition, useDeferredValue, 乐观更新
-- **👷 Web Workers**: 多线程内容处理，不阻塞主UI线程
-- **📱 虚拟化渲染**: 支持无限消息列表的高性能滚动
-- **🛡️ 企业级安全**: AES-GCM加密 + 多重设备指纹验证
+- **⚡ React 19 Compiler**: Automatic component optimization, 50-70% performance improvement
+- **🧠 Smart Caching System**: LRU+TTL hybrid strategy, 30-50% memory usage reduction  
+- **🔄 Concurrency Features**: useTransition, useDeferredValue, optimistic updates
+- **👷 Web Workers**: Multi-threaded content processing, non-blocking main UI thread
+- **📱 Virtualized Rendering**: High-performance scrolling for unlimited message lists
+- **🛡️ Enterprise Security**: AES-GCM encryption + multi-factor device fingerprint verification
 
-## 🎯 核心功能
+## 🎯 Core Features
 
-### 💬 聊天功能
-- **多模型支持**: Gemini 2.5 Pro/Flash/Flash-Lite/Live
-- **多API密钥管理**: 智能轮询，提高可靠性和速率限制处理
-- **实时流式响应**: 即时消息传输，支持打字机效果
-- **多模态对话**: 图片、PDF、文档上传和分析
-- **对话管理**: 创建、保存、导出多个对话记录
+### 💬 Chat Functions
+- **Multi-model Support**: Gemini 2.5 Pro/Flash/Flash-Lite/Live
+- **Multi-API Key Management**: Smart polling, improved reliability and rate limit handling
+- **Real-time Streaming Response**: Instant message transmission with typewriter effect
+- **Multimodal Conversations**: Image, PDF, and document upload and analysis
+- **Conversation Management**: Create, save, and export multiple conversation records
 
-### 🎨 内容渲染
-- **交互式图表**: Mermaid图表渲染，支持缩放和下载
-- **丰富数据表格**: 可排序、搜索、分页，支持CSV/JSON导出
-- **动态图表**: 多种图表类型（线性、柱状、饼图等）
-- **数学公式**: 支持KaTeX行内和块级数学表达式
-- **代码高亮**: 语法高亮，一键复制功能
-- **URL上下文分析**: 🆕 直接分析网页内容
+### 🎨 Content Rendering
+- **Interactive Charts**: Mermaid chart rendering with zoom and download support
+- **Rich Data Tables**: Sortable, searchable, paginated with CSV/JSON export
+- **Dynamic Charts**: Multiple chart types (linear, bar, pie, etc.)
+- **Mathematical Formulas**: KaTeX inline and block mathematical expressions
+- **Code Highlighting**: Syntax highlighting with one-click copy function
+- **URL Context Analysis**: 🆕 Direct web content analysis
 
-### ⚡ 性能特性
-- **智能代码分割**: 8个优化chunk，按需加载
-- **虚拟化列表**: 支持无限量消息的高效渲染
-- **并发处理**: React 19并发特性，优化用户体验
-- **智能缓存**: 50MB缓存空间，LRU自动清理
-- **PWA支持**: 完整离线功能和桌面安装
+### ⚡ Performance Features
+- **Smart Code Splitting**: 8 optimized chunks, on-demand loading
+- **Virtualized Lists**: Efficient rendering for unlimited message counts
+- **Concurrent Processing**: React 19 concurrency features for optimized user experience
+- **Smart Caching**: 50MB cache space with LRU auto-cleanup
+- **PWA Support**: Complete offline functionality and desktop installation
 
-### 🔒 安全特性
-- **加密存储**: API密钥使用AES-GCM加密存储
-- **设备指纹**: 多维度浏览器指纹识别
-- **输入净化**: 防XSS攻击，内容安全策略
-- **权限管理**: 多层API密钥访问控制
-- **安全头**: HTTPS强制，内容安全策略
+### 🔒 Security Features
+- **Encrypted Storage**: API keys stored with AES-GCM encryption
+- **Device Fingerprinting**: Multi-dimensional browser fingerprint identification
+- **Input Sanitization**: XSS attack prevention, content security policy
+- **Permission Management**: Multi-tier API key access control
+- **Security Headers**: HTTPS enforcement, content security policy
 
-## 🛠️ 技术栈
+## 🛠️ Technology Stack
 
-### 前端框架
-- **React 19.1.1** - 并发特性和编译器优化
-- **TypeScript 5.5.3** - 严格类型检查和IntelliSense
-- **Vite 7.1.2** - 极速构建和HMR热重载
-- **Tailwind CSS 3.4.1** - 实用优先的CSS框架
+### Frontend Framework
+- **React 19.1.1** - Concurrency features and compiler optimization
+- **TypeScript 5.5.3** - Strict type checking and IntelliSense
+- **Vite 7.1.2** - Lightning-fast build and HMR hot reload
+- **Tailwind CSS 3.4.1** - Utility-first CSS framework
 
-### AI集成
-- **@google/genai 1.14.0** - 官方Google Generative AI SDK
-- **流式处理** - 支持实时响应流
-- **多模态支持** - 文本、图像、文档处理
+### AI Integration
+- **@google/genai 1.14.0** - Official Google Generative AI SDK
+- **Streaming Processing** - Real-time response streaming support
+- **Multimodal Support** - Text, image, and document processing
 
-### 性能优化
-- **@tanstack/react-virtual 3.10.8** - 虚拟化滚动
-- **Zustand 5.0.7** - 轻量状态管理
-- **Comlink 4.4.2** - Web Worker通信
-- **Immer 10.1.1** - 不可变状态更新
+### Performance Optimization
+- **@tanstack/react-virtual 3.10.8** - Virtualized scrolling
+- **Zustand 5.0.7** - Lightweight state management
+- **Comlink 4.4.2** - Web Worker communication
+- **Immer 10.1.1** - Immutable state updates
 
-### 内容处理
-- **React Markdown 10.1.0** - Markdown渲染
-- **Mermaid 11.9.0** - 图表和流程图
-- **KaTeX 0.16.22** - 数学公式渲染
-- **Prism.js** - 代码语法高亮
-- **Recharts** - 数据可视化图表
+### Content Processing
+- **React Markdown 10.1.0** - Markdown rendering
+- **Mermaid 11.9.0** - Charts and flowcharts
+- **KaTeX 0.16.22** - Mathematical formula rendering
+- **Prism.js** - Code syntax highlighting
+- **Recharts** - Data visualization charts
 
-### 开发工具
-- **ESLint 9.33.0** - 代码质量检查
-- **Vitest 2.1.8** - 单元测试框架
-- **TypeScript ESLint** - TypeScript代码规范
-- **Rollup Visualizer** - Bundle分析
+### Development Tools
+- **ESLint 9.33.0** - Code quality checking
+- **Vitest 2.1.8** - Unit testing framework
+- **TypeScript ESLint** - TypeScript code standards
+- **Rollup Visualizer** - Bundle analysis
 
-## 🚀 快速开始
+## 🚀 Quick Start
 
-### 环境要求
+### System Requirements
 - **Node.js 18+** 
-- **npm 或 yarn**
-- **Google AI Studio API密钥**
+- **npm or yarn**
+- **Google AI Studio API Key**
 
-### 安装步骤
+### Installation Steps
 
-1. **克隆项目**
+1. **Clone the repository**
 ```bash
 git clone https://github.com/tellerlin/gemini-app.git
 cd gemini-app
 ```
 
-2. **安装依赖**
+2. **Install dependencies**
 ```bash
 npm install
 ```
 
-3. **配置环境变量** (可选)
+3. **Configure environment variables** (optional)
 ```bash
 cp .env.example .env
-# 编辑.env文件添加API密钥
+# Edit .env file to add API keys
 ```
 
-4. **启动开发服务器**
+4. **Start development server**
 ```bash
 npm run dev
 ```
 
-5. **打开浏览器**
-访问 `http://localhost:5173`
+5. **Open browser**
+Visit `http://localhost:5173`
 
-### API密钥配置
+### API Key Configuration
 
-#### 方法1: 应用内配置
-1. 访问 [Google AI Studio](https://makersuite.google.com/app/apikey)
-2. 创建一个或多个API密钥
-3. 在应用中点击设置图标
-4. 添加API密钥（支持多密钥冗余）
+#### Method 1: In-app Configuration
+1. Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
+2. Create one or more API keys
+3. Click the settings icon in the app
+4. Add API keys (supports multi-key redundancy)
 
-#### 方法2: 环境变量
+#### Method 2: Environment Variables
 ```env
 VITE_GEMINI_API_KEYS=key1,key2,key3
-VITE_PROXY_URL=http://proxy:port  # 可选
+VITE_PROXY_URL=http://proxy:port  # Optional
 ```
 
-## 📊 性能指标
+## 📊 Performance Metrics
 
-### 构建优化
+### Build Optimization
 ```
-关键路径Bundle:     < 400kB (gzipped < 120kB)
-非关键资源:         1.5MB+ (懒加载)
-代码分割:          8个智能chunks
-构建时间:          ~30秒 (提升33%)
-```
-
-### 运行时性能
-```
-首屏加载时间:       减少50-70%
-内存使用:          减少30-50% (智能缓存)
-交互响应时间:       减少60-80% (并发优化)
-虚拟化列表:        支持10万+消息无卡顿
+Critical Path Bundle:   < 400kB (gzipped < 120kB)
+Non-critical Resources: 1.5MB+ (lazy loaded)
+Code Splitting:         8 smart chunks
+Build Time:             ~30s (33% improvement)
 ```
 
-### 缓存效率
+### Runtime Performance
 ```
-缓存策略:          LRU + TTL混合
-最大缓存空间:       50MB
-自动清理:         过期条目自动清理
-命中率:           90%+ (预计)
+First Paint Time:       50-70% reduction
+Memory Usage:          30-50% reduction (smart cache)
+Interaction Response:   60-80% reduction (concurrency optimization)
+Virtualized Lists:      Support 100k+ messages without lag
+```
+
+### Cache Efficiency
+```
+Cache Strategy:         LRU + TTL hybrid
+Max Cache Space:        50MB
+Auto Cleanup:          Expired entries auto-cleaned
+Hit Rate:              90%+ (estimated)
 ```
 
 ## 🧪 开发和测试
@@ -186,35 +186,35 @@ npm run build:analyze # Bundle分析
 - ✅ **组件集成测试**: 用户界面和交互流程
 - ✅ **类型安全验证**: 100% TypeScript覆盖
 
-## 🏗️ 项目架构
+## 🏗️ Project Architecture
 
-### 目录结构
+### Directory Structure
 ```
 src/
-├── components/          # React组件
-│   ├── ui/             # 可复用UI组件
-│   ├── ChatArea.tsx    # 主聊天界面
-│   ├── OptimizedChatList.tsx # 🆕 虚拟化聊天列表
-│   ├── EnhancedMessageBubble.tsx # 富文本消息显示
-│   └── GlobalErrorBoundary.tsx # 全局错误处理
-├── hooks/              # 自定义Hooks
-│   ├── useChat.ts      # 聊天状态管理
-│   ├── useConcurrentChat.ts # 🆕 并发聊天优化
-│   ├── useWebWorker.ts # 🆕 Web Worker管理
-│   └── useLocalStorage.ts # 本地存储工具
-├── services/           # 外部服务
-│   └── gemini.ts       # Gemini AI服务
-├── stores/             # 状态管理
-│   └── appStore.ts     # Zustand全局状态
-├── utils/              # 工具函数
-│   ├── smartCache.ts   # 🆕 智能缓存系统
-│   ├── security.ts     # 安全工具
-│   ├── contentParser.ts # 内容解析
-│   └── contextManager.ts # 上下文管理
+├── components/          # React components
+│   ├── ui/             # Reusable UI components
+│   ├── ChatArea.tsx    # Main chat interface
+│   ├── OptimizedChatList.tsx # 🆕 Virtualized chat list
+│   ├── EnhancedMessageBubble.tsx # Rich text message display
+│   └── GlobalErrorBoundary.tsx # Global error handling
+├── hooks/              # Custom Hooks
+│   ├── useChat.ts      # Chat state management
+│   ├── useConcurrentChat.ts # 🆕 Concurrent chat optimization
+│   ├── useWebWorker.ts # 🆕 Web Worker management
+│   └── useLocalStorage.ts # Local storage utilities
+├── services/           # External services
+│   └── gemini.ts       # Gemini AI service
+├── stores/             # State management
+│   └── appStore.ts     # Zustand global state
+├── utils/              # Utility functions
+│   ├── smartCache.ts   # 🆕 Smart cache system
+│   ├── security.ts     # Security utilities
+│   ├── contentParser.ts # Content parsing
+│   └── contextManager.ts # Context management
 ├── workers/            # 🆕 Web Workers
-│   └── contentProcessor.ts # 多线程内容处理
-├── types/              # TypeScript类型定义
-└── __tests__/          # 测试文件
+│   └── contentProcessor.ts # Multi-threaded content processing
+├── types/              # TypeScript type definitions
+└── __tests__/          # Test files
 ```
 
 ### 性能架构

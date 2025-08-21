@@ -2,49 +2,49 @@ import React from 'react';
 import { MermaidDiagram } from '../components/MermaidDiagram';
 
 const testFlowchart = `graph TD
-    A["用户"] --> B{"打开购物网站/App"}
-    B --> C{"浏览商品"}
-    C --> D{"选择商品并加入购物车"}
-    D --> E{"确认购物车"}
-    E --> F{"登录/注册"}
-    F -- 否 --> G["填写收货地址/选择已有地址"]
-    G --> H{"选择支付方式"}
-    F -- 是 --> H
-    H --> I{"完成支付"}
-    I --> J["商家处理订单"]
-    J --> K["商品出库/发货"]
-    K --> L["物流配送"]
-    L --> M{"用户收货"}
-    M --> N["订单完成/评价"]`;
+    A["User"] --> B{"Open Shopping Website/App"}
+    B --> C{"Browse Products"}
+    C --> D{"Select Products and Add to Cart"}
+    D --> E{"Confirm Cart"}
+    E --> F{"Login/Register"}
+    F -- No --> G["Fill in Delivery Address/Select Existing Address"]
+    G --> H{"Select Payment Method"}
+    F -- Yes --> H
+    H --> I{"Complete Payment"}
+    I --> J["Merchant Process Order"]
+    J --> K["Product Warehouse/Shipping"]
+    K --> L["Logistics Delivery"]
+    L --> M{"User Receives Goods"}
+    M --> N["Order Complete/Review"]`;
 
 export function MermaidTestPage() {
   return (
     <div style={{ padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
       <h1 style={{ textAlign: 'center', marginBottom: '30px' }}>
-        Mermaid 自适应测试页面
+        Mermaid Responsive Test Page
       </h1>
       
       <div style={{ marginBottom: '30px' }}>
-        <h2>修复后的优化组件测试</h2>
+        <h2>Fixed Optimized Component Test</h2>
         <p style={{ color: '#666', marginBottom: '20px' }}>
-          该组件已修复无限循环问题，并添加了响应式防抖功能。
+          This component has fixed infinite loop issues and added responsive debounce functionality.
         </p>
         
         <MermaidDiagram
           code={testFlowchart}
-          title="购物流程图 - 修复版本"
+          title="Shopping Flow Chart - Fixed Version"
           enableExport={true}
         />
       </div>
 
       <div style={{ backgroundColor: '#f5f5f5', padding: '15px', borderRadius: '8px' }}>
-        <h3>修复内容：</h3>
+        <h3>Fixed Issues:</h3>
         <ul style={{ marginTop: '10px' }}>
-          <li>✅ 修复了无限循环的状态更新问题</li>
-          <li>✅ 添加了防抖机制，避免频繁的resize事件触发</li>
-          <li>✅ 优化了尺寸变化检测，只有显著变化才会重新渲染</li>
-          <li>✅ 分离了容器尺寸初始化和图表渲染逻辑</li>
-          <li>✅ 使用响应式工具函数提高代码复用性</li>
+          <li>✅ Fixed infinite loop state update issues</li>
+          <li>✅ Added debounce mechanism to avoid frequent resize event triggers</li>
+          <li>✅ Optimized size change detection, only significant changes trigger re-render</li>
+          <li>✅ Separated container size initialization and chart rendering logic</li>
+          <li>✅ Used responsive utility functions to improve code reusability</li>
         </ul>
       </div>
     </div>
