@@ -1,14 +1,14 @@
-# Gemini Chat App - 部署指南
+# Gemini Chat App - Deployment Guide
 
-## CORS问题解决方案
+## CORS Issue Solution
 
-### 问题说明
-前端应用直接调用Google Gemini API会遇到CORS（跨源资源共享）问题，浏览器会阻止这些请求。
+### Problem Description
+Frontend applications directly calling Google Gemini API will encounter CORS (Cross-Origin Resource Sharing) issues, as browsers will block these requests.
 
-### 解决方案
+### Solutions
 
-#### 1. 本地开发
-本地开发时使用Vite代理，已在`vite.config.ts`中配置：
+#### 1. Local Development
+For local development, use Vite proxy configured in `vite.config.ts`:
 
 ```typescript
 proxy: {
@@ -20,20 +20,20 @@ proxy: {
 }
 ```
 
-#### 2. Cloudflare Pages部署
+#### 2. Cloudflare Pages Deployment
 
-##### 步骤1：创建Cloudflare Worker
+##### Step 1: Create Cloudflare Worker
 
-1. 登录Cloudflare控制台
-2. 进入 "Workers & Pages" 
-3. 点击 "Create Application" > "Create Worker"
-4. 将以下代码复制到Worker编辑器：
+1. Log into Cloudflare console
+2. Navigate to "Workers & Pages" 
+3. Click "Create Application" > "Create Worker"
+4. Copy the following code to the Worker editor:
 
 ```javascript
-// Cloudflare Worker - 代理Gemini API请求
+// Cloudflare Worker - Proxy Gemini API requests
 export default {
   async fetch(request, env, ctx) {
-    // 处理CORS预检请求
+    // Handle CORS preflight requests
     if (request.method === 'OPTIONS') {
       return new Response(null, {
         status: 200,
@@ -46,21 +46,21 @@ export default {
       });
     }
 
-    // 只允许POST请求
+    // Only allow POST requests
     if (request.method !== 'POST') {
       return new Response('Method not allowed', { status: 405 });
     }
 
     try {
-      // 获取请求体
+      // Get request body
       const body = await request.text();
       const url = new URL(request.url);
       
-      // 构建Gemini API URL
+      // Build Gemini API URL
       const geminiPath = url.pathname.replace('/api/gemini', '');
       const geminiUrl = `https://generativelanguage.googleapis.com${geminiPath}${url.search}`;
 
-      // 转发请求到Gemini API
+      // Forward request to Gemini API
       const geminiResponse = await fetch(geminiUrl, {
         method: 'POST',
         headers: {
@@ -72,7 +72,7 @@ export default {
 
       const responseData = await geminiResponse.text();
 
-      // 返回响应，添加CORS头
+      // Return response with CORS headers
       return new Response(responseData, {
         status: geminiResponse.status,
         headers: {
@@ -96,72 +96,72 @@ export default {
 };
 ```
 
-5. 点击 "Save and Deploy"
-6. 记录Worker的URL，格式为：`https://your-worker-name.your-subdomain.workers.dev`
+5. Click "Save and Deploy"
+6. Record the Worker URL, format: `https://your-worker-name.your-subdomain.workers.dev`
 
-##### 步骤2：配置路由
+##### Step 2: Configure Routing
 
-**方法A：使用Worker路由（推荐）**
+**Method A: Use Worker Routes (Recommended)**
 
-1. 在Cloudflare控制台中，进入你的域名设置
-2. 点击 "Workers Routes"
-3. 添加路由：
+1. In the Cloudflare console, go to your domain settings
+2. Click "Workers Routes"
+3. Add route:
    - Route: `your-domain.com/api/gemini/*`
-   - Worker: 选择上面创建的Worker
+   - Worker: Select the Worker created above
 
-**方法B：使用环境变量**
+**Method B: Use Environment Variables**
 
-在你的构建设置中添加环境变量：
+Add environment variable in your build settings:
 ```
 VITE_GEMINI_PROXY_URL=https://your-worker-name.your-subdomain.workers.dev
 ```
 
-##### 步骤3：部署前端应用
+##### Step 3: Deploy Frontend Application
 
-1. 连接你的GitHub仓库到Cloudflare Pages
-2. 设置构建命令：`npm run build`
-3. 设置输出目录：`dist`
-4. 部署应用
+1. Connect your GitHub repository to Cloudflare Pages
+2. Set build command: `npm run build`
+3. Set output directory: `dist`
+4. Deploy the application
 
-#### 3. 验证部署
+#### 3. Verify Deployment
 
-部署完成后，检查：
+After deployment, check:
 
-1. **控制台日志**：应该看到 `🌐 Using Gemini API proxy: https://your-domain.com/api/gemini`
-2. **网络请求**：在开发者工具中确认API请求指向代理地址
-3. **功能测试**：发送消息测试AI回复功能
+1. **Console Logs**: Should see `🌐 Using Gemini API proxy: https://your-domain.com/api/gemini`
+2. **Network Requests**: Confirm in developer tools that API requests point to proxy address
+3. **Functionality Test**: Send messages to test AI response functionality
 
-#### 4. 故障排除
+#### 4. Troubleshooting
 
-**常见问题：**
+**Common Issues:**
 
-1. **Worker 500错误**：检查Worker代码和日志
-2. **仍有CORS错误**：确认Worker路由配置正确
-3. **API密钥错误**：检查密钥传递是否正确
+1. **Worker 500 Error**: Check Worker code and logs
+2. **Still CORS Errors**: Ensure Worker route configuration is correct
+3. **API Key Errors**: Check if key transmission is correct
 
-**调试步骤：**
+**Debug Steps:**
 
-1. 查看Cloudflare Worker日志
-2. 检查浏览器网络请求
-3. 确认API密钥格式正确
+1. Check Cloudflare Worker logs
+2. Inspect browser network requests
+3. Confirm API key format is correct
 
-### Cloudflare Insights问题
+### Cloudflare Insights Issues
 
-如果看到Cloudflare Insights的CORS错误，这些是正常的警告，不影响应用功能。已在`index.html`中添加CSP头来减少这些警告。
+If you see Cloudflare Insights CORS errors, these are normal warnings and don't affect application functionality. CSP headers have been added in `index.html` to reduce these warnings.
 
-要完全禁用Cloudflare Insights：
-1. 进入Cloudflare控制台
-2. 导航到 "Analytics" > "Web Analytics"  
-3. 禁用 "Cloudflare Web Analytics"
+To completely disable Cloudflare Insights:
+1. Go to Cloudflare console
+2. Navigate to "Analytics" > "Web Analytics"  
+3. Disable "Cloudflare Web Analytics"
 
-## 安全注意事项
+## Security Considerations
 
-1. **API密钥保护**：确保API密钥只在客户端使用，Worker不会记录密钥
-2. **域名限制**：可以在Worker中添加域名白名单限制
-3. **速率限制**：考虑在Worker中添加速率限制保护
+1. **API Key Protection**: Ensure API keys are only used on client-side, Worker doesn't log keys
+2. **Domain Restrictions**: Consider adding domain whitelist restrictions in Worker
+3. **Rate Limiting**: Consider adding rate limiting protection in Worker
 
-## 监控和维护
+## Monitoring and Maintenance
 
-1. 定期检查Worker使用情况和错误日志
-2. 监控API配额使用情况  
-3. 保持Worker代码更新
+1. Regularly check Worker usage and error logs
+2. Monitor API quota usage  
+3. Keep Worker code updated
