@@ -275,22 +275,247 @@ docker run -p 8080:8080 \
 docker-compose up -d
 ```
 
-## 🌐 部署选项
+## 🌐 One-Click Deployment Options
 
-### 推荐平台
-- **Cloudflare Pages**: 一键部署，全球CDN
-- **Vercel**: 自动构建，边缘函数支持
-- **Netlify**: 静态托管，表单处理
-- **AWS S3**: 静态网站托管
-- **Docker**: 容器化部署
+### ⚡ Quick Deploy
 
-### 环境配置
-```env
-# 生产环境
-NODE_ENV=production
-VITE_GEMINI_API_KEYS=your_keys_here
-VITE_PROXY_URL=http://proxy:port # 可选
+Deploy your Gemini Chat Application to any of these platforms with one click:
+
+#### Cloudflare Pages
+[![Deploy to Cloudflare Pages](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/tellerlin/gemini-app)
+
+**Features:**
+- Global CDN with edge locations worldwide
+- Automatic HTTPS and custom domains
+- Built-in analytics and performance monitoring
+- Serverless functions support
+- Free tier: 500 builds/month, unlimited bandwidth
+
+**Deployment Steps:**
+1. Click the deploy button above
+2. Connect your GitHub account
+3. Configure environment variables
+4. Deploy automatically
+
+#### Vercel
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/tellerlin/gemini-app)
+
+**Features:**
+- Automatic builds from Git
+- Edge functions and serverless support
+- Preview deployments for PRs
+- Built-in CI/CD pipeline
+- Free tier: 100GB bandwidth/month
+
+**Deployment Steps:**
+1. Click the deploy button above
+2. Import from your GitHub repository
+3. Configure build settings (auto-detected)
+4. Set environment variables
+5. Deploy instantly
+
+#### Netlify
+[![Deploy to Netlify](https://www.netlify.com/img/deploy/button.svg)](https://app.netlify.com/start/deploy?repository=https://github.com/tellerlin/gemini-app)
+
+**Features:**
+- Git-based continuous deployment
+- Form handling and serverless functions
+- Split testing and branch deploys
+- Built-in DNS management
+- Free tier: 100GB bandwidth/month
+
+**Deployment Steps:**
+1. Click the deploy button above
+2. Connect to GitHub
+3. Configure build settings
+4. Add environment variables
+5. Deploy automatically
+
+### 🏗️ Advanced Deployment Options
+
+#### GitHub Pages
+```bash
+# Build for GitHub Pages
+npm run build
+
+# Deploy using GitHub Actions (automatic)
+# Create .github/workflows/deploy.yml:
+name: Deploy to GitHub Pages
+on:
+  push:
+    branches: [ main ]
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      - run: npm ci
+      - run: npm run build
+      - uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
 ```
+
+#### AWS S3 + CloudFront
+```bash
+# Install AWS CLI
+npm install -g @aws-cli/cli
+
+# Build and deploy
+npm run build
+aws s3 sync dist/ s3://your-bucket-name --delete
+aws cloudfront create-invalidation --distribution-id YOUR_DISTRIBUTION_ID --paths "/*"
+```
+
+#### Railway
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/vite-react)
+
+**One-Click Setup:**
+1. Click the Railway button
+2. Connect GitHub repository
+3. Set environment variables
+4. Deploy automatically
+
+#### Render
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/tellerlin/gemini-app)
+
+**Deployment Steps:**
+1. Click deploy button
+2. Connect GitHub account
+3. Configure build settings
+4. Set environment variables
+5. Deploy instantly
+
+### 🛠️ Environment Configuration
+
+Required environment variables for all platforms:
+
+```env
+# Required - Gemini API Keys
+VITE_GEMINI_API_KEYS=your_api_key_1,your_api_key_2,your_api_key_3
+
+# Optional - Proxy Configuration
+VITE_PROXY_URL=http://your-proxy:port
+
+# Optional - Analytics
+VITE_ANALYTICS_ID=your_analytics_id
+
+# Build Configuration
+NODE_ENV=production
+```
+
+### 🔧 Platform-Specific Settings
+
+#### Cloudflare Pages
+```toml
+# wrangler.toml
+[build]
+command = "npm run build"
+publish = "dist"
+
+[env.production.vars]
+NODE_ENV = "production"
+```
+
+#### Vercel
+```json
+// vercel.json
+{
+  "version": 2,
+  "build": {
+    "env": {
+      "NODE_ENV": "production"
+    }
+  },
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
+}
+```
+
+#### Netlify
+```toml
+# netlify.toml
+[build]
+publish = "dist"
+command = "npm run build"
+
+[[redirects]]
+from = "/*"
+to = "/index.html"
+status = 200
+
+[build.environment]
+NODE_ENV = "production"
+```
+
+### 📋 Pre-Deployment Checklist
+
+- [ ] **API Keys**: Configure Gemini API keys in environment variables
+- [ ] **Build Test**: Run `npm run build` locally to ensure no errors
+- [ ] **Environment Variables**: Set all required environment variables
+- [ ] **Domain Setup**: Configure custom domain (optional)
+- [ ] **Analytics**: Set up analytics tracking (optional)
+- [ ] **Performance**: Test build performance and bundle size
+- [ ] **Security**: Ensure no sensitive data in client-side code
+
+### 🚀 Deployment Best Practices
+
+1. **Environment Separation**
+   - Use different API keys for staging/production
+   - Configure different analytics for each environment
+
+2. **Performance Optimization**
+   - Enable build caching on your platform
+   - Use CDN for static assets
+   - Configure proper cache headers
+
+3. **Monitoring**
+   - Set up error tracking (Sentry, LogRocket)
+   - Configure performance monitoring
+   - Enable uptime monitoring
+
+4. **Security**
+   - Use environment variables for sensitive data
+   - Enable HTTPS (automatic on most platforms)
+   - Configure proper CORS headers
+
+### 🌍 Global CDN & Performance
+
+All recommended platforms provide global CDN distribution:
+
+- **Cloudflare**: 280+ data centers worldwide
+- **Vercel**: Edge Network in 40+ regions
+- **Netlify**: Global CDN with instant cache invalidation
+- **AWS CloudFront**: 400+ edge locations globally
+
+### 💰 Cost Comparison
+
+| Platform | Free Tier | Paid Plans Start | Best For |
+|----------|-----------|------------------|----------|
+| **Cloudflare Pages** | 500 builds/month, unlimited bandwidth | $20/month | High traffic, enterprise |
+| **Vercel** | 100GB bandwidth/month | $20/month | React/Next.js apps |
+| **Netlify** | 100GB bandwidth/month | $19/month | JAMstack, forms |
+| **GitHub Pages** | Unlimited public repos | Free | Open source projects |
+| **Railway** | $5 credit/month | $5/month | Full-stack apps |
+
+Choose the platform that best fits your needs and budget!
 
 ## 🔧 高级配置
 
