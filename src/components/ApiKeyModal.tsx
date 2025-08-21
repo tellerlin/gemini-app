@@ -25,16 +25,15 @@ export function ApiKeyModal({
   useEffect(() => {
     if (isOpen) {
       setActualApiKeys(currentApiKeys);
-      const keysToDisplay = showKeys 
-        ? currentApiKeys.join(', ')
-        : currentApiKeys.map(maskApiKey).join(', ');
-      setApiKeysText(keysToDisplay);
+      // Always start with actual keys to allow immediate editing
+      setApiKeysText(currentApiKeys.join(', '));
+      setShowKeys(true); // Default to showing keys for immediate editing
     }
-  }, [isOpen, currentApiKeys, showKeys]);
+  }, [isOpen, currentApiKeys]);
 
   const handleSave = () => {
-    // If showing masked keys, use the actual keys; otherwise parse the text
-    const keys = showKeys ? parseApiKeys(apiKeysText) : actualApiKeys;
+    // Always parse from the text since we're allowing direct editing
+    const keys = parseApiKeys(apiKeysText);
     onSave(keys);
     onClose();
   };
@@ -56,20 +55,13 @@ export function ApiKeyModal({
     const newText = e.target.value;
     setApiKeysText(newText);
     
-    // If we're showing actual keys, update the actual keys array
-    if (showKeys) {
-      setActualApiKeys(parseApiKeys(newText));
-    }
+    // Always update the actual keys array since textarea is always editable
+    setActualApiKeys(parseApiKeys(newText));
   };
 
   const handleAddKey = () => {
-    if (showKeys) {
-      setApiKeysText(prev => prev + ', ');
-    } else {
-      // Show a message or automatically switch to show mode for editing
-      setShowKeys(true);
-      setApiKeysText(actualApiKeys.join(', ') + ', ');
-    }
+    // Add a comma and space to allow adding a new key
+    setApiKeysText(prev => prev ? prev + ', ' : '');
   };
 
   const handleClearKeys = () => {
@@ -87,7 +79,7 @@ export function ApiKeyModal({
     }
   };
 
-  const validKeys = showKeys ? parseApiKeys(apiKeysText) : actualApiKeys;
+  const validKeys = parseApiKeys(apiKeysText);
 
   const displayKeys = showKeys ? validKeys : validKeys.map(maskApiKey);
 
@@ -166,8 +158,6 @@ export function ApiKeyModal({
               onChange={handleTextChange}
               placeholder="Enter your Gemini API keys (comma-separated)..."
               className="w-full h-24 p-3 border border-gray-300 rounded-lg font-mono text-sm resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              style={!showKeys ? {userSelect: 'none', WebkitUserSelect: 'none', MozUserSelect: 'none', msUserSelect: 'none'} : {}}
-              readOnly={!showKeys}
             />
             
             <div className="flex items-center justify-between text-xs text-gray-500">
