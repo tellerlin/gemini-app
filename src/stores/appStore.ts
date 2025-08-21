@@ -77,7 +77,7 @@ const defaultConfig: ConversationConfig = {
     maxOutputTokens: 1000000,
   },
   groundingConfig: {
-    enabled: false,
+    enabled: true,
     useGoogleSearch: true,
     maxResults: 5,
   },

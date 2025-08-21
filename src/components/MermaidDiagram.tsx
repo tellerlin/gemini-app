@@ -41,12 +41,12 @@ export function MermaidDiagram({
         return;
       }
 
-      // Simple Mermaid initialization
+      // Enhanced Mermaid initialization with Context7 best practices
       mermaid.initialize({
         startOnLoad: false,
         theme: 'default',
         securityLevel: 'loose',
-        fontFamily: '"Inter", "Noto Sans CJK SC", system-ui, sans-serif',
+        fontFamily: '"Inter", "Noto Sans CJK SC", "Microsoft YaHei", "SimHei", system-ui, sans-serif',
         useMaxWidth: true,
         flowchart: {
           useMaxWidth: true,
@@ -60,6 +60,19 @@ export function MermaidDiagram({
           diagramMarginY: 10
         },
         gantt: {
+          useMaxWidth: true
+        },
+        // Additional diagram types with useMaxWidth
+        pie: {
+          useMaxWidth: true
+        },
+        quadrantChart: {
+          useMaxWidth: true
+        },
+        xyChart: {
+          useMaxWidth: true
+        },
+        timeline: {
           useMaxWidth: true
         }
       });
@@ -206,23 +219,33 @@ export function MermaidDiagram({
         </div>
       </div>
 
-      {/* Diagram Container */}
+      {/* Diagram Container - Enhanced with responsive design from HTML export */}
       <div 
         ref={containerRef}
-        className="p-4 overflow-auto bg-white"
-        style={{ minHeight: '300px', maxHeight: '80vh' }}
+        className="p-4 overflow-auto bg-white flex justify-center items-center"
+        style={{ 
+          minHeight: '200px', 
+          maxHeight: '90vh',
+          textAlign: 'center'
+        }}
       >
         {svg ? (
           <div 
-            className="flex justify-center items-center transition-transform duration-200"
+            className="mermaid-diagram-wrapper max-w-full w-full flex justify-center"
             style={{ 
               transform: `scale(${scale})`,
-              transformOrigin: 'center'
+              transformOrigin: 'center',
+              transition: 'transform 0.2s ease-in-out',
+              overflow: 'visible'
             }}
           >
             <div 
               dangerouslySetInnerHTML={{ __html: svg }}
-              className="mermaid-diagram"
+              className="mermaid-diagram max-w-full"
+              style={{
+                maxWidth: '100%',
+                height: 'auto'
+              }}
             />
           </div>
         ) : (

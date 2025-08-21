@@ -64,17 +64,35 @@ export const ModernMarkdownRenderer = React.memo(function ModernMarkdownRenderer
         return `__INLINE_CODE_${inlineCodes.length - 1}__`;
       });
       
-      // 3. 修复中文和数学公式混合的问题
+      // 3. 智能数学公式处理 - 使用占位符机制避免冲突
+      // 创建数学公式占位符数组
+      const mathBlockPlaceholders: string[] = [];
+      
+      // 先处理块级数学公式
+      processed = processed.replace(/\$\$\n?([\s\S]*?)\n?\$\$/g, (match, content) => {
+        const placeholder = `__MATH_BLOCK_${mathBlockPlaceholders.length}__`;
+        mathBlockPlaceholders.push(match); // 保留原始格式
+        return placeholder;
+      });
+      
+      // 修复中文和数学公式混合的问题
       // 将类似 "以下代码块部分显示不太正常 -> $ \alpha + \beta = \gamma $" 中的箭头形式转换为反引号
       processed = processed.replace(
         /([\u4e00-\u9fff\s]+)->\s*\$\s*([^$]+)\s*\$/g,
         '$1-> `$2`'
       );
       
-      // 4. 处理混合内容中的数学表达式 - 确保真正的数学公式格式正确
+      // 处理混合内容中的数学表达式 - 确保真正的数学公式格式正确
       // 修复块级数学公式格式
       processed = processed.replace(/```math\n([\s\S]*?)\n```/g, (match, content) => {
-        return `$$\n${content.trim()}\n$$`;
+        const placeholder = `__MATH_BLOCK_${mathBlockPlaceholders.length}__`;
+        mathBlockPlaceholders.push(`$$\n${content.trim()}\n$$`);
+        return placeholder;
+      });
+      
+      // 恢复数学公式占位符
+      mathBlockPlaceholders.forEach((mathContent, index) => {
+        processed = processed.replace(`__MATH_BLOCK_${index}__`, mathContent);
       });
       
       // 5. 恢复代码块
@@ -119,6 +137,9 @@ export const ModernMarkdownRenderer = React.memo(function ModernMarkdownRenderer
       
       // Handle regular code blocks (both with language specification and without)
       if (!inline && (match || codeString.includes('\n') || codeString.length > 50)) {
+        const lineCount = codeString.split('\n').length;
+        const shouldShowLineNumbers = lineCount > 5 && !isMobile; // Don't show line numbers on mobile for better UX
+        
         return (
           <div className="relative group my-4">
             {enableCopy && (
@@ -140,8 +161,15 @@ export const ModernMarkdownRenderer = React.memo(function ModernMarkdownRenderer
                 background: '#282c34',
                 border: '1px solid #e5e7eb',
               }}
-              showLineNumbers={codeString.split('\n').length > 5}
+              showLineNumbers={shouldShowLineNumbers}
               wrapLines={true}
+              lineNumberStyle={{
+                minWidth: '3em',
+                paddingRight: '1em',
+                textAlign: 'right',
+                userSelect: 'none',
+                opacity: 0.6
+              }}
               {...props}
             >
               {codeString}
@@ -169,15 +197,15 @@ export const ModernMarkdownRenderer = React.memo(function ModernMarkdownRenderer
     // Block math: $$...$$
     // Inline math: $...$
     
-    // Custom table styling
+    // Custom table styling with improved responsive support
     table({ children, ...props }: {
       children?: React.ReactNode;
       [key: string]: unknown;
     }) {
       return (
-        <div className="overflow-x-auto my-4">
+        <div className="table-wrapper overflow-x-auto my-4 border border-gray-200 rounded-lg shadow-sm">
           <table 
-            className="min-w-full border border-gray-200 rounded-lg overflow-hidden"
+            className="min-w-full border-collapse bg-white min-w-[500px]"
             {...props}
           >
             {children}
@@ -248,7 +276,17 @@ export const ModernMarkdownRenderer = React.memo(function ModernMarkdownRenderer
           remarkGfm, 
           remarkMath  // 使用默认配置，自动支持 $...$ 和 $$...$$
         ]}
-        rehypePlugins={[[rehypeKatex, { output: 'html' }]]}
+        rehypePlugins={[[rehypeKatex, { 
+          output: 'htmlAndMathml',
+          throwOnError: false,
+          errorColor: '#dc2626',
+          strict: 'warn',
+          fleqn: false,
+          macros: {},
+          maxSize: Infinity,
+          maxExpand: 1000,
+          trust: false
+        }]]}
         components={components}
       >
         {processedContent}

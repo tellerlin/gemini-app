@@ -7,9 +7,59 @@ import { fixMermaidSyntax } from './contentParser';
 function ExportMarkdownRenderer({ content }: { content: string }) {
   // Simple but effective content processing that mirrors ModernMarkdownRenderer logic
   const processContent = (text: string) => {
+    // 增强的内容处理逻辑，采用主程序的保护机制
+    
+    // 1. 首先保护所有代码块，避免处理其中的特殊字符
+    const codeBlocks: string[] = [];
+    let processed = text.replace(/```[\s\S]*?```/g, (match) => {
+      codeBlocks.push(match);
+      return `__CODE_BLOCK_${codeBlocks.length - 1}__`;
+    });
+    
+    // 2. 保护内联代码
+    const inlineCodes: string[] = [];
+    processed = processed.replace(/`[^`]*?`/g, (match) => {
+      inlineCodes.push(match);
+      return `__INLINE_CODE_${inlineCodes.length - 1}__`;
+    });
+
+    // 3. 智能数学公式处理 - 使用占位符机制避免冲突
+    const mathBlockPlaceholders: string[] = [];
+    
+    // 先处理块级数学公式
+    processed = processed.replace(/\$\$\n?([\s\S]*?)\n?\$\$/g, (match, content) => {
+      const placeholder = `__MATH_BLOCK_${mathBlockPlaceholders.length}__`;
+      mathBlockPlaceholders.push(`<div class="math-block">$$${content.trim()}$$</div>`);
+      return placeholder;
+    });
+    
+    // 处理内联数学公式
+    processed = processed.replace(/\$([^$\n]+)\$/g, (match, content) => {
+      return `<span class="math-inline">$${content}$</span>`;
+    });
+    
+    // 修复中文和数学公式混合的问题（从主程序学习）
+    processed = processed.replace(
+      /([\u4e00-\u9fff\s]+)->\s*\$\s*([^$]+)\s*\$/g,
+      '$1-> `$2`'
+    );
+    
+    // 处理 ```math 块
+    processed = processed.replace(/```math\n([\s\S]*?)\n```/g, (match, content) => {
+      const placeholder = `__MATH_BLOCK_${mathBlockPlaceholders.length}__`;
+      mathBlockPlaceholders.push(`<div class="math-block">$$${content.trim()}$$</div>`);
+      return placeholder;
+    });
+
+    // 4. 处理Mermaid图表（已经恢复代码块，所以Mermaid会被正确处理）
+    // 恢复代码块进行Mermaid处理
+    codeBlocks.forEach((code, index) => {
+      processed = processed.replace(`__CODE_BLOCK_${index}__`, code);
+    });
+
     // Handle Mermaid diagrams - convert to placeholder that will be replaced
     const mermaidRegex = /```mermaid\n([\s\S]*?)\n```/g;
-    let processed = text.replace(mermaidRegex, (match, code) => {
+    processed = processed.replace(mermaidRegex, (match, code) => {
       // Basic validation to avoid rendering invalid diagrams
       const trimmedCode = code.trim();
       if (!trimmedCode || 
@@ -29,40 +79,29 @@ function ExportMarkdownRenderer({ content }: { content: string }) {
       return `<div class="mermaid-diagram" data-diagram="${encodeURIComponent(fixedCode)}">${escapeHtml(fixedCode)}</div>`;
     });
 
-    // Handle code blocks with syntax highlighting placeholder
+    // Handle other code blocks with syntax highlighting placeholder
     processed = processed.replace(/```(\w+)?\n([\s\S]*?)\n```/g, (match, lang, code) => {
       const language = lang || 'text';
-      return `<pre class="code-block" data-language="${language}"><code>${escapeHtml(code.trim())}</code></pre>`;
+      const lineCount = code.trim().split('\n').length;
+      const shouldShowLineNumbers = lineCount > 5;
+      
+      return `<pre class="code-block" data-language="${language}" data-line-numbers="${shouldShowLineNumbers}"><code>${escapeHtml(code.trim())}</code></pre>`;
     });
 
-    // Handle math expressions BEFORE inline code to avoid conflicts
-    // Create placeholders for processed math blocks to avoid double processing
-    const mathBlockPlaceholders: string[] = [];
-    
-    // Process block math FIRST 
-    processed = processed.replace(/\$\$\n?([\s\S]*?)\n?\$\$/g, (match, content) => {
-      const placeholder = `__MATH_BLOCK_${mathBlockPlaceholders.length}__`;
-      mathBlockPlaceholders.push(`<div class="math-block">$$${content.trim()}$$</div>`);
-      return placeholder;
-    });
-    
-    // Then process inline math
-    processed = processed.replace(/\$([^$\n]+)\$/g, (match, content) => {
-      return `<span class="math-inline">$${content}$</span>`;
-    });
-    
-    // Restore math block placeholders
+    // 5. 恢复数学公式占位符
     mathBlockPlaceholders.forEach((html, index) => {
       processed = processed.replace(`__MATH_BLOCK_${index}__`, html);
     });
+    
+    // 6. 恢复内联代码
+    inlineCodes.forEach((code, index) => {
+      processed = processed.replace(`__INLINE_CODE_${index}__`, '<code class="inline-code">' + escapeHtml(code.slice(1, -1)) + '</code>');
+    });
 
-    // Handle inline code AFTER math expressions
-    processed = processed.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>');
-
-    // Handle markdown tables with proper parsing BEFORE other formatting
+    // 7. 处理markdown表格（在其他格式化之前）
     processed = parseMarkdownTables(processed);
 
-    // Handle markdown formatting
+    // 8. 处理基本markdown格式
     processed = processed
       .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
       .replace(/\*([^*]+)\*/g, '<em>$1</em>')
@@ -141,10 +180,19 @@ function ExportDocument({ conversation }: { conversation: Conversation }) {
             key: 'prism-autoloader',
             src: 'https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js'
           }),
+          React.createElement('script', {
+            key: 'prism-line-numbers',
+            src: 'https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/line-numbers/prism-line-numbers.min.js'
+          }),
           React.createElement('link', {
             key: 'prism-css',
             rel: 'stylesheet',
             href: 'https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css'
+          }),
+          React.createElement('link', {
+            key: 'prism-line-numbers-css',
+            rel: 'stylesheet',
+            href: 'https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/line-numbers/prism-line-numbers.css'
           }),
           React.createElement('style', {
             key: 'styles',
@@ -553,7 +601,7 @@ function getInitScript(): string {
         });
       }
 
-      // Initialize KaTeX math rendering with improved error handling
+      // Initialize KaTeX math rendering with improved error handling (Context7 best practices)
       if (typeof katex !== 'undefined') {
         // Block math expressions
         const mathBlocks = document.querySelectorAll('.math-block');
@@ -564,13 +612,21 @@ function getInitScript(): string {
               katex.render(math, block, { 
                 displayMode: true,
                 throwOnError: false,
-                errorColor: '#cc0000',
-                strict: false
+                errorColor: '#dc2626',
+                strict: 'warn',
+                output: 'htmlAndMathml',
+                fleqn: false,
+                macros: {},
+                maxSize: Infinity,
+                maxExpand: 1000,
+                trust: false
               });
             }
           } catch (error) {
             console.error('KaTeX block rendering error:', error);
-            block.innerHTML = '<span style="color: #cc0000;">数学公式渲染失败: ' + (error.message || 'Unknown error') + '</span>';
+            block.innerHTML = '<div style="color: #dc2626; background: #fef2f2; padding: 8px; border-radius: 4px; border: 1px solid #fecaca;">' +
+                             '<strong>数学公式渲染失败</strong><br>' + 
+                             '<small>' + (error.message || 'Unknown error') + '</small></div>';
           }
         });
 
@@ -583,23 +639,36 @@ function getInitScript(): string {
               katex.render(math, inline, { 
                 displayMode: false,
                 throwOnError: false,
-                errorColor: '#cc0000',
-                strict: false
+                errorColor: '#dc2626',
+                strict: 'warn',
+                output: 'htmlAndMathml',
+                macros: {},
+                maxSize: Infinity,
+                maxExpand: 1000,
+                trust: false
               });
             }
           } catch (error) {
             console.error('KaTeX inline rendering error:', error);
-            inline.innerHTML = '<span style="color: #cc0000;">公式错误</span>';
+            inline.innerHTML = '<span style="color: #dc2626; background: #fef2f2; padding: 2px 4px; border-radius: 2px; font-size: 0.875rem;">公式错误</span>';
           }
         });
       }
 
-      // Initialize Prism syntax highlighting
+      // Initialize Prism syntax highlighting with line numbers support
       if (typeof Prism !== 'undefined') {
         // Load additional language components if needed
         if (typeof Prism.plugins !== 'undefined' && Prism.plugins.autoloader) {
           Prism.plugins.autoloader.languages_path = 'https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/';
         }
+        
+        // Add line numbers to eligible code blocks
+        const codeBlocks = document.querySelectorAll('.code-block[data-line-numbers="true"]');
+        codeBlocks.forEach(block => {
+          if (!block.classList.contains('line-numbers')) {
+            block.classList.add('line-numbers');
+          }
+        });
         
         Prism.highlightAll();
       }

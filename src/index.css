@@ -2,6 +2,64 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Mathematical expressions overflow control */
+@layer base {
+  /* KaTeX math formulas responsive handling */
+  .katex-display {
+    overflow-x: auto;
+    max-width: 100%;
+    margin: 1rem 0;
+  }
+  
+  .katex {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+  
+  /* Math block containers */
+  .math-block {
+    overflow-x: auto;
+    max-width: 100%;
+    text-align: center;
+    margin: 1rem 0;
+  }
+  
+  .math-inline {
+    max-width: 100%;
+    display: inline-block;
+    overflow-x: auto;
+  }
+
+  /* Enhanced Mermaid diagram responsiveness - learned from HTML export */
+  .mermaid-diagram {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 0 auto;
+  }
+  
+  .mermaid-diagram svg {
+    max-width: 100%;
+    height: auto;
+    display: block;
+  }
+  
+  .mermaid-diagram-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    overflow: visible;
+  }
+  
+  /* Ensure Mermaid diagrams are responsive across all types */
+  .mermaid-diagram .node,
+  .mermaid-diagram .cluster,
+  .mermaid-diagram .edgePath {
+    transition: all 0.2s ease-in-out;
+  }
+}
+
 /* Mobile-specific optimizations */
 @layer base {
   html {
