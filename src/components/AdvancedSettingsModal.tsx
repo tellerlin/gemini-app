@@ -78,7 +78,7 @@ export function AdvancedSettingsModal({
       ...prev,
       groundingConfig: {
         ...prev.groundingConfig,
-        enabled: prev.groundingConfig?.enabled ?? false,
+        enabled: prev.groundingConfig?.enabled ?? true,
         useGoogleSearch: prev.groundingConfig?.useGoogleSearch ?? true,
         maxResults: prev.groundingConfig?.maxResults ?? 5,
         ...updates,
@@ -91,7 +91,7 @@ export function AdvancedSettingsModal({
       ...prev,
       urlContextConfig: {
         ...prev.urlContextConfig,
-        enabled: prev.urlContextConfig?.enabled ?? false,
+        enabled: prev.urlContextConfig?.enabled ?? true,
         maxUrls: prev.urlContextConfig?.maxUrls ?? 3,
         urls: prev.urlContextConfig?.urls ?? [],
         ...updates,

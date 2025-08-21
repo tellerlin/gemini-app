@@ -21,6 +21,7 @@ interface SidebarProps {
   selectedModel: string;
   onModelChange: (model: string) => void;
   isMobile?: boolean;
+  hasApiKey: boolean;
 }
 
 export function Sidebar({
@@ -38,6 +39,7 @@ export function Sidebar({
   selectedModel,
   onModelChange,
   isMobile = false,
+  hasApiKey,
 }: SidebarProps) {
   const [exportDropdownOpen, setExportDropdownOpen] = useState<string | null>(null);
 
@@ -231,7 +233,10 @@ export function Sidebar({
             <Button
               onClick={onOpenSettings}
               variant="ghost"
-              className="w-full justify-start"
+              className={cn(
+                "w-full justify-start",
+                !hasApiKey && "animate-pulse bg-yellow-50 hover:bg-yellow-100 text-yellow-700 border border-yellow-200"
+              )}
             >
               <Settings className="h-4 w-4 mr-2" />
               API Settings

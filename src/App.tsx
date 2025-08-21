@@ -128,6 +128,7 @@ function App() {
             selectedModel={selectedModel}
             onModelChange={setSelectedModel}
             isMobile={isMobile}
+            hasApiKey={apiKeys && apiKeys.length > 0}
           />
 
           {/* Main Chat Area */}
