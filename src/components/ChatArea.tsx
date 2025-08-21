@@ -85,6 +85,13 @@ export const ChatArea = memo(function ChatArea({
             </div>
           </div>
         </div>
+        <ChatInput
+          onSendMessage={onSendMessage}
+          onGenerateImage={onGenerateImage}
+          isLoading={isLoading}
+          disabled={true}
+          isMobile={isMobile}
+        />
       </div>
     );
   }
