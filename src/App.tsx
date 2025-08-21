@@ -40,6 +40,7 @@ function App() {
     defaultConversationConfig,
     setDefaultConversationConfig,
     getPerformanceMetrics,
+    resetPerformanceMetrics,
   } = useChat();
 
   // Handle responsive behavior
@@ -183,6 +184,7 @@ function App() {
             isOpen={performanceMonitorOpen}
             onClose={() => setPerformanceMonitorOpen(false)}
             getMetrics={getPerformanceMetrics}
+            onResetMetrics={resetPerformanceMetrics}
           />
           
           {/* Model Switch Indicator */}

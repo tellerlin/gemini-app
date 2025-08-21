@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Activity, Clock, CheckCircle, AlertCircle, BarChart3, RefreshCw } from 'lucide-react';
+import { Activity, Clock, CheckCircle, AlertCircle, BarChart3, RefreshCw, RotateCcw } from 'lucide-react';
 import { Button } from './ui/Button';
 import type { PerformanceMetrics, KeyHealthStats } from '../types/chat';
 
@@ -7,9 +7,10 @@ interface PerformanceMonitorProps {
   isOpen: boolean;
   onClose: () => void;
   getMetrics: () => PerformanceMetrics | null;
+  onResetMetrics?: () => void;
 }
 
-export function PerformanceMonitor({ isOpen, onClose, getMetrics }: PerformanceMonitorProps) {
+export function PerformanceMonitor({ isOpen, onClose, getMetrics, onResetMetrics }: PerformanceMonitorProps) {
   const [metrics, setMetrics] = useState<PerformanceMetrics | null>(null);
   const [refreshInterval, setRefreshInterval] = useState<NodeJS.Timeout | null>(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
@@ -22,6 +23,13 @@ export function PerformanceMonitor({ isOpen, onClose, getMetrics }: PerformanceM
       console.error('Error fetching metrics:', error);
     }
   }, [getMetrics]);
+
+  const handleResetMetrics = useCallback(() => {
+    if (window.confirm('确定要重置所有性能统计数据吗？这将清零所有计数器并重新开始统计。')) {
+      onResetMetrics?.();
+      refreshMetrics(); // Refresh to show the reset values
+    }
+  }, [onResetMetrics, refreshMetrics]);
 
   useEffect(() => {
     if (isOpen) {
@@ -92,6 +100,17 @@ export function PerformanceMonitor({ isOpen, onClose, getMetrics }: PerformanceM
               <RefreshCw className="h-4 w-4 mr-1" />
               Manual Refresh
             </Button>
+            {onResetMetrics && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleResetMetrics}
+                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+              >
+                <RotateCcw className="h-4 w-4 mr-1" />
+                Reset Stats
+              </Button>
+            )}
             <Button variant="ghost" size="sm" onClick={onClose}>
               ✕
             </Button>

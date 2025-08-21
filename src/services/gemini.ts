@@ -1697,6 +1697,30 @@ export class GeminiService {
   }
 
   /**
+   * Reset all performance metrics to zero
+   * Useful for starting fresh statistics tracking
+   */
+  resetStats() {
+    this.startTime = Date.now();
+    this.totalRequests = 0;
+    this.totalErrors = 0;
+    
+    // Reset all key health statistics
+    this.keyHealth.clear();
+    this.apiKeys.forEach((_, index) => {
+      this.keyHealth.set(index, {
+        successCount: 0,
+        errorCount: 0,
+        lastUsed: new Date().toISOString(),
+        lastError: null,
+        consecutiveErrors: 0
+      });
+    });
+    
+    console.log('📊 Performance metrics reset - starting fresh statistics');
+  }
+
+  /**
    * Utility function to create delays
    * @private
    */

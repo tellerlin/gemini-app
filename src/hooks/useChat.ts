@@ -882,6 +882,10 @@ export function useChat() {
     return geminiService.getStats();
   }, []);
 
+  const resetPerformanceMetrics = useCallback(() => {
+    geminiService.resetStats();
+  }, []);
+
   return {
     conversations,
     currentConversation,
@@ -903,6 +907,7 @@ export function useChat() {
     setDefaultConversationConfig,
     updateConversationConfig,
     getPerformanceMetrics,
+    resetPerformanceMetrics,
     // Context management
     contextConfig,
     updateContextConfig,
