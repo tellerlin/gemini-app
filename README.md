@@ -91,7 +91,25 @@ VITE_GEMINI_API_KEYS=your_api_keys
 VITE_GEMINI_PROXY_URL=https://your-worker.workers.dev
 ```
 
-> **💡 Custom Domain**: Both your app and worker can use the same custom domain (e.g., `yourdomain.com` for app, `yourdomain.com/api/gemini/*` for worker) for seamless integration.
+#### 🌐 Custom Domain Setup (Optional)
+
+For a professional setup using your own domain:
+
+**Method 1: Worker Routes (Recommended)**
+1. After deploying both worker and app, go to your domain in Cloudflare Dashboard
+2. Navigate to **"Workers Routes"** section  
+3. Click **"Add Route"**
+4. Set route pattern: `yourdomain.com/api/gemini/*`
+5. Select your deployed worker
+6. Update environment variable: `VITE_GEMINI_PROXY_URL=https://yourdomain.com`
+
+![Cloudflare Workers Routes Setting](cloudflare-workers-routes-setting.png)
+
+**Benefits:**
+- ✅ Same domain for both app and API (`yourdomain.com`)
+- ✅ Clean URLs without `workers.dev` subdomain  
+- ✅ Better SEO and professional appearance
+- ✅ Unified SSL certificate management
 
 ## 🔧 Configuration
 
