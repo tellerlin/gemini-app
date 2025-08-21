@@ -319,7 +319,32 @@ export class GeminiService {
    */
   private createGenAI(): GoogleGenAI {
     const apiKey = this.getCurrentApiKey();
-    return new GoogleGenAI({ apiKey });
+    
+    // Determine the appropriate base URL based on environment
+    let baseUrl: string;
+    
+    // Check for custom proxy URL in environment
+    const customProxyUrl = import.meta.env.VITE_GEMINI_PROXY_URL || process.env.VITE_GEMINI_PROXY_URL;
+    
+    if (customProxyUrl) {
+      // Use custom proxy URL (for production deployments)
+      baseUrl = customProxyUrl;
+    } else if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      // Use Vite dev proxy for local development
+      baseUrl = `${window.location.origin}/api/gemini`;
+    } else {
+      // For production without proxy, use Cloudflare Worker path
+      baseUrl = `${window.location.origin}/api/gemini`;
+    }
+    
+    console.log(`🌐 Using Gemini API proxy: ${baseUrl}`);
+    
+    return new GoogleGenAI({ 
+      apiKey,
+      httpOptions: {
+        baseUrl
+      }
+    });
   }
 
   /**

@@ -175,6 +175,19 @@ export default defineConfig(({ mode }) => {
     // Enable HMR optimizations
     hmr: {
       overlay: true
+    },
+    // Proxy for Gemini API to avoid CORS issues
+    proxy: {
+      '/api/gemini': {
+        target: 'https://generativelanguage.googleapis.com',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/gemini/, ''),
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        }
+      }
     }
   },
   
