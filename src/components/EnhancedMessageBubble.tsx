@@ -30,10 +30,10 @@ export const EnhancedMessageBubble = React.memo(function EnhancedMessageBubble({
     try {
       await navigator.clipboard.writeText(message.content);
       setCopied(true);
-      toast.success('已复制消息到剪贴板');
+      toast.success('Copied message to clipboard');
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast.error('复制失败');
+      toast.error('Copy failed');
     }
   };
 
@@ -147,7 +147,7 @@ export const EnhancedMessageBubble = React.memo(function EnhancedMessageBubble({
                     <div className="w-1 h-1 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
                     <div className="w-1 h-1 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                   </div>
-                  <span>正在生成回答...</span>
+                  <span>Generating answer...</span>
                   {conversationConfig?.streamingEnabled !== false && (
                     <span className="inline-block w-2 h-3 bg-blue-500 ml-1 animate-pulse" />
                   )}
@@ -160,7 +160,7 @@ export const EnhancedMessageBubble = React.memo(function EnhancedMessageBubble({
                     className="text-red-600 border-red-200 hover:bg-red-50 text-xs py-1 px-2 h-6"
                   >
                     <Square className="h-2 w-2 mr-1" />
-                    停止
+                    Stop
                   </Button>
                 )}
               </div>
@@ -179,7 +179,7 @@ export const EnhancedMessageBubble = React.memo(function EnhancedMessageBubble({
                   "p-1 text-gray-400 hover:text-gray-600 transition-colors",
                   "active:scale-95 touch-manipulation"
                 )}
-                title="复制整个消息"
+                title="Copy entire message"
               >
                 {copied ? (
                   <Check className="h-3 w-3 text-green-500" />

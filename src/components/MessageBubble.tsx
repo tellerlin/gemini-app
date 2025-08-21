@@ -19,7 +19,7 @@ interface MessageBubbleProps {
   isMobile?: boolean;
 }
 
-// 获取文件扩展名的映射
+// File extension mapping
 const getFileExtension = (language: string): string => {
   const extensionMap: { [key: string]: string } = {
     javascript: 'js',
@@ -77,12 +77,12 @@ const getFileExtension = (language: string): string => {
   return extensionMap[language.toLowerCase()] || 'txt';
 };
 
-// 代码块复制和导出组件
+// Code block copy and export component
 function CodeBlockCopy({ code, language, isMobile = false }: { code: string; language: string; isMobile?: boolean }) {
   const [copied, setCopied] = useState(false);
   const [showActions, setShowActions] = useState(false);
 
-  // 调试日志
+  // Debug log
   React.useEffect(() => {
     console.log('CodeBlockCopy rendered for language:', language);
   }, [language]);
@@ -139,11 +139,11 @@ function CodeBlockCopy({ code, language, isMobile = false }: { code: string; lan
   );
 }
 
-// 表格操作组件
+// Table operations component
 function TableActions({ tableRef, isMobile = false }: { tableRef: React.RefObject<HTMLTableElement>; isMobile?: boolean }) {
   const [copied, setCopied] = useState(false);
 
-  // 调试日志
+  // Debug log
   React.useEffect(() => {
     console.log('TableActions rendered');
   }, []);
@@ -153,7 +153,7 @@ function TableActions({ tableRef, isMobile = false }: { tableRef: React.RefObjec
       const tableElement = tableRef.current;
       if (!tableElement) return;
       
-      // 提取表格数据为纯文本
+      // Extract table data as plain text
       const rows = Array.from(tableElement.rows);
       const tableText = rows.map(row => 
         Array.from(row.cells).map(cell => cell.textContent || '').join('\t')
@@ -177,7 +177,7 @@ function TableActions({ tableRef, isMobile = false }: { tableRef: React.RefObjec
       const csvData = rows.map(row => 
         Array.from(row.cells).map(cell => {
           const text = cell.textContent || '';
-          // 如果包含逗号、引号或换行符，需要用引号包围并转义
+          // If contains comma, quotes or newlines, wrap in quotes and escape
           if (text.includes(',') || text.includes('"') || text.includes('\n')) {
             return '"' + text.replace(/"/g, '""') + '"';
           }
@@ -198,10 +198,10 @@ function TableActions({ tableRef, isMobile = false }: { tableRef: React.RefObjec
       const tableElement = tableRef.current;
       if (!tableElement) return;
       
-      // 使用SheetJS将HTML表格转换为工作簿
+      // Use SheetJS to convert HTML table to workbook
       const wb = XLSX.utils.table_to_book(tableElement, { sheet: "Sheet1" });
       
-      // 导出为XLSX文件
+      // Export as XLSX file
       const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
       const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
       saveAs(blob, 'table.xlsx');

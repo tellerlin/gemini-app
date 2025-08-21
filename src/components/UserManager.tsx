@@ -154,7 +154,7 @@ export function UserManager({
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md m-4 max-h-[90vh] overflow-y-auto">
         <div className="p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xl font-semibold text-gray-900">用户管理</h2>
+            <h2 className="text-xl font-semibold text-gray-900">User Management</h2>
             <button
               onClick={onClose}
               className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -165,7 +165,7 @@ export function UserManager({
 
           {/* Current User */}
           <div className="mb-6">
-            <h3 className="text-sm font-medium text-gray-700 mb-3">当前用户</h3>
+            <h3 className="text-sm font-medium text-gray-700 mb-3">Current User</h3>
             <div className="flex items-center p-3 bg-blue-50 rounded-lg border border-blue-200">
               <User className="h-4 w-4 text-blue-600 mr-2" />
               <span className="text-blue-900 font-medium">{currentUser.name}</span>
@@ -174,7 +174,7 @@ export function UserManager({
 
           {/* User List */}
           <div className="mb-6">
-            <h3 className="text-sm font-medium text-gray-700 mb-3">所有用户</h3>
+            <h3 className="text-sm font-medium text-gray-700 mb-3">All Users</h3>
             <div className="space-y-2 max-h-32 overflow-y-auto">
               {users.map((user) => (
                 <button
@@ -190,7 +190,7 @@ export function UserManager({
                   <User className="h-3 w-3 mr-2" />
                   <span className="text-sm">{user.name}</span>
                   {user.id === currentUser.id && (
-                    <span className="ml-auto text-xs text-blue-600">当前</span>
+                    <span className="ml-auto text-xs text-blue-600">Current</span>
                   )}
                 </button>
               ))}
@@ -199,11 +199,11 @@ export function UserManager({
 
           {/* Create New User */}
           <div className="mb-6">
-            <h3 className="text-sm font-medium text-gray-700 mb-3">创建新用户</h3>
+            <h3 className="text-sm font-medium text-gray-700 mb-3">Create New User</h3>
             <div className="flex gap-2">
               <Input
                 type="text"
-                placeholder="用户名称"
+                placeholder="User Name"
                 value={newUserName}
                 onChange={(e) => setNewUserName(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleCreateUser()}
@@ -223,15 +223,15 @@ export function UserManager({
           {/* Storage Info */}
           {storageInfo && (
             <div className="mb-6">
-              <h3 className="text-sm font-medium text-gray-700 mb-3">存储使用情况</h3>
+              <h3 className="text-sm font-medium text-gray-700 mb-3">Storage Usage</h3>
               <div className="bg-gray-50 p-3 rounded-lg">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">已使用:</span>
+                  <span className="text-gray-600">Used:</span>
                   <span className="font-medium">{formatBytes(storageInfo.used)}</span>
                 </div>
                 {storageInfo.quota > 0 && (
                   <div className="flex items-center justify-between text-sm mt-1">
-                    <span className="text-gray-600">总容量:</span>
+                    <span className="text-gray-600">Total:</span>
                     <span className="font-medium">{formatBytes(storageInfo.quota)}</span>
                   </div>
                 )}
@@ -251,7 +251,7 @@ export function UserManager({
 
           {/* Data Management */}
           <div className="space-y-3">
-            <h3 className="text-sm font-medium text-gray-700">数据管理</h3>
+            <h3 className="text-sm font-medium text-gray-700">Data Management</h3>
             
             <div className="grid grid-cols-2 gap-2">
               <Button
@@ -262,7 +262,7 @@ export function UserManager({
                 className="flex items-center justify-center gap-2"
               >
                 <Download className="h-4 w-4" />
-                导出数据
+                Export Data
               </Button>
               
               <label className="relative">
@@ -281,7 +281,7 @@ export function UserManager({
                   className="w-full flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <Upload className="h-4 w-4" />
-                  导入数据
+                  Import Data
                 </Button>
               </label>
             </div>
@@ -294,7 +294,7 @@ export function UserManager({
               className="w-full flex items-center justify-center gap-2"
             >
               <HardDrive className="h-4 w-4" />
-              清理旧数据
+              Clean Old Data
             </Button>
           </div>
         </div>

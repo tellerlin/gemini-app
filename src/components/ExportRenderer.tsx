@@ -36,7 +36,7 @@ export function ExportRenderer({
           <h1 className="text-2xl font-bold text-gray-900 mb-2">{title}</h1>
           {includeMetadata && (
             <p className="text-sm text-gray-600">
-              导出时间: {formatTimestamp(new Date())} | 共 {messages.length} 条消息
+              Export time: {formatTimestamp(new Date())} | {messages.length} messages total
             </p>
           )}
         </div>
@@ -55,7 +55,7 @@ export function ExportRenderer({
                       ? 'bg-blue-100 text-blue-800' 
                       : 'bg-gray-100 text-gray-800'
                   }`}>
-                    {message.role === 'user' ? '用户' : 'AI助手'}
+                    {message.role === 'user' ? 'User' : 'AI Assistant'}
                   </span>
                 </div>
                 <span className="text-xs text-gray-500">
@@ -67,7 +67,7 @@ export function ExportRenderer({
             {/* Files */}
             {message.files && message.files.length > 0 && (
               <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-                <h4 className="text-sm font-medium text-gray-700 mb-2">附件:</h4>
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Attachments:</h4>
                 <div className="space-y-2">
                   {message.files.map((file) => (
                     <div key={file.id} className="flex items-center space-x-2">
@@ -118,7 +118,7 @@ export function ExportRenderer({
       {includeMetadata && (
         <div className="mt-12 pt-8 border-t border-gray-200 text-center">
           <p className="text-xs text-gray-500">
-            此对话记录由 Gemini App 导出 | 导出时间: {formatTimestamp(new Date())}
+            This conversation record was exported by Gemini App | Export time: {formatTimestamp(new Date())}
           </p>
         </div>
       )}

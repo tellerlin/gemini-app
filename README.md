@@ -166,25 +166,25 @@ Auto Cleanup:          Expired entries auto-cleaned
 Hit Rate:              90%+ (estimated)
 ```
 
-## 🧪 开发和测试
+## 🧪 Development and Testing
 
-### 可用脚本
+### Available Scripts
 ```bash
-npm run dev          # 启动开发服务器 (HMR优化)
-npm run build        # 生产构建 (React 19编译器)
-npm run preview      # 预览生产构建
-npm run test         # 运行测试套件
-npm run test:ui      # 可视化测试界面
-npm run type-check   # TypeScript类型检查
-npm run lint         # ESLint代码检查
-npm run build:analyze # Bundle分析
+npm run dev          # Start development server (HMR optimized)
+npm run build        # Production build (React 19 compiler)
+npm run preview      # Preview production build
+npm run test         # Run test suite
+npm run test:ui      # Visual testing interface
+npm run type-check   # TypeScript type checking
+npm run lint         # ESLint code checking
+npm run build:analyze # Bundle analysis
 ```
 
-### 测试覆盖
-- ✅ **智能缓存测试**: LRU策略、TTL过期、内存限制
-- ✅ **并发聊天测试**: 乐观更新、消息搜索、性能指标
-- ✅ **组件集成测试**: 用户界面和交互流程
-- ✅ **类型安全验证**: 100% TypeScript覆盖
+### Test Coverage
+- ✅ **Smart Cache Testing**: LRU strategy, TTL expiration, memory limits
+- ✅ **Concurrent Chat Testing**: Optimistic updates, message search, performance metrics
+- ✅ **Component Integration Testing**: User interface and interaction flows
+- ✅ **Type Safety Validation**: 100% TypeScript coverage
 
 ## 🏗️ Project Architecture
 
@@ -217,53 +217,53 @@ src/
 └── __tests__/          # Test files
 ```
 
-### 性能架构
+### Performance Architecture
 
-#### 智能代码分割
+#### Smart Code Splitting
 ```typescript
-// Vendor chunks优化
-vendor-react:     11.33 kB  (React核心)
-vendor-gemini:   225.52 kB  (AI服务)
-vendor-ui:        23.83 kB  (UI组件)
-vendor-markdown: 801.04 kB  (内容渲染 - 懒加载)
-vendor-diagrams: 459.75 kB  (图表库 - 懒加载)
-vendor-math:     266.78 kB  (数学公式 - 懒加载)
+// Optimized vendor chunks
+vendor-react:     11.33 kB  (React core)
+vendor-gemini:   225.52 kB  (AI service)
+vendor-ui:        23.83 kB  (UI components)
+vendor-markdown: 801.04 kB  (Content rendering - lazy loaded)
+vendor-diagrams: 459.75 kB  (Chart libraries - lazy loaded)
+vendor-math:     266.78 kB  (Math formulas - lazy loaded)
 ```
 
-#### Web Worker架构
+#### Web Worker Architecture
 ```typescript
-// 多线程处理
+// Multi-threaded processing
 ContentProcessor Worker:
-├── Markdown处理
-├── Mermaid图表生成
-├── 代码语法高亮
-├── 数学公式渲染
-├── 表格数据处理
-└── 图像优化
+├── Markdown processing
+├── Mermaid chart generation
+├── Code syntax highlighting
+├── Math formula rendering
+├── Table data processing
+└── Image optimization
 ```
 
-#### 智能缓存系统
+#### Smart Cache System
 ```typescript
-// 混合缓存策略
+// Hybrid cache strategy
 SmartCache:
-├── LRU策略 (最近最少使用)
-├── TTL过期 (时间生存期)
-├── 大小限制 (最大50MB)
-├── 自动清理 (过期条目)
-└── 性能监控 (统计信息)
+├── LRU strategy (Least Recently Used)
+├── TTL expiration (Time To Live)
+├── Size limits (Max 50MB)
+├── Auto cleanup (Expired entries)
+└── Performance monitoring (Statistics)
 ```
 
-## 🐳 Docker部署
+## 🐳 Docker Deployment
 
-### 标准部署
+### Standard Deployment
 ```bash
 docker build -t gemini-app .
 docker run -p 8080:8080 gemini-app
 ```
 
-### 优化部署
+### Optimized Deployment
 ```bash
-# 使用优化的Dockerfile
+# Use optimized Dockerfile
 docker build -f Dockerfile.optimized -t gemini-app:optimized .
 docker run -p 8080:8080 \
   -e NODE_ENV=production \
@@ -517,128 +517,128 @@ All recommended platforms provide global CDN distribution:
 
 Choose the platform that best fits your needs and budget!
 
-## 🔧 高级配置
+## 🔧 Advanced Configuration
 
-### 智能缓存配置
+### Smart Cache Configuration
 ```typescript
-// 自定义缓存设置
+// Custom cache settings
 const cache = new SmartCache<string>(
-  100, // 最大100MB
-  1000 // 最多1000条目
+  100, // Max 100MB
+  1000 // Max 1000 entries
 );
 ```
 
-### Web Worker配置
+### Web Worker Configuration
 ```typescript
-// 启用多线程处理
+// Enable multi-threaded processing
 const { processMarkdown, generateMermaidDiagram } = useContentProcessor();
 ```
 
-### 并发特性配置
+### Concurrency Features Configuration
 ```typescript
-// 使用React 19并发特性
+// Use React 19 concurrency features
 const { messages, sendMessage, isPending } = useConcurrentChat();
 ```
 
-## 📈 监控和分析
+## 📈 Monitoring and Analytics
 
-### 性能监控
+### Performance Monitoring
 - **Core Web Vitals**: FCP, LCP, FID, CLS
-- **Bundle分析**: Rollup Visualizer
-- **内存使用**: 智能缓存统计
-- **渲染性能**: 虚拟化指标
+- **Bundle Analysis**: Rollup Visualizer
+- **Memory Usage**: Smart cache statistics
+- **Rendering Performance**: Virtualization metrics
 
-### 获取指标
+### Getting Metrics
 ```typescript
-// 运行时性能数据
+// Runtime performance data
 const cacheStats = cache.getStats();
 const chatMetrics = useConcurrentChat().getPerformanceMetrics();
 ```
 
-## 🤝 贡献指南
+## 🤝 Contributing
 
-### 开发流程
-1. **Fork项目** 并克隆到本地
-2. **创建特性分支**: `git checkout -b feature/amazing-feature`
-3. **提交更改**: `git commit -m 'Add amazing feature'`
-4. **推送分支**: `git push origin feature/amazing-feature`
-5. **创建Pull Request**
+### Development Workflow
+1. **Fork the project** and clone locally
+2. **Create feature branch**: `git checkout -b feature/amazing-feature`
+3. **Commit changes**: `git commit -m 'Add amazing feature'`
+4. **Push branch**: `git push origin feature/amazing-feature`
+5. **Create Pull Request**
 
-### 代码规范
-- **TypeScript严格模式**: 所有代码必须类型安全
-- **ESLint规则**: 遵循项目代码风格
-- **测试覆盖**: 新功能必须包含测试
-- **性能考虑**: 避免不必要的重新渲染
+### Code Standards
+- **TypeScript Strict Mode**: All code must be type-safe
+- **ESLint Rules**: Follow project code style
+- **Test Coverage**: New features must include tests
+- **Performance Considerations**: Avoid unnecessary re-renders
 
-### 提交规范
+### Commit Standards
 ```
-feat: 添加新功能
-fix: 修复bug
-docs: 文档更新
-style: 代码格式调整
-refactor: 重构代码
-perf: 性能优化
-test: 测试更新
+feat: Add new feature
+fix: Bug fix
+docs: Documentation update
+style: Code formatting adjustment
+refactor: Code refactoring
+perf: Performance optimization
+test: Test update
 ```
 
-## 🐛 故障排除
+## 🐛 Troubleshooting
 
-### 常见问题
+### Common Issues
 
-#### API密钥错误
-- 验证密钥是否有效且有适当权限
-- 检查是否超出配额限制
-- 尝试多密钥配置
+#### API Key Errors
+- Verify keys are valid and have appropriate permissions
+- Check if quota limits are exceeded
+- Try multi-key configuration
 
-#### 性能问题
-- 检查浏览器开发者工具性能标签
-- 验证Bundle大小是否合理
-- 查看内存使用情况
+#### Performance Issues
+- Check browser developer tools performance tab
+- Verify bundle size is reasonable
+- Check memory usage
 
-#### 构建失败
-- 清理缓存: `npm run clean`
-- 重新安装依赖: `rm -rf node_modules && npm install`
-- 检查Node.js版本
+#### Build Failures
+- Clear cache: `npm run clean`
+- Reinstall dependencies: `rm -rf node_modules && npm install`
+- Check Node.js version
 
-### 调试模式
+### Debug Mode
 ```bash
-# 启用详细日志
+# Enable verbose logging
 DEBUG=* npm run dev
 
-# TypeScript严格检查
+# TypeScript strict checking
 npm run type-check
 
-# Bundle分析
+# Bundle analysis
 npm run build:analyze
 ```
 
-## 📄 许可证
+## 📄 License
 
-MIT License - 详见 [LICENSE](LICENSE) 文件
+MIT License - See [LICENSE](LICENSE) file for details
 
-## 🙏 致谢
+## 🙏 Acknowledgments
 
-- [Google AI](https://ai.google.dev/) - Gemini AI模型
-- [React团队](https://react.dev/) - React 19框架
-- [Vite团队](https://vitejs.dev/) - 构建工具
-- [Tailwind CSS](https://tailwindcss.com/) - CSS框架
-- [开源社区](https://github.com/) - 各种优秀的开源项目
+- [Google AI](https://ai.google.dev/) - Gemini AI models
+- [React Team](https://react.dev/) - React 19 framework
+- [Vite Team](https://vitejs.dev/) - Build tools
+- [Tailwind CSS](https://tailwindcss.com/) - CSS framework
+- [Open Source Community](https://github.com/) - Various excellent open source projects
 
 ---
 
 <div align="center">
 
-**🚀 使用最新2025技术栈构建的现代AI聊天应用**
+**🚀 Modern AI Chat Application Built with Latest 2025 Technology Stack**
 
-[🌟 Star项目](https://github.com/tellerlin/gemini-app) · 
-[📖 查看文档](https://github.com/tellerlin/gemini-app/wiki) · 
-[🐛 报告Bug](https://github.com/tellerlin/gemini-app/issues) · 
-[💡 请求功能](https://github.com/tellerlin/gemini-app/discussions)
+[🌟 Star Project](https://github.com/tellerlin/gemini-app) · 
+[📖 View Documentation](https://github.com/tellerlin/gemini-app/wiki) · 
+[🐛 Report Bug](https://github.com/tellerlin/gemini-app/issues) · 
+[💡 Request Feature](https://github.com/tellerlin/gemini-app/discussions)
 
 ---
 
-*构建于 ❤️ 使用 React 19, TypeScript, 和 Google Gemini AI*
+*Built with ❤️ using React 19, TypeScript, and Google Gemini AI*
 
-**版本**: 2.0.0-optimized | **最后更新**: 2025-08-19
+**Version**: 2.0.0-optimized | **Last Updated**: 2025-08-19
 
 </div>

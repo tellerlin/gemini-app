@@ -31,33 +31,33 @@ const getLoadingPhases = (requestType: string = 'text', messageContent: string =
   
   if (requestType === 'image') {
     return [
-      { id: 'processing', label: '处理请求', icon: Bot, duration: 1000, description: '分析图片生成需求' },
-      { id: 'generating', label: '生成图片', icon: Image, duration: 8000, description: '使用 AI 模型创建图片' },
-      { id: 'finalizing', label: '完成处理', icon: Zap, duration: 500, description: '优化和输出结果' },
+      { id: 'processing', label: 'Processing Request', icon: Bot, duration: 1000, description: 'Analyzing image generation requirements' },
+      { id: 'generating', label: 'Generating Image', icon: Image, duration: 8000, description: 'Using AI model to create image' },
+      { id: 'finalizing', label: 'Finalizing', icon: Zap, duration: 500, description: 'Optimizing and outputting results' },
     ];
   }
   
   if (requestType === 'thinking' || isComplexQuery) {
     return [
-      { id: 'thinking', label: '深度思考', icon: Brain, duration: 2000, description: '分析问题复杂度' },
-      { id: 'processing', label: '处理信息', icon: Bot, duration: 3000, description: '整理相关知识' },
-      { id: 'generating', label: '组织回答', icon: Zap, duration: 2000, description: '构建完整回复' },
+      { id: 'thinking', label: 'Deep Thinking', icon: Brain, duration: 2000, description: 'Analyzing problem complexity' },
+      { id: 'processing', label: 'Processing Information', icon: Bot, duration: 3000, description: 'Organizing relevant knowledge' },
+      { id: 'generating', label: 'Organizing Answer', icon: Zap, duration: 2000, description: 'Building complete response' },
     ];
   }
   
   if (isAnalysisRequest) {
     return [
-      { id: 'analyzing', label: '分析内容', icon: Search, duration: 2000, description: '深入理解问题' },
-      { id: 'processing', label: '处理数据', icon: Bot, duration: 2000, description: '整合相关信息' },
-      { id: 'generating', label: '生成回答', icon: Zap, duration: 1500, description: '组织分析结果' },
+      { id: 'analyzing', label: 'Analyzing Content', icon: Search, duration: 2000, description: 'Deep understanding of the problem' },
+      { id: 'processing', label: 'Processing Data', icon: Bot, duration: 2000, description: 'Integrating relevant information' },
+      { id: 'generating', label: 'Generating Answer', icon: Zap, duration: 1500, description: 'Organizing analysis results' },
     ];
   }
   
   // Default for text requests
   const baseDuration = isLongContent ? 2000 : 1000;
   return [
-    { id: 'processing', label: '理解问题', icon: Bot, duration: baseDuration, description: '分析您的请求' },
-    { id: 'generating', label: '生成回答', icon: Zap, duration: baseDuration * 1.5, description: '构建回复内容' },
+    { id: 'processing', label: 'Understanding Question', icon: Bot, duration: baseDuration, description: 'Analyzing your request' },
+    { id: 'generating', label: 'Generating Answer', icon: Zap, duration: baseDuration * 1.5, description: 'Building response content' },
   ];
 };
 
