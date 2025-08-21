@@ -110,8 +110,7 @@ export class GeminiService {
   private totalErrors = 0;
   private startTime = Date.now();
   
-  // Proxy configuration support
-  private proxyUrl?: string;
+  // Proxy functionality removed for security and simplicity
   
   // AbortController for stopping generation
   private currentAbortController?: AbortController;
@@ -127,12 +126,9 @@ export class GeminiService {
   // Callback for notifying UI about model switches
   private onModelSwitchCallback?: (fromModel: string, toModel: string, reason: string) => void;
 
-  constructor(apiKeys?: string[], proxyUrl?: string) {
+  constructor(apiKeys?: string[]) {
     if (apiKeys && apiKeys.length > 0) {
       this.setApiKeys(apiKeys);
-    }
-    if (proxyUrl) {
-      this.setProxyUrl(proxyUrl);
     }
   }
 
@@ -162,25 +158,6 @@ export class GeminiService {
     } catch (error) {
       console.error('❌ Failed to initialize Gemini API client:', error);
       throw new Error(`Failed to initialize Gemini API: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-  }
-
-  /**
-   * Set proxy URL for HTTP requests
-   * @param proxyUrl - Proxy URL (e.g., "http://192.168.1.3:7890")
-   */
-  setProxyUrl(proxyUrl: string): void {
-    try {
-      if (proxyUrl && proxyUrl.trim() !== '') {
-        this.proxyUrl = proxyUrl.trim();
-        console.log(`🌐 Proxy configured: ${this.proxyUrl}`);
-      } else {
-        this.proxyUrl = undefined;
-        console.log(`🌐 Proxy disabled`);
-      }
-    } catch (error) {
-      console.error('❌ Failed to set proxy URL:', error);
-      throw new Error(`Failed to set proxy: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
 
@@ -230,13 +207,6 @@ export class GeminiService {
     }
     
     console.log(`🔄 Model switched: ${fromModel} → ${toModel} (${reason})`);
-  }
-
-  /**
-   * Get current proxy configuration
-   */
-  getProxyUrl(): string | undefined {
-    return this.proxyUrl;
   }
 
   /**
@@ -309,7 +279,7 @@ export class GeminiService {
       return {
         category: 'NETWORK_ERROR',
         explanation: 'Network connectivity issue or request timeout.',
-        suggestion: 'Check your internet connection and proxy settings',
+        suggestion: 'Check your internet connection',
         allowModelSwitch: false,
       };
     }
@@ -2460,4 +2430,4 @@ Please provide a comprehensive analysis based on the content of these URLs.`;
 
 // Initialize service with environment configuration
 const envConfig = loadEnvConfig();
-export const geminiService = new GeminiService(envConfig.apiKeys, envConfig.proxyUrl);
+export const geminiService = new GeminiService();

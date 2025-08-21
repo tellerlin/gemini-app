@@ -1,8 +1,7 @@
-// Environment variable utilities for API key management and proxy configuration
+// Environment variable utilities for API key management
+// ⚠️ Security Note: API keys should NOT be stored in environment variables in production
 
 export interface EnvConfig {
-  GEMINI_API_KEYS?: string;
-  PROXY_URL?: string;
   DEFAULT_MODEL?: string;
   REQUEST_TIMEOUT?: string;
   MAX_RETRIES?: string;
@@ -22,32 +21,14 @@ export function parseApiKeys(keysString: string): string[] {
 }
 
 /**
- * Load API keys from environment variables
- * In a browser environment, this would typically come from a .env file
- * or be injected during build time
+ * Load API keys from environment variables (DEPRECATED for security)
+ * This function is deprecated and should not be used in production.
+ * API keys should only be managed through user settings.
+ * @deprecated Use user settings instead for security reasons
  */
 export function loadApiKeysFromEnv(): string[] {
-  // In a Vite environment, environment variables are prefixed with VITE_
-  const envKeys = import.meta.env.VITE_GEMINI_API_KEYS;
-  
-  if (envKeys) {
-    return parseApiKeys(envKeys);
-  }
-  
+  console.warn('⚠️ loadApiKeysFromEnv is deprecated for security reasons. Use user settings instead.');
   return [];
-}
-
-/**
- * Load proxy URL from environment variables
- */
-export function loadProxyFromEnv(): string | undefined {
-  const proxyUrl = import.meta.env.VITE_PROXY_URL;
-  
-  if (proxyUrl && proxyUrl.trim() !== '') {
-    return proxyUrl.trim();
-  }
-  
-  return undefined;
 }
 
 /**
@@ -77,15 +58,11 @@ export function loadMaxRetriesFromEnv(): number {
  * Load all environment configuration
  */
 export function loadEnvConfig(): {
-  apiKeys: string[];
-  proxyUrl?: string;
   defaultModel: string;
   requestTimeout: number;
   maxRetries: number;
 } {
   return {
-    apiKeys: loadApiKeysFromEnv(),
-    proxyUrl: loadProxyFromEnv(),
     defaultModel: loadDefaultModelFromEnv(),
     requestTimeout: loadRequestTimeoutFromEnv(),
     maxRetries: loadMaxRetriesFromEnv(),
@@ -99,18 +76,6 @@ export function validateApiKey(key: string): boolean {
   // Basic validation for Gemini API keys
   // They typically start with "AI" and are around 40 characters long
   return key.length > 20 && key.length < 100;
-}
-
-/**
- * Validate proxy URL format
- */
-export function validateProxyUrl(url: string): boolean {
-  try {
-    const parsedUrl = new URL(url);
-    return parsedUrl.protocol === 'http:' || parsedUrl.protocol === 'https:';
-  } catch {
-    return false;
-  }
 }
 
 /**

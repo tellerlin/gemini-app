@@ -22,4 +22,22 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Environment variables - NEVER commit these
 .env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Sensitive configuration files
+config/*.json
+secrets/
+keys/
+*.key
+*.pem
+
+# API keys and secrets (extra protection)
+*api-key*
+*secret*
+*password*
