@@ -126,6 +126,8 @@ npm run dev
 5. **Open browser**
 Visit `http://localhost:5173`
 
+> **✅ CORS Issues Resolved**: The application now automatically uses proxy configuration to avoid CORS errors with Gemini API calls. Local development uses Vite proxy, while production deployments use Cloudflare Workers for seamless API access.
+
 ### API Key Configuration
 
 #### Method 1: In-app Configuration
@@ -137,8 +139,10 @@ Visit `http://localhost:5173`
 #### Method 2: Environment Variables
 ```env
 VITE_GEMINI_API_KEYS=key1,key2,key3
-VITE_PROXY_URL=http://proxy:port  # Optional
+VITE_GEMINI_PROXY_URL=https://your-worker.workers.dev  # For custom proxy
 ```
+
+> **🌐 Proxy Configuration**: For production deployments, you can configure a custom proxy URL to handle Gemini API requests and avoid CORS issues. See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed setup instructions.
 
 ## 📊 Performance Metrics
 
@@ -290,12 +294,16 @@ Deploy your Gemini Chat Application to any of these platforms with one click:
 - Built-in analytics and performance monitoring
 - Automatic deployments from Git
 - Free tier: 500 builds/month, unlimited bandwidth
+- **🆕 CORS-Free API Access**: Built-in Cloudflare Workers support for seamless Gemini API integration
 
 **Deployment Steps:**
 1. Click the deploy button above
 2. Connect your GitHub account
 3. Configure environment variables (VITE_GEMINI_API_KEYS)
-4. Deploy automatically
+4. **Set up API Proxy** (recommended): Follow [DEPLOYMENT.md](./DEPLOYMENT.md) to configure Cloudflare Workers for API proxying
+5. Deploy automatically
+
+> **💡 Recommended**: Cloudflare Pages with Workers provides the best experience for this application, automatically handling CORS issues and providing global edge caching.
 
 #### Vercel
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/tellerlin/gemini-app)
@@ -398,8 +406,8 @@ Required environment variables for all platforms:
 # Required - Gemini API Keys
 VITE_GEMINI_API_KEYS=your_api_key_1,your_api_key_2,your_api_key_3
 
-# Optional - Proxy Configuration
-VITE_PROXY_URL=http://your-proxy:port
+# Optional - Custom Proxy Configuration (for CORS handling)
+VITE_GEMINI_PROXY_URL=https://your-worker-name.workers.dev
 
 # Optional - Analytics
 VITE_ANALYTICS_ID=your_analytics_id
@@ -407,6 +415,8 @@ VITE_ANALYTICS_ID=your_analytics_id
 # Build Configuration
 NODE_ENV=production
 ```
+
+> **🔧 CORS Solution**: Set `VITE_GEMINI_PROXY_URL` to your Cloudflare Worker URL to enable seamless API access without CORS issues. See [DEPLOYMENT.md](./DEPLOYMENT.md) for complete setup guide.
 
 ### 🔧 Platform-Specific Settings
 
@@ -473,6 +483,7 @@ NODE_ENV = "production"
 - [ ] **API Keys**: Configure Gemini API keys in environment variables
 - [ ] **Build Test**: Run `npm run build` locally to ensure no errors
 - [ ] **Environment Variables**: Set all required environment variables
+- [ ] **CORS Setup**: Configure API proxy for production (see [DEPLOYMENT.md](./DEPLOYMENT.md))
 - [ ] **Domain Setup**: Configure custom domain (optional)
 - [ ] **Analytics**: Set up analytics tracking (optional)
 - [ ] **Performance**: Test build performance and bundle size
@@ -587,6 +598,12 @@ test: Test update
 ## 🐛 Troubleshooting
 
 ### Common Issues
+
+#### CORS Errors with Gemini API
+**✅ RESOLVED**: This application now includes automatic CORS handling
+- **Local Development**: Uses Vite proxy automatically
+- **Production**: Uses Cloudflare Workers proxy (see [DEPLOYMENT.md](./DEPLOYMENT.md))
+- **Custom Setup**: Configure `VITE_GEMINI_PROXY_URL` environment variable
 
 #### API Key Errors
 - Verify keys are valid and have appropriate permissions
