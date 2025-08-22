@@ -23,6 +23,13 @@ export interface GeminiGenerationConfig {
     enabled?: boolean;
     budget?: number;
   };
+  // Enhanced caching configuration
+  cachingConfig?: {
+    enabled: boolean;
+    ttl?: number; // Time to live in seconds
+    systemInstruction?: string;
+    useImplicitCaching?: boolean;
+  };
 }
 
 // Response type that can contain both text and images with RAI info
@@ -126,6 +133,17 @@ export class GeminiService {
   // Callback for notifying UI about model switches
   private onModelSwitchCallback?: (fromModel: string, toModel: string, reason: string) => void;
 
+  // Enhanced caching for improved performance
+  private responseCache = new Map<string, {
+    response: string | GeminiResponse;
+    timestamp: number;
+    ttl: number;
+    metadata?: GroundingMetadata | UrlContextMetadata;
+  }>();
+  
+  private readonly DEFAULT_CACHE_TTL = 300000; // 5 minutes
+  private readonly MAX_CACHE_SIZE = 100;
+
   constructor(apiKeys?: string[]) {
     if (apiKeys && apiKeys.length > 0) {
       this.setApiKeys(apiKeys);
@@ -162,11 +180,100 @@ export class GeminiService {
   }
 
   /**
+   * Generate cache key for request
+   * @private
+   */
+  private generateCacheKey(messages: Message[], model: string, config?: GeminiGenerationConfig): string {
+    const messageHash = messages.map(m => `${m.role}:${m.content}`).join('|');
+    const configHash = config ? JSON.stringify({
+      temperature: config.generationConfig?.temperature,
+      topK: config.generationConfig?.topK,
+      topP: config.generationConfig?.topP,
+      systemInstruction: config.systemInstruction,
+      grounding: config.groundingConfig?.enabled,
+      urlContext: config.urlContextConfig?.enabled,
+    }) : '';
+    return `${model}:${messageHash}:${configHash}`;
+  }
+
+  /**
+   * Check if cached response is still valid
+   * @private
+   */
+  private getCachedResponse(cacheKey: string): (string | GeminiResponse) | null {
+    const cached = this.responseCache.get(cacheKey);
+    if (!cached) return null;
+    
+    const now = Date.now();
+    if (now - cached.timestamp > cached.ttl) {
+      this.responseCache.delete(cacheKey);
+      return null;
+    }
+    
+    console.log('✅ Using cached response');
+    return cached.response;
+  }
+
+  /**
+   * Store response in cache
+   * @private
+   */
+  private setCachedResponse(
+    cacheKey: string, 
+    response: string | GeminiResponse, 
+    ttl: number = this.DEFAULT_CACHE_TTL,
+    metadata?: GroundingMetadata | UrlContextMetadata
+  ): void {
+    // Implement LRU cache eviction
+    if (this.responseCache.size >= this.MAX_CACHE_SIZE) {
+      const oldestKey = this.responseCache.keys().next().value;
+      this.responseCache.delete(oldestKey);
+    }
+    
+    this.responseCache.set(cacheKey, {
+      response,
+      timestamp: Date.now(),
+      ttl,
+      metadata
+    });
+    
+    console.log(`📦 Response cached with TTL: ${ttl}ms`);
+  }
+
+  /**
+   * Clear response cache
+   */
+  clearCache(): void {
+    this.responseCache.clear();
+    console.log('🗑️ Response cache cleared');
+  }
+
+  /**
    * Set callback for model switch notifications
    * @param callback - Function to call when model switches occur
    */
   setModelSwitchCallback(callback: (fromModel: string, toModel: string, reason: string) => void): void {
     this.onModelSwitchCallback = callback;
+  }
+
+  /**
+   * Get cache statistics
+   */
+  getCacheStats(): {
+    size: number;
+    maxSize: number;
+    hitRate: string;
+    oldestEntry?: Date;
+  } {
+    const entries = Array.from(this.responseCache.values());
+    const oldestTimestamp = entries.length > 0 ? Math.min(...entries.map(e => e.timestamp)) : null;
+    
+    return {
+      size: this.responseCache.size,
+      maxSize: this.MAX_CACHE_SIZE,
+      hitRate: '0%', // Would need to track hits vs misses
+      oldestEntry: oldestTimestamp ? new Date(oldestTimestamp) : undefined
+    };
   }
 
   /**
@@ -211,6 +318,7 @@ export class GeminiService {
 
   /**
    * Analyze and categorize API errors with user-friendly explanations
+   * Enhanced with Google AI documentation error patterns
    * @private
    */
   private categorizeApiError(error: any): { 
@@ -219,47 +327,102 @@ export class GeminiService {
     suggestion: string; 
     isQuotaExhausted?: boolean;
     allowModelSwitch?: boolean;
+    retryAfter?: number;
   } {
     const errorMessage = error?.message || '';
     const errorCode = error?.status || error?.code;
 
-    // Quota exhausted
-    if (errorCode === 429 || errorMessage.includes('quota') || errorMessage.includes('RESOURCE_EXHAUSTED')) {
+    // Enhanced quota exhausted detection
+    if (errorCode === 429 || 
+        errorMessage.includes('quota') || 
+        errorMessage.includes('RESOURCE_EXHAUSTED') ||
+        errorMessage.includes('rate limit') ||
+        errorMessage.includes('requests per minute')) {
       return {
         category: 'QUOTA_EXCEEDED',
-        explanation: 'API quota limit reached. You have exceeded the daily free tier limit (100 requests per day).',
-        suggestion: 'Wait 24 hours for quota reset or upgrade to a paid plan at https://makersuite.google.com/',
+        explanation: 'API quota limit reached. You have exceeded the rate limit or daily quota.',
+        suggestion: 'Wait for quota reset, reduce request frequency, or upgrade your plan at https://makersuite.google.com/',
         isQuotaExhausted: true,
         allowModelSwitch: true,
+        retryAfter: this.extractRetryAfter(error) || 60000, // Default 1 minute
       };
     }
 
-    // API key expired or invalid
-    if (errorCode === 400 && (errorMessage.includes('API key expired') || errorMessage.includes('API_KEY_INVALID'))) {
+    // API key issues with more detailed detection
+    if (errorCode === 400 && (
+        errorMessage.includes('API key expired') || 
+        errorMessage.includes('API_KEY_INVALID') ||
+        errorMessage.includes('INVALID_API_KEY') ||
+        errorMessage.includes('API key not valid'))) {
       return {
         category: 'API_KEY_EXPIRED',
-        explanation: 'Your API key has expired and needs to be renewed.',
+        explanation: 'Your API key has expired or is invalid.',
         suggestion: 'Generate a new API key at https://makersuite.google.com/app/apikey',
         allowModelSwitch: false,
       };
     }
 
-    // API not enabled
-    if (errorCode === 403 && errorMessage.includes('SERVICE_DISABLED')) {
+    // Service disabled detection
+    if (errorCode === 403 && (
+        errorMessage.includes('SERVICE_DISABLED') ||
+        errorMessage.includes('API not enabled') ||
+        errorMessage.includes('Generative Language API'))) {
       return {
         category: 'API_NOT_ENABLED',
         explanation: 'The Generative Language API is not enabled for your Google Cloud project.',
-        suggestion: 'Enable the API in the Google Cloud Console at the URL provided in the error message',
+        suggestion: 'Enable the API in the Google Cloud Console',
         allowModelSwitch: false,
       };
     }
 
-    // Thinking mode budget issue
-    if (errorCode === 400 && errorMessage.includes('Budget 0 is invalid')) {
+    // Enhanced thinking mode budget detection
+    if (errorCode === 400 && (
+        errorMessage.includes('Budget 0 is invalid') ||
+        errorMessage.includes('thinking budget') ||
+        errorMessage.includes('thinkingBudget'))) {
       return {
         category: 'THINKING_MODE_REQUIRED',
-        explanation: 'The gemini-2.5-pro model requires thinking mode to be enabled with a budget > 0.',
-        suggestion: 'This has been automatically fixed. Please try again.',
+        explanation: 'The model requires thinking mode to be enabled with a valid budget.',
+        suggestion: 'This has been automatically configured. Please try again.',
+        allowModelSwitch: true,
+      };
+    }
+
+    // Content filtering and safety issues
+    if (errorMessage.includes('safety') || 
+        errorMessage.includes('SAFETY') ||
+        errorMessage.includes('blocked') ||
+        errorMessage.includes('BLOCKED_REASON')) {
+      return {
+        category: 'CONTENT_SAFETY',
+        explanation: 'Content was blocked by safety filters.',
+        suggestion: 'Modify your prompt to comply with content policies',
+        allowModelSwitch: false,
+      };
+    }
+
+    // Model not found or unsupported
+    if (errorCode === 404 || 
+        errorMessage.includes('model not found') ||
+        errorMessage.includes('Model not found') ||
+        errorMessage.includes('INVALID_MODEL')) {
+      return {
+        category: 'MODEL_NOT_FOUND',
+        explanation: 'The specified model is not available or not supported.',
+        suggestion: 'Check the model name and try a different model',
+        allowModelSwitch: true,
+      };
+    }
+
+    // Context length exceeded
+    if (errorMessage.includes('context length') ||
+        errorMessage.includes('token limit') ||
+        errorMessage.includes('CONTEXT_LENGTH_EXCEEDED') ||
+        errorMessage.includes('maximum context')) {
+      return {
+        category: 'CONTEXT_TOO_LONG',
+        explanation: 'The input exceeds the model\'s maximum context length.',
+        suggestion: 'Reduce the input size or use a model with larger context window',
         allowModelSwitch: true,
       };
     }
@@ -274,13 +437,29 @@ export class GeminiService {
       };
     }
 
-    // Network/Timeout issues
-    if (errorMessage.includes('timeout') || errorMessage.includes('network')) {
+    // Network/Timeout issues with enhanced detection
+    if (errorMessage.includes('timeout') || 
+        errorMessage.includes('network') ||
+        errorMessage.includes('ENOTFOUND') ||
+        errorMessage.includes('ECONNRESET') ||
+        errorMessage.includes('ETIMEDOUT')) {
       return {
         category: 'NETWORK_ERROR',
-        explanation: 'Network connectivity issue or request timeout.',
-        suggestion: 'Check your internet connection',
+        explanation: 'Network connectivity issue or request timeout occurred.',
+        suggestion: 'Check your internet connection and try again',
         allowModelSwitch: false,
+        retryAfter: 5000, // 5 second retry
+      };
+    }
+
+    // Server errors (5xx)
+    if (errorCode >= 500 && errorCode < 600) {
+      return {
+        category: 'SERVER_ERROR',
+        explanation: 'Google AI service is experiencing temporary issues.',
+        suggestion: 'Please wait a moment and try again',
+        allowModelSwitch: false,
+        retryAfter: 10000, // 10 second retry
       };
     }
 
@@ -289,8 +468,30 @@ export class GeminiService {
       category: 'UNKNOWN_ERROR',
       explanation: `Unexpected error: ${errorMessage}`,
       suggestion: 'Please check the error details and try again',
-      allowModelSwitch: true, // Allow model switch for unknown errors
+      allowModelSwitch: true,
     };
+  }
+
+  /**
+   * Extract retry-after value from error response
+   * @private
+   */
+  private extractRetryAfter(error: any): number | null {
+    // Check for Retry-After header
+    if (error?.response?.headers?.['retry-after']) {
+      const retryAfter = parseInt(error.response.headers['retry-after'], 10);
+      if (!isNaN(retryAfter)) {
+        return retryAfter * 1000; // Convert seconds to milliseconds
+      }
+    }
+    
+    // Check for rate limit reset information in error message
+    const resetMatch = error?.message?.match(/try again in (\d+) seconds?/i);
+    if (resetMatch) {
+      return parseInt(resetMatch[1], 10) * 1000;
+    }
+    
+    return null;
   }
 
   /**
@@ -705,6 +906,7 @@ export class GeminiService {
 
   /**
    * Handle grounding streaming text generation with tools
+   * Enhanced with optimized streaming patterns from Google AI documentation
    * @private
    */
   private async* handleGroundingStreamingTextGeneration(
@@ -728,13 +930,18 @@ export class GeminiService {
       tools.push({ urlContext: {} });
     }
 
-    // Merge config with defaults and include tools
+    // Enhanced generation config following Google AI best practices
     const generationConfig = {
       temperature: config?.generationConfig?.temperature ?? 0.7,
       topK: config?.generationConfig?.topK ?? 40,
       topP: config?.generationConfig?.topP ?? 0.95,
       maxOutputTokens: config?.generationConfig?.maxOutputTokens ?? 1000000,
+      // Optimize response format for streaming
+      responseMimeType: config?.generationConfig?.responseMimeType ?? "text/plain",
     };
+
+    // Smart thinking configuration based on task complexity
+    const thinkingConfig = await this.getOptimalThinkingConfig(lastMessage.content, model);
 
     const requestConfig: GeminiRequestConfig = {
       ...generationConfig,
@@ -742,15 +949,15 @@ export class GeminiService {
       ...(config?.systemInstruction && {
         systemInstruction: config.systemInstruction
       }),
-      ...(model.includes('2.5') && {
+      ...(model.includes('2.5') && thinkingConfig.enabled && {
         thinkingConfig: {
-          thinkingBudget: model.includes('2.5-pro') ? (config?.thinkingConfig?.budget ?? 10000) : (config?.thinkingConfig?.enabled === false ? 0 : (config?.thinkingConfig?.budget ?? 10000)),
+          thinkingBudget: thinkingConfig.budget,
         }
       }),
     };
     
     if (messages.length === 1) {
-      // Single message with tools
+      // Single message with tools - optimized streaming pattern
       console.log('📝 Single message grounding streaming generation');
       
       const response = await ai.models.generateContentStream({
@@ -760,10 +967,19 @@ export class GeminiService {
       });
 
       let accumulatedText = '';
+      let finalCandidate: any = null;
+      
+      // Enhanced streaming with better chunk handling
       for await (const chunk of response) {
         // Check if generation was aborted
         if (this.currentAbortController?.signal.aborted) {
+          console.log('🛑 Streaming aborted by user during single message generation');
           break;
+        }
+        
+        // Store the latest candidate for metadata extraction
+        if (chunk.candidates && chunk.candidates.length > 0) {
+          finalCandidate = chunk.candidates[0];
         }
         
         if (chunk.text) {
@@ -772,16 +988,16 @@ export class GeminiService {
         }
       }
 
-      // Extract grounding metadata from final response
-      if (response.candidates?.[0]?.groundingMetadata) {
+      // Extract grounding metadata from final candidate
+      if (finalCandidate?.groundingMetadata) {
         yield { 
-          groundingMetadata: response.candidates[0].groundingMetadata as GroundingMetadata 
+          groundingMetadata: finalCandidate.groundingMetadata as GroundingMetadata 
         };
       }
 
-      if (response.candidates?.[0]?.urlContextMetadata) {
+      if (finalCandidate?.urlContextMetadata) {
         yield { 
-          urlContextMetadata: response.candidates[0].urlContextMetadata as UrlContextMetadata 
+          urlContextMetadata: finalCandidate.urlContextMetadata as UrlContextMetadata 
         };
       }
     } else {
@@ -1729,6 +1945,117 @@ export class GeminiService {
     });
     
     console.log('📊 Performance metrics reset - starting fresh statistics');
+  }
+
+  /**
+   * Get optimal thinking configuration based on task complexity
+   * Enhanced with pattern matching from Google AI best practices
+   * @private
+   */
+  private async getOptimalThinkingConfig(messageContent: string, model: string): Promise<{ enabled: boolean; budget: number }> {
+    const capabilities = await this.getModelCapabilities(model);
+    
+    if (!capabilities.supportsThinking) {
+      return { enabled: false, budget: 0 };
+    }
+
+    // Analyze message content to determine optimal thinking budget
+    const content = messageContent.toLowerCase();
+    
+    // Complex reasoning tasks - high thinking budget
+    if (
+      content.includes('analyze') ||
+      content.includes('explain') ||
+      content.includes('reasoning') ||
+      content.includes('logic') ||
+      content.includes('problem') ||
+      content.includes('solution') ||
+      content.includes('compare') ||
+      content.includes('evaluate') ||
+      content.includes('pros and cons') ||
+      content.includes('advantages') ||
+      content.includes('disadvantages') ||
+      content.includes('step by step') ||
+      content.includes('think through')
+    ) {
+      return { enabled: true, budget: 50000 }; // High thinking for complex reasoning
+    }
+    
+    // Coding/technical tasks - medium thinking budget
+    if (
+      content.includes('code') ||
+      content.includes('program') ||
+      content.includes('function') ||
+      content.includes('algorithm') ||
+      content.includes('debug') ||
+      content.includes('implement') ||
+      content.includes('technical') ||
+      content.includes('architecture') ||
+      content.includes('design pattern') ||
+      content.includes('optimize')
+    ) {
+      return { enabled: true, budget: 30000 }; // Medium thinking for coding
+    }
+    
+    // Math/calculation tasks - medium thinking budget
+    if (
+      content.includes('calculate') ||
+      content.includes('math') ||
+      content.includes('equation') ||
+      content.includes('formula') ||
+      content.includes('solve') ||
+      content.includes('computation')
+    ) {
+      return { enabled: true, budget: 25000 }; // Medium thinking for math
+    }
+    
+    // Creative tasks - low thinking budget
+    if (
+      content.includes('write') ||
+      content.includes('story') ||
+      content.includes('poem') ||
+      content.includes('creative') ||
+      content.includes('imagine') ||
+      content.includes('describe')
+    ) {
+      return { enabled: true, budget: 10000 }; // Low thinking for creativity
+    }
+    
+    // Simple questions - minimal thinking
+    if (
+      content.includes('what is') ||
+      content.includes('who is') ||
+      content.includes('when is') ||
+      content.includes('where is') ||
+      content.includes('define') ||
+      content.includes('meaning')
+    ) {
+      return { enabled: true, budget: 5000 }; // Minimal thinking for simple questions
+    }
+    
+    // Quick requests - no thinking for speed
+    if (
+      content.includes('quick') ||
+      content.includes('fast') ||
+      content.includes('brief') ||
+      content.includes('summary') ||
+      content.length < 50
+    ) {
+      return { enabled: false, budget: 0 }; // No thinking for speed
+    }
+    
+    // Default: moderate thinking
+    return { enabled: true, budget: 15000 };
+  }
+
+  /**
+   * Get model capabilities for thinking configuration
+   * @private
+   */
+  private async getModelCapabilities(modelId: string) {
+    // Import the capabilities function
+    const { getModelCapabilities } = await import('../config/gemini');
+    return getModelCapabilities(modelId);
   }
 
   /**

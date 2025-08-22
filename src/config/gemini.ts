@@ -11,12 +11,21 @@ export const GEMINI_MODELS: Array<{
   supportsThinking?: boolean;
   supportsGrounding?: boolean;
   supportsUrlContext?: boolean;
+  supportsImageGeneration?: boolean;
   costTier?: 'free' | 'low' | 'medium' | 'high';
+  inputPricing?: {
+    perMillion: number;
+    cachingPerMillion?: number;
+  };
+  outputPricing?: {
+    perMillion: number;
+    thinkingPerMillion?: number;
+  };
 }> = [
   {
-    id: 'gemini-2.5-pro',
-    name: 'Gemini 2.5 Pro',
-    description: '',
+    id: 'gemini-2.5-pro-preview-06-05',
+    name: 'Gemini 2.5 Pro Preview',
+    description: 'Latest Gemini 2.5 Pro with enhanced reasoning, coding, and multimodal capabilities',
     supportsVision: true,
     supportsAudio: true,
     supportsVideo: true,
@@ -24,39 +33,110 @@ export const GEMINI_MODELS: Array<{
     supportsThinking: true,
     supportsGrounding: true,
     supportsUrlContext: true,
-    maxTokens: 2000000, // Updated context window for 2025
+    maxTokens: 1048576, // 1M input, 65K output
     costTier: 'high',
+    inputPricing: {
+      perMillion: 1.25, // ≤200k tokens
+      cachingPerMillion: 0.31
+    },
+    outputPricing: {
+      perMillion: 10.00,
+      thinkingPerMillion: 10.00 // Included in output pricing
+    }
   },
   {
-    id: 'gemini-2.5-flash',
-    name: 'Gemini 2.5 Flash',
-    description: '',
+    id: 'gemini-2.5-flash-preview-05-20',
+    name: 'Gemini 2.5 Flash Preview',
+    description: 'Fast and cost-effective with adaptive thinking capabilities',
     supportsVision: true,
     supportsAudio: true,
     supportsVideo: true,
+    supportsPdf: true,
     supportsThinking: true,
     supportsGrounding: true,
     supportsUrlContext: true,
-    maxTokens: 1000000, // Updated context window for 2025
+    maxTokens: 1048576, // 1M input, 65K output
     costTier: 'medium',
-  },
-  {
-    id: 'gemini-2.5-flash-lite',
-    name: 'Gemini 2.5 Flash-Lite',
-    description: '',
-    supportsVision: true,
-    supportsAudio: true,
-    supportsVideo: true,
-    supportsThinking: true,
-    supportsGrounding: true,
-    supportsUrlContext: true,
-    maxTokens: 8192,
-    costTier: 'low',
+    inputPricing: {
+      perMillion: 0.15, // text/image/video
+      cachingPerMillion: 0.0375
+    },
+    outputPricing: {
+      perMillion: 0.60, // non-thinking
+      thinkingPerMillion: 3.50 // thinking tokens
+    }
   },
   {
     id: 'gemini-2.0-flash',
     name: 'Gemini 2.0 Flash',
-    description: '',
+    description: 'Next-generation features with multimodal capabilities',
+    supportsVision: true,
+    supportsAudio: true,
+    supportsVideo: true,
+    supportsPdf: true,
+    supportsThinking: true,
+    supportsGrounding: true,
+    supportsUrlContext: true,
+    supportsImageGeneration: false,
+    maxTokens: 1000000,
+    costTier: 'medium',
+  },
+  {
+    id: 'gemini-2.0-flash-live-001',
+    name: 'Gemini 2.0 Flash Live',
+    description: 'Optimized for low-latency bidirectional voice and video interactions',
+    supportsVision: true,
+    supportsAudio: true,
+    supportsVideo: true,
+    supportsLive: true,
+    supportsThinking: false,
+    supportsGrounding: false,
+    supportsUrlContext: false,
+    maxTokens: 1000000,
+    costTier: 'medium',
+  },
+  {
+    id: 'gemini-2.0-flash-preview-image-generation',
+    name: 'Gemini 2.0 Flash Image Generation',
+    description: 'Specialized for conversational image generation and editing',
+    supportsVision: true,
+    supportsImageGeneration: true,
+    supportsThinking: false,
+    supportsGrounding: false,
+    supportsUrlContext: false,
+    maxTokens: 1000000,
+    costTier: 'high',
+  },
+  {
+    id: 'gemini-embedding-exp-03-07',
+    name: 'Gemini Embedding Experimental',
+    description: 'State-of-the-art text embeddings for semantic understanding',
+    supportsVision: false,
+    supportsThinking: false,
+    supportsGrounding: false,
+    supportsUrlContext: false,
+    maxTokens: 2048,
+    costTier: 'low',
+  },
+  // Legacy models (maintaining backward compatibility)
+  {
+    id: 'gemini-2.5-pro',
+    name: 'Gemini 2.5 Pro (Legacy)',
+    description: 'Legacy version - use gemini-2.5-pro-preview-06-05 instead',
+    supportsVision: true,
+    supportsAudio: true,
+    supportsVideo: true,
+    supportsPdf: true,
+    supportsThinking: true,
+    supportsGrounding: true,
+    supportsUrlContext: true,
+    maxTokens: 2000000,
+    costTier: 'high',
+  },
+  {
+    id: 'gemini-2.5-flash',
+    name: 'Gemini 2.5 Flash (Legacy)',
+    description: 'Legacy version - use gemini-2.5-flash-preview-05-20 instead',
     supportsVision: true,
     supportsAudio: true,
     supportsVideo: true,
@@ -66,49 +146,42 @@ export const GEMINI_MODELS: Array<{
     maxTokens: 1000000,
     costTier: 'medium',
   },
-  {
-    id: 'gemma-3-27b-it',
-    name: 'Gemma 3 27B IT',
-    description: '',
-    supportsVision: false,
-    supportsAudio: false,
-    supportsVideo: false,
-    supportsThinking: false,
-    supportsGrounding: false,
-    supportsUrlContext: false,
-    maxTokens: 8192,
-    costTier: 'low',
-  },
 ];
 
-export const DEFAULT_MODEL = 'gemini-2.5-flash';
+export const DEFAULT_MODEL = 'gemini-2.5-flash-preview-05-20';
 
 // Model fallback chain for intelligent switching when quota is exhausted
+// Updated with latest 2025 model hierarchy
 export const MODEL_FALLBACK_CHAINS: Record<string, string[]> = {
-  'gemini-2.5-pro': [
-    'gemini-2.5-flash', // Same generation, faster and cheaper
-    'gemini-2.5-flash-lite', // Even more cost-effective
-    'gemma-3-27b-it', // Open-source fallback
+  'gemini-2.5-pro-preview-06-05': [
+    'gemini-2.5-flash-preview-05-20', // Same generation, faster and cheaper
+    'gemini-2.0-flash', // Fallback to stable 2.0
+    'gemini-2.5-pro', // Legacy pro version
   ],
-  'gemini-2.5-flash': [
-    'gemini-2.5-flash-lite', // More cost-effective alternative
-    'gemma-3-27b-it', // Open-source alternative
-    'gemini-2.5-pro', // Upgrade if lite doesn't work
-  ],
-  'gemini-2.5-flash-lite': [
-    'gemma-3-27b-it', // Similar cost tier, different capabilities
-    'gemini-2.5-flash', // Upgrade to better performance
-    'gemini-2.5-pro', // Premium fallback
+  'gemini-2.5-flash-preview-05-20': [
+    'gemini-2.0-flash', // Stable alternative
+    'gemini-2.5-flash', // Legacy flash version
+    'gemini-2.5-pro-preview-06-05', // Upgrade to pro if needed
   ],
   'gemini-2.0-flash': [
-    'gemini-2.5-flash', // Alternative with similar capabilities
-    'gemma-3-27b-it', // Open-source alternative
-    'gemini-2.5-pro', // Premium alternative
+    'gemini-2.5-flash-preview-05-20', // Upgrade to latest flash
+    'gemini-2.5-flash', // Legacy flash alternative
+    'gemini-2.5-pro-preview-06-05', // Premium alternative
   ],
-  'gemma-3-27b-it': [
-    'gemini-2.5-flash-lite', // Similar cost tier
-    'gemini-2.5-flash', // Better multimodal support
-    'gemini-2.0-flash', // Advanced features
+  'gemini-2.0-flash-live-001': [
+    'gemini-2.0-flash', // Similar generation without live features
+    'gemini-2.5-flash-preview-05-20', // Latest general purpose model
+  ],
+  // Legacy model fallbacks
+  'gemini-2.5-pro': [
+    'gemini-2.5-pro-preview-06-05', // Upgrade to latest
+    'gemini-2.5-flash-preview-05-20', // Step down to flash
+    'gemini-2.0-flash', // Stable alternative
+  ],
+  'gemini-2.5-flash': [
+    'gemini-2.5-flash-preview-05-20', // Upgrade to latest
+    'gemini-2.0-flash', // Alternative option
+    'gemini-2.5-pro-preview-06-05', // Upgrade if needed
   ],
 };
 
