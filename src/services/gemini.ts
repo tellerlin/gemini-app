@@ -324,7 +324,7 @@ export class GeminiService {
     let baseUrl: string;
     
     // Check for custom proxy URL in environment
-    const customProxyUrl = import.meta.env.VITE_GEMINI_PROXY_URL || process.env.VITE_GEMINI_PROXY_URL;
+    const customProxyUrl = import.meta.env.VITE_GEMINI_PROXY_URL;
     
     if (customProxyUrl) {
       // Use custom proxy URL (for production deployments)

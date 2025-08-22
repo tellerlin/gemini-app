@@ -81,7 +81,7 @@ export const GEMINI_MODELS: Array<{
   },
 ];
 
-export const DEFAULT_MODEL = 'gemini-2.0-flash';
+export const DEFAULT_MODEL = 'gemini-2.5-flash';
 
 // Model fallback chain for intelligent switching when quota is exhausted
 export const MODEL_FALLBACK_CHAINS: Record<string, string[]> = {
