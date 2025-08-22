@@ -265,34 +265,20 @@ export const GEMINI_MODELS: Array<{
   }
 ];
 
-export const DEFAULT_MODEL = 'gemini-2.5-flash-preview-05-20';
+export const DEFAULT_MODEL = 'gemini-2.5-flash'; // Use stable GA model instead of preview
 
 // Intelligent model fallback chains based on actual availability and performance
 export const MODEL_FALLBACK_CHAINS: Record<string, string[]> = {
-  // Primary model fallbacks
-  'gemini-2.5-pro-preview-06-05': [
-    'gemini-2.5-flash-preview-05-20', // Same generation but faster
-    'gemini-2.5-pro', // Stable version
-    'gemini-2.5-flash', // Downgrade but still has thinking
-    'gemini-2.0-flash-001', // Downgrade to 2.0 GA
-  ],
-  'gemini-2.5-flash-preview-05-20': [
-    'gemini-2.5-flash', // Stable version
-    'gemini-2.0-flash-001', // Downgrade to GA version
-    'gemini-2.0-flash', // 2.0 preview version
-    'gemini-1.5-flash-002', // Last resort to 1.5
+  // Primary model fallbacks - Updated to prefer stable models
+  'gemini-2.5-pro': [
+    'gemini-2.5-flash', // Stable flash version
+    'gemini-2.0-flash-001', // GA version
+    'gemini-2.5-flash-lite', // Cost-effective option
   ],
   'gemini-2.5-flash': [
-    'gemini-2.5-flash-preview-05-20', // Upgrade to preview
-    'gemini-2.0-flash-001', // Downgrade to 2.0 GA
-    'gemini-2.5-flash-lite', // Downgrade to lite version
-    'gemini-1.5-flash-002', // Last resort backup
-  ],
-  'gemini-2.5-pro': [
-    'gemini-2.5-pro-preview-06-05', // Upgrade to preview
-    'gemini-2.5-flash-preview-05-20', // Downgrade to flash
-    'gemini-2.5-flash', // Stable flash
-    'gemini-2.0-flash-001', // Final backup
+    'gemini-2.0-flash-001', // Downgrade to stable 2.0
+    'gemini-2.5-flash-lite', // Lite version
+    'gemini-1.5-flash-002', // Legacy backup
   ],
   'gemini-2.5-flash-lite': [
     'gemini-2.5-flash', // Upgrade to full version
@@ -351,11 +337,11 @@ export const RECOMMENDED_MODELS = {
     'gemini-2.5-flash-preview-05-20'
   ],
   
-  // Balanced performance and cost
+  // Balanced performance and cost - Updated to stable models
   balanced: [
-    'gemini-2.5-flash-preview-05-20',
     'gemini-2.5-flash',
-    'gemini-2.0-flash-001'
+    'gemini-2.0-flash-001',
+    'gemini-1.5-flash-002'
   ],
   
   // Cost priority

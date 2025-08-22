@@ -515,48 +515,49 @@ export class GeminiService {
   }
 
   /**
-   * Create a new GoogleGenAI instance with the current API key
+   * Validate and sanitize model ID to ensure compatibility
    * @private
    */
+  private validateModel(modelId: string): string {
+    // Map deprecated models to current versions
+    const modelMappings: Record<string, string> = {
+      'gemini-2.5-flash-preview-05-20': 'gemini-2.5-flash',
+      'gemini-2.5-pro-preview-06-05': 'gemini-2.5-pro',
+      'gemini-2.0-flash-experimental': 'gemini-2.0-flash-001',
+      'gemini-1.5-pro-latest': 'gemini-1.5-pro-002',
+      'gemini-1.5-flash-latest': 'gemini-1.5-flash-002'
+    };
+    
+    // Return mapped model or original if no mapping exists
+    const validatedModel = modelMappings[modelId] || modelId;
+    
+    if (modelMappings[modelId]) {
+      console.log(`🔄 Model ${modelId} mapped to ${validatedModel} for compatibility`);
+    }
+    
+    return validatedModel;
+  }
   private createGenAI(): GoogleGenAI {
     const apiKey = this.getCurrentApiKey();
     
-    // Determine the appropriate base URL based on environment
-    let baseUrl: string | undefined;
+    // Simplified configuration following official SDK patterns
+    const config: any = { apiKey };
     
     // Check environment variable for API mode
     const apiMode = import.meta.env.VITE_GEMINI_API_MODE;
     const customProxyUrl = import.meta.env.VITE_GEMINI_PROXY_URL;
     
-    if (apiMode === 'direct') {
-      // Force direct connection to Google API
-      baseUrl = undefined; // Use default Google API endpoint
-      console.log(`🌐 Using direct connection to Google Gemini API`);
-    } else if (apiMode === 'proxy' || customProxyUrl) {
-      // Force proxy mode with custom URL or default proxy path
-      baseUrl = customProxyUrl || `${window.location.origin}/api/gemini`;
+    // Only configure baseUrl if explicitly needed
+    if (apiMode === 'proxy' || customProxyUrl) {
+      const baseUrl = customProxyUrl || `${window.location.origin}/api/gemini`;
+      config.baseUrl = baseUrl; // Use baseUrl directly instead of httpOptions
       console.log(`🌐 Using proxy connection: ${baseUrl}`);
     } else {
-      // Auto-detect mode based on environment (default behavior)
-      if (window.location.hostname === 'localhost' || 
-          window.location.hostname === '127.0.0.1' || 
-          window.location.hostname === '0.0.0.0') {
-        // Local development - use direct connection by default
-        baseUrl = undefined;
-        console.log(`🌐 Auto-detected local development - using direct connection to Google Gemini API`);
-      } else {
-        // Production deployment - use proxy by default (for Cloudflare, Vercel, etc.)
-        baseUrl = `${window.location.origin}/api/gemini`;
-        console.log(`🌐 Auto-detected production deployment - using proxy: ${baseUrl}`);
-      }
+      // Use default Google API endpoint (recommended by official docs)
+      console.log(`🌐 Using direct connection to Google Gemini API`);
     }
     
-    const genAIConfig: any = { apiKey };
-    if (baseUrl) {
-      genAIConfig.httpOptions = { baseUrl };
-    }
-    
-    return new GoogleGenAI(genAIConfig);
+    return new GoogleGenAI(config);
   }
 
   /**
@@ -580,7 +581,7 @@ export class GeminiService {
    */
   async* generateStreamingResponseWithModelSwitch(
     messages: Message[],
-    preferredModel: string = 'gemini-2.5-flash-preview-05-20',
+    preferredModel: string = 'gemini-2.5-flash',
     config?: GeminiGenerationConfig
   ): AsyncGenerator<{ 
     text?: string; 
@@ -963,7 +964,17 @@ export class GeminiService {
       const response = await ai.models.generateContentStream({
         model,
         contents: [{ role: 'user', parts: [{ text: lastMessage.content }] }],
-        config: requestConfig
+        // Optimized generation configuration following official patterns
+        generationConfig: {
+          temperature: requestConfig.temperature,
+          topK: requestConfig.topK,
+          topP: requestConfig.topP,
+          maxOutputTokens: requestConfig.maxOutputTokens,
+          responseMimeType: requestConfig.responseMimeType
+        },
+        ...(requestConfig.tools && { tools: requestConfig.tools }),
+        ...(requestConfig.systemInstruction && { systemInstruction: requestConfig.systemInstruction }),
+        ...(requestConfig.thinkingConfig && { thinkingConfig: requestConfig.thinkingConfig })
       });
 
       let accumulatedText = '';
@@ -1012,7 +1023,17 @@ export class GeminiService {
       const chat = ai.chats.create({
         model,
         history,
-        config: requestConfig
+        // Optimized generation configuration following official patterns
+        generationConfig: {
+          temperature: requestConfig.temperature,
+          topK: requestConfig.topK,
+          topP: requestConfig.topP,
+          maxOutputTokens: requestConfig.maxOutputTokens,
+          responseMimeType: requestConfig.responseMimeType
+        },
+        ...(requestConfig.tools && { tools: requestConfig.tools }),
+        ...(requestConfig.systemInstruction && { systemInstruction: requestConfig.systemInstruction }),
+        ...(requestConfig.thinkingConfig && { thinkingConfig: requestConfig.thinkingConfig })
       });
 
       if (!lastMessage.content || lastMessage.content.trim() === '') {
@@ -1363,7 +1384,17 @@ export class GeminiService {
       const response = await ai.models.generateContentStream({
         model,
         contents: [{ role: 'user', parts: [{ text: lastMessage.content }] }],
-        config: requestConfig
+        // Optimized generation configuration following official patterns
+        generationConfig: {
+          temperature: requestConfig.temperature,
+          topK: requestConfig.topK,
+          topP: requestConfig.topP,
+          maxOutputTokens: requestConfig.maxOutputTokens,
+          responseMimeType: requestConfig.responseMimeType
+        },
+        ...(requestConfig.tools && { tools: requestConfig.tools }),
+        ...(requestConfig.systemInstruction && { systemInstruction: requestConfig.systemInstruction }),
+        ...(requestConfig.thinkingConfig && { thinkingConfig: requestConfig.thinkingConfig })
       });
 
       for await (const chunk of response) {
@@ -1382,14 +1413,27 @@ export class GeminiService {
       console.log(`📚 Chat with ${history.length} history messages (SDK pattern)`);
       
       // Use SDK's built-in chat creation pattern from examples
-      const chat = ai.chats.create({ model, history, config: requestConfig });
+      // Use simplified chat creation pattern from official docs
+      const chat = ai.chats.create({
+        model,
+        history,
+        generationConfig: {
+          temperature: requestConfig.temperature,
+          topK: requestConfig.topK,
+          topP: requestConfig.topP,
+          maxOutputTokens: requestConfig.maxOutputTokens
+        },
+        ...(requestConfig.systemInstruction && { systemInstruction: requestConfig.systemInstruction }),
+        ...(requestConfig.thinkingConfig && { thinkingConfig: requestConfig.thinkingConfig })
+      });
 
       if (!lastMessage.content?.trim()) {
         throw new Error('Message content cannot be empty');
       }
       
       // Simplified message sending pattern from examples
-      const response = await chat.sendMessageStream({ message: lastMessage.content.trim() });
+      // Simplified message sending following official patterns
+      const response = await chat.sendMessageStream(lastMessage.content.trim());
       
       for await (const chunk of response) {
         if (this.currentAbortController?.signal.aborted) break;
@@ -1408,7 +1452,7 @@ export class GeminiService {
    */
   async generateResponseWithModelSwitch(
     messages: Message[],
-    preferredModel: string = 'gemini-2.5-flash-preview-05-20',
+    preferredModel: string = 'gemini-2.5-flash',
     config?: GeminiGenerationConfig
   ): Promise<{
     response: string | GeminiResponse;
@@ -1698,23 +1742,25 @@ export class GeminiService {
     }
 
     console.log(`🔧 Generating content with ${parts.length} parts`);
+    
+    // Optimized content generation following official patterns
     const response = await ai.models.generateContent({
       model,
       contents: [{ role: 'user', parts }],
-      config: {
+      generationConfig: {
         temperature: 0.7,
         topK: 40,
         topP: 0.95,
-        maxOutputTokens: 1000000,
-        // New 2.5 model thinking configuration
-        ...(model.includes('2.5') && {
-          thinkingConfig: {
-            thinkingBudget: 10000, // Default thinking enabled, configurable
-          }
-        }),
-        // System instruction support
-        systemInstruction: "You are a helpful assistant. Please provide accurate and detailed responses.",
-      }
+        maxOutputTokens: 1000000
+      },
+      // System instruction support
+      systemInstruction: "You are a helpful assistant. Please provide accurate and detailed responses.",
+      // New 2.5 model thinking configuration
+      ...(model.includes('2.5') && {
+        thinkingConfig: {
+          thinkingBudget: 10000, // Default thinking enabled, configurable
+        }
+      })
     });
     
     if (!response.text) {
@@ -1755,7 +1801,17 @@ export class GeminiService {
       const response = await ai.models.generateContent({
         model,
         contents: [{ role: 'user', parts: [{ text: lastMessage.content }] }],
-        config: requestConfig
+        // Optimized generation configuration following official patterns
+        generationConfig: {
+          temperature: requestConfig.temperature,
+          topK: requestConfig.topK,
+          topP: requestConfig.topP,
+          maxOutputTokens: requestConfig.maxOutputTokens,
+          responseMimeType: requestConfig.responseMimeType
+        },
+        ...(requestConfig.tools && { tools: requestConfig.tools }),
+        ...(requestConfig.systemInstruction && { systemInstruction: requestConfig.systemInstruction }),
+        ...(requestConfig.thinkingConfig && { thinkingConfig: requestConfig.thinkingConfig })
       });
       return response.text;
     } else {
@@ -1770,14 +1826,27 @@ export class GeminiService {
       console.log(`📚 Chat history: ${history.length} messages`);
       
       // SDK built-in chat creation (pattern from examples)
-      const chat = ai.chats.create({ model, history, config: requestConfig });
+      // Use simplified chat creation pattern from official docs
+      const chat = ai.chats.create({
+        model,
+        history,
+        generationConfig: {
+          temperature: requestConfig.temperature,
+          topK: requestConfig.topK,
+          topP: requestConfig.topP,
+          maxOutputTokens: requestConfig.maxOutputTokens
+        },
+        ...(requestConfig.systemInstruction && { systemInstruction: requestConfig.systemInstruction }),
+        ...(requestConfig.thinkingConfig && { thinkingConfig: requestConfig.thinkingConfig })
+      });
       
       if (!lastMessage.content?.trim()) {
         throw new Error('Message content cannot be empty');
       }
       
       // Simplified message sending (pattern from examples)
-      const response = await chat.sendMessage({ message: lastMessage.content.trim() });
+      // Simplified message sending following official patterns
+      const response = await chat.sendMessage(lastMessage.content.trim());
       return response.text;
     }
   }
@@ -2592,17 +2661,17 @@ export class GeminiService {
   }
 
   /**
-   * Validate a single API key with a simple test request
+   * Validate API key with simple test following official patterns
    * @private
    */
   private async validateSingleApiKey(apiKey: string): Promise<boolean> {
     try {
       const ai = new GoogleGenAI({ apiKey });
       const response = await ai.models.generateContent({
-        model: 'gemini-2.0-flash',
+        model: 'gemini-2.5-flash',
         contents: [{ role: 'user', parts: [{ text: 'Test validation' }] }],
         generationConfig: {
-          maxOutputTokens: 10,
+          maxOutputTokens: 10
         }
       });
       
