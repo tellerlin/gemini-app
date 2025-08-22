@@ -134,9 +134,9 @@ export function Sidebar({
             </Button>
           </div>
 
-          {/* Conversations List with enhanced design and reduced padding */}
-          <div className="flex-1 overflow-y-auto px-2">
-            <div className="space-y-2">
+          {/* Conversations List with enhanced design and minimal padding */}
+          <div className="flex-1 overflow-y-auto px-1">
+            <div className="space-y-1">
               {conversations.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
                   <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -158,15 +158,15 @@ export function Sidebar({
                     )}
                     onClick={() => onSelectConversation(conversation.id)}
                   >
-                    {/* 最小化的左侧图标 */}
-                    <div className="flex items-center py-2 pl-2">
+                    {/* 极小的左侧图标 - 减少所有padding */}
+                    <div className="flex items-center py-1 pl-1.5">
                       <div className="w-3 h-3 rounded bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center flex-shrink-0">
                         <MessageCircle className="h-2 w-2 text-white" />
                       </div>
                     </div>
                     
-                    {/* 最大化的文字区域 */}
-                    <div className="flex-1 min-w-0 py-2 px-2">
+                    {/* 最大化的文字区域 - 减少padding */}
+                    <div className="flex-1 min-w-0 py-1 px-1">
                       <p className="text-xs sm:text-sm font-medium text-gray-900 truncate leading-tight mb-0.5">
                         {conversation.title}
                       </p>
@@ -174,8 +174,8 @@ export function Sidebar({
                         {formatDate(conversation.updatedAt)}
                       </p>
                     </div>
-                    {/* 极度紧凑的操作按钮区域 */}
-                    <div className="flex items-center opacity-0 group-hover:opacity-100 transition-smooth py-2 pr-1">
+                    {/* 极小的操作按钮区域 - 减少所有padding */}
+                    <div className="flex items-center opacity-0 group-hover:opacity-100 transition-smooth py-1 pr-1">
                       <div className="relative export-dropdown">
                         <button
                           onClick={(e) => {
@@ -184,24 +184,24 @@ export function Sidebar({
                               exportDropdownOpen === conversation.id ? null : conversation.id
                             );
                           }}
-                          className="w-5 h-5 text-gray-400 hover:text-blue-500 transition-smooth rounded flex items-center justify-center hover:bg-white/60"
+                          className="w-4 h-4 text-gray-400 hover:text-blue-500 transition-smooth rounded flex items-center justify-center hover:bg-white/60"
                           title="Export conversation"
                         >
-                          {/* 自定义下载图标 - 无留白 */}
-                          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" className="text-current">
-                            <path d="M5 1v6M2 5l3 3 3-3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                          {/* 自定义下载图标 - 更小尺寸 */}
+                          <svg width="8" height="8" viewBox="0 0 8 8" fill="none" className="text-current">
+                            <path d="M4 0.5v5M1.5 3.5l2.5 2.5 2.5-2.5" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/>
                           </svg>
                         </button>
                         
                         {exportDropdownOpen === conversation.id && (
-                          <div className="absolute right-0 mt-1 w-16 bg-white/95 backdrop-blur-modern border border-white/40 rounded-lg shadow-modern z-50">
+                          <div className="absolute right-0 mt-1 w-14 bg-white/95 backdrop-blur-modern border border-white/40 rounded-lg shadow-modern z-50">
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 onExportConversation(conversation.id, 'txt');
                                 setExportDropdownOpen(null);
                               }}
-                              className="w-full px-2 py-1 text-left text-xs text-gray-700 hover:bg-white/80 first:rounded-t-lg transition-smooth"
+                              className="w-full px-1.5 py-1 text-left text-xs text-gray-700 hover:bg-white/80 first:rounded-t-lg transition-smooth"
                             >
                               TXT
                             </button>
@@ -211,7 +211,7 @@ export function Sidebar({
                                 onExportConversation(conversation.id, 'html');
                                 setExportDropdownOpen(null);
                               }}
-                              className="w-full px-2 py-1 text-left text-xs text-gray-700 hover:bg-white/80 transition-smooth"
+                              className="w-full px-1.5 py-1 text-left text-xs text-gray-700 hover:bg-white/80 transition-smooth"
                             >
                               HTML
                             </button>
@@ -221,7 +221,7 @@ export function Sidebar({
                                 onExportConversation(conversation.id, 'pdf');
                                 setExportDropdownOpen(null);
                               }}
-                              className="w-full px-2 py-1 text-left text-xs text-gray-700 hover:bg-white/80 last:rounded-b-lg transition-smooth"
+                              className="w-full px-1.5 py-1 text-left text-xs text-gray-700 hover:bg-white/80 last:rounded-b-lg transition-smooth"
                             >
                               PDF
                             </button>
@@ -234,12 +234,12 @@ export function Sidebar({
                           e.stopPropagation();
                           onDeleteConversation(conversation.id);
                         }}
-                        className="w-5 h-5 text-gray-400 hover:text-red-500 transition-smooth rounded flex items-center justify-center hover:bg-red-50/80 ml-1"
+                        className="w-4 h-4 text-gray-400 hover:text-red-500 transition-smooth rounded flex items-center justify-center hover:bg-red-50/80 ml-0.5"
                         title="Delete conversation"
                       >
-                        {/* 自定义删除图标 - 无留白 */}
-                        <svg width="8" height="8" viewBox="0 0 8 8" fill="none" className="text-current">
-                          <path d="M1 1l6 6M7 1l-6 6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                        {/* 自定义删除图标 - 更小尺寸 */}
+                        <svg width="6" height="6" viewBox="0 0 6 6" fill="none" className="text-current">
+                          <path d="M0.5 0.5l5 5M5.5 0.5l-5 5" stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
                         </svg>
                       </button>
                     </div>
