@@ -199,70 +199,6 @@ export const GEMINI_MODELS: Array<{
     }
   },
 
-  // Gemini 1.5 Series - Backup options with proven stability
-  {
-    id: 'gemini-1.5-pro-002',
-    name: 'Gemini 1.5 Pro 002',
-    description: 'Stable Gemini 1.5 Pro with 2M token context (Sept 2024)',
-    supportsVision: true,
-    supportsAudio: false,
-    supportsVideo: false,
-    supportsPdf: true,
-    supportsThinking: false,
-    supportsGrounding: false,
-    supportsUrlContext: false,
-    maxTokens: 2000000, // 2M tokens
-    costTier: 'high',
-    inputPricing: {
-      perMillion: 1.25,
-      cachingPerMillion: 0.3125
-    },
-    outputPricing: {
-      perMillion: 5.00
-    }
-  },
-  {
-    id: 'gemini-1.5-flash-002',
-    name: 'Gemini 1.5 Flash 002',
-    description: 'Stable Gemini 1.5 Flash with 1M token context (Sept 2024)',
-    supportsVision: true,
-    supportsAudio: false,
-    supportsVideo: false,
-    supportsPdf: true,
-    supportsThinking: false,
-    supportsGrounding: false,
-    supportsUrlContext: false,
-    maxTokens: 1000000,
-    costTier: 'medium',
-    inputPricing: {
-      perMillion: 0.15,
-      cachingPerMillion: 0.0375
-    },
-    outputPricing: {
-      perMillion: 0.60
-    }
-  },
-  {
-    id: 'gemini-1.5-flash-8b-001',
-    name: 'Gemini 1.5 Flash-8B 001',
-    description: 'Smallest and most cost effective Flash model (Oct 2024)',
-    supportsVision: true,
-    supportsAudio: false,
-    supportsVideo: false,
-    supportsPdf: true,
-    supportsThinking: false,
-    supportsGrounding: false,
-    supportsUrlContext: false,
-    maxTokens: 1000000,
-    costTier: 'low',
-    inputPricing: {
-      perMillion: 0.0375,
-      cachingPerMillion: 0.009375
-    },
-    outputPricing: {
-      perMillion: 0.15
-    }
-  }
 ];
 
 export const DEFAULT_MODEL = 'gemini-2.5-flash'; // Use stable GA model instead of preview
@@ -278,53 +214,29 @@ export const MODEL_FALLBACK_CHAINS: Record<string, string[]> = {
   'gemini-2.5-flash': [
     'gemini-2.0-flash-001', // Downgrade to stable 2.0
     'gemini-2.5-flash-lite', // Lite version
-    'gemini-1.5-flash-002', // Legacy backup
+    'gemini-2.0-flash-lite-001', // Stable lite version
   ],
   'gemini-2.5-flash-lite': [
     'gemini-2.5-flash', // Upgrade to full version
     'gemini-2.0-flash-lite-001', // Same tier 2.0 version
-    'gemini-1.5-flash-8b-001', // Small model backup
-    'gemini-1.5-flash-002', // Final backup
+    'gemini-2.0-flash-001', // Stable 2.0 backup
   ],
   
   // 2.0 Series fallbacks
   'gemini-2.0-flash-001': [
     'gemini-2.0-flash', // Preview version
     'gemini-2.5-flash-preview-05-20', // Upgrade to 2.5
-    'gemini-1.5-flash-002', // Downgrade to 1.5 stable
-    'gemini-1.5-flash-8b-001', // Smallest model
+    'gemini-2.0-flash-lite-001', // Downgrade to 2.0 lite
   ],
   'gemini-2.0-flash': [
     'gemini-2.0-flash-001', // GA version
     'gemini-2.5-flash-preview-05-20', // Upgrade to 2.5
-    'gemini-1.5-flash-002', // Downgrade backup
-    'gemini-2.0-flash-lite-001', // Lite version
+    'gemini-2.0-flash-lite-001', // Downgrade backup
   ],
   'gemini-2.0-flash-lite-001': [
     'gemini-2.0-flash-001', // Upgrade to full version
     'gemini-2.5-flash-lite', // Upgrade to 2.5 lite
-    'gemini-1.5-flash-8b-001', // Same tier small model
-    'gemini-1.5-flash-002', // Final backup
-  ],
-  
-  // 1.5 Series fallbacks
-  'gemini-1.5-pro-002': [
-    'gemini-2.5-pro-preview-06-05', // Upgrade to 2.5
-    'gemini-1.5-flash-002', // Same generation flash
-    'gemini-2.0-flash-001', // Upgrade to 2.0
-    'gemini-1.5-flash-8b-001', // Small model backup
-  ],
-  'gemini-1.5-flash-002': [
-    'gemini-2.5-flash-preview-05-20', // Upgrade to 2.5
-    'gemini-2.0-flash-001', // Upgrade to 2.0
-    'gemini-1.5-flash-8b-001', // Small model version
-    'gemini-1.5-pro-002', // Upgrade to pro
-  ],
-  'gemini-1.5-flash-8b-001': [
-    'gemini-1.5-flash-002', // Upgrade to full version
-    'gemini-2.0-flash-lite-001', // Upgrade to 2.0 lite
-    'gemini-2.5-flash-lite', // Upgrade to 2.5 lite
-    'gemini-2.0-flash-001', // Final upgrade option
+    'gemini-2.0-flash-001', // Final backup
   ]
 };
 
@@ -341,22 +253,20 @@ export const RECOMMENDED_MODELS = {
   balanced: [
     'gemini-2.5-flash',
     'gemini-2.0-flash-001',
-    'gemini-1.5-flash-002'
+    'gemini-2.0-flash-lite-001'
   ],
   
   // Cost priority
   costEffective: [
     'gemini-2.5-flash-lite',
-    'gemini-2.0-flash-lite-001',
-    'gemini-1.5-flash-8b-001'
+    'gemini-2.0-flash-lite-001'
   ],
   
   // Stability priority (GA versions only)
   stable: [
     'gemini-2.5-flash',
     'gemini-2.5-pro',
-    'gemini-2.0-flash-001',
-    'gemini-1.5-flash-002'
+    'gemini-2.0-flash-001'
   ],
   
   // Thinking capability priority
@@ -417,8 +327,8 @@ export function getModelSwitchExplanation(fromModel: string, toModel: string): s
   }
   
   // Determine the reason for switching
-  const fromGeneration = fromModel.includes('2.5') ? 2.5 : fromModel.includes('2.0') ? 2.0 : 1.5;
-  const toGeneration = toModel.includes('2.5') ? 2.5 : toModel.includes('2.0') ? 2.0 : 1.5;
+  const fromGeneration = fromModel.includes('2.5') ? 2.5 : fromModel.includes('2.0') ? 2.0 : 1.0;
+  const toGeneration = toModel.includes('2.5') ? 2.5 : toModel.includes('2.0') ? 2.0 : 1.0;
   
   if (toGeneration > fromGeneration) {
     return `Upgraded from ${fromModelInfo.name} to ${toModelInfo.name} for better performance`;
