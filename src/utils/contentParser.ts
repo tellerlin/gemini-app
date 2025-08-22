@@ -14,7 +14,7 @@ export function fixMermaidSyntax(mermaidCode: string): string {
     return mermaidCache.get(mermaidCode)!;
   }
 
-  let fixed = mermaidCode.trim();
+  const fixed = mermaidCode.trim();
   
   // console.log('Fixing Mermaid syntax using official best practices, input:', fixed);
   

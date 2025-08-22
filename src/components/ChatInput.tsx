@@ -100,17 +100,18 @@ export function ChatInput({ onSendMessage, onGenerateImage, isLoading, disabled,
               type="button"
               onClick={() => setShowFileUpload(!showFileUpload)}
               className={cn(
-                'absolute right-2 top-1/2 transform -translate-y-1/2 touch-target',
+                'absolute right-2 top-1/2 transform -translate-y-1/2 touch-target mobile-interactive',
                 'text-gray-400 hover:text-blue-500 transition-smooth rounded-lg',
                 'active:scale-95 hover:bg-blue-50/60',
-                showFileUpload && 'text-blue-500 bg-blue-50/60'
+                showFileUpload && 'text-blue-500 bg-blue-50/60',
+                isMobile && 'touch-target-xl'
               )}
               title="Attach files"
             >
               {showFileUpload ? (
-                <X className="h-4 w-4" />
+                <X className={cn(isMobile ? "h-5 w-5" : "h-4 w-4")} />
               ) : (
-                <Paperclip className="h-4 w-4" />
+                <Paperclip className={cn(isMobile ? "h-5 w-5" : "h-4 w-4")} />
               )}
             </button>
           </div>
@@ -124,7 +125,10 @@ export function ChatInput({ onSendMessage, onGenerateImage, isLoading, disabled,
         </div>
 
         {/* Send and Generate Image Buttons */}
-        <div className="flex space-x-2">
+        <div className={cn(
+          "flex",
+          isMobile ? "space-x-2" : "space-x-3"
+        )}>
           {/* Generate Image Button */}
           {onGenerateImage && (
             <Button
@@ -134,12 +138,14 @@ export function ChatInput({ onSendMessage, onGenerateImage, isLoading, disabled,
               isLoading={isLoading}
               variant="outline"
               className={cn(
-                "rounded-2xl p-0 transition-all duration-200 active:scale-95 touch-manipulation",
-                isMobile ? "h-11 w-11" : "h-12 w-12"
+                "rounded-2xl p-0 transition-all duration-200 active:scale-95 touch-manipulation mobile-interactive",
+                isMobile ? "h-12 w-12 touch-target" : "h-14 w-14 hover:scale-105"
               )}
               title="Generate Image"
             >
-              <Image className="h-4 w-4" />
+              <Image className={cn(
+                isMobile ? "h-4 w-4" : "h-5 w-5"
+              )} />
             </Button>
           )}
 
@@ -149,11 +155,13 @@ export function ChatInput({ onSendMessage, onGenerateImage, isLoading, disabled,
             disabled={disabled || (!message.trim() && files.length === 0)}
             isLoading={isLoading}
             className={cn(
-              "rounded-2xl p-0 transition-all duration-200 active:scale-95 touch-manipulation",
-              isMobile ? "h-11 w-11" : "h-12 w-12"
+              "rounded-2xl p-0 transition-all duration-200 active:scale-95 touch-manipulation mobile-interactive",
+              isMobile ? "h-12 w-12 touch-target" : "h-14 w-14 hover:scale-105"
             )}
           >
-            <Send className="h-4 w-4" />
+            <Send className={cn(
+              isMobile ? "h-4 w-4" : "h-5 w-5"
+            )} />
           </Button>
         </div>
       </form>

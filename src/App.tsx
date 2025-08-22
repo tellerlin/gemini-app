@@ -132,6 +132,7 @@ function App() {
             selectedModel={selectedModel}
             onModelChange={setSelectedModel}
             isMobile={isMobile}
+            isDesktop={isDesktop}
             hasApiKey={apiKeys && apiKeys.length > 0}
           />
 
@@ -143,19 +144,20 @@ function App() {
                 variant="ghost"
                 size="sm"
                 onClick={() => setSidebarOpen(true)}
-                className="sidebar-toggle touch-target hover:bg-white/60 rounded-xl transition-smooth"
+                className="sidebar-toggle touch-target-xl hover:bg-white/60 rounded-xl transition-smooth mobile-interactive"
               >
-                <Menu className="h-5 w-5 text-gray-700" />
+                <Menu className="h-6 w-6 text-gray-700" />
               </Button>
               <div className="flex items-center space-x-2">
-                <div className="w-6 h-6 bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 rounded-md flex items-center justify-center shadow-sm">
-                  <span className="text-white font-bold text-xs">G</span>
+                <div className="w-7 h-7 bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 rounded-lg flex items-center justify-center shadow-sm">
+                  <span className="text-white font-bold text-sm">G</span>
                 </div>
                 <h1 className="text-fluid-base font-semibold gradient-text truncate">
                   {currentConversation?.title || 'New Conversation'}
                 </h1>
               </div>
-              <div className="w-10" /> {/* Spacer for centering */}
+              <div className="w-12" /> {/* Spacer for centering */}
+            </div>
             </div>
 
             {/* Chat Content with enhanced styling */}

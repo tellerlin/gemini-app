@@ -29,9 +29,9 @@ export function Button({
   };
 
   const sizeClasses = {
-    sm: 'px-4 py-2 mobile-text-sm-enhanced min-h-[44px]',
-    md: 'px-5 py-2.5 mobile-text-enhanced min-h-[48px]',
-    lg: 'px-6 py-3 text-fluid-base min-h-[52px]',
+    sm: 'px-4 py-2 mobile-text-sm-enhanced min-h-[48px]',
+    md: 'px-5 py-2.5 mobile-button-text min-h-[52px]',
+    lg: 'px-6 py-3 text-fluid-base min-h-[56px]',
   };
 
   return (
