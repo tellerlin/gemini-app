@@ -91,7 +91,7 @@ export function Sidebar({
       >
         <div className="flex flex-col h-full">
           {/* Header with enhanced styling and logo */}
-          <div className="flex items-center justify-between px-3 py-3 border-b border-white/20 bg-gradient-to-r from-white/80 to-white/60">
+          <div className="flex items-center justify-between px-3 py-2 border-b border-white/20 bg-gradient-to-r from-white/80 to-white/60">
             <div className="flex items-center space-x-2">
               <div className="w-7 h-7 bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 rounded-lg flex items-center justify-center shadow-modern">
                 <span className="text-white font-bold text-xs">G</span>
@@ -107,7 +107,7 @@ export function Sidebar({
           </div>
 
           {/* Model Selection with modern design */}
-          <div className="px-3 py-3 border-b border-white/20 bg-gradient-to-r from-blue-50/50 to-indigo-50/50">
+          <div className="px-3 py-2 border-b border-white/20 bg-gradient-to-r from-blue-50/50 to-indigo-50/50">
             <Select
               label="Model"
               value={selectedModel}
@@ -117,13 +117,10 @@ export function Sidebar({
                 label: model.name,
               }))}
             />
-            <div className="mt-2 mobile-text-sm-enhanced text-gray-600 bg-white/40 rounded-lg p-2 backdrop-blur-sm">
-              {GEMINI_MODELS.find(m => m.id === selectedModel)?.description}
-            </div>
           </div>
 
           {/* New Conversation Button with enhanced style */}
-          <div className="px-3 py-3">
+          <div className="px-3 py-2">
             <Button
               onClick={onNewConversation}
               className="w-full justify-start btn-modern bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 hover:scale-[1.02] shadow-modern"
@@ -250,40 +247,40 @@ export function Sidebar({
           </div>
 
           {/* Settings Buttons with enhanced design */}
-          <div className="px-3 py-3 border-t border-white/20 bg-gradient-to-r from-white/60 to-white/40 backdrop-blur-sm space-y-2">
+          <div className="px-3 py-2 border-t border-white/20 bg-gradient-to-r from-white/60 to-white/40 backdrop-blur-sm space-y-1">
             <Button
               onClick={onOpenSettings}
               variant="ghost"
               className={cn(
-                "w-full justify-start btn-modern hover:bg-white/60 text-sm",
+                "w-full justify-start btn-modern hover:bg-white/60 text-xs py-1.5",
                 !hasApiKey && "animate-pulse bg-gradient-to-r from-yellow-50 to-orange-50 hover:from-yellow-100 hover:to-orange-100 text-yellow-700 border border-yellow-200 shadow-modern"
               )}
             >
-              <Settings className="h-4 w-4 mr-2" />
+              <Settings className="h-3 w-3 mr-1.5" />
               API Settings
             </Button>
             <Button
               onClick={onOpenAdvancedSettings}
               variant="ghost"
-              className="w-full justify-start btn-modern hover:bg-white/60 text-sm"
+              className="w-full justify-start btn-modern hover:bg-white/60 text-xs py-1.5"
             >
-              <Sliders className="h-4 w-4 mr-2" />
+              <Sliders className="h-3 w-3 mr-1.5" />
               Advanced Settings
             </Button>
             <Button
               onClick={onOpenPerformanceMonitor}
               variant="ghost"
-              className="w-full justify-start btn-modern hover:bg-white/60 text-sm"
+              className="w-full justify-start btn-modern hover:bg-white/60 text-xs py-1.5"
             >
-              <Activity className="h-4 w-4 mr-2" />
+              <Activity className="h-3 w-3 mr-1.5" />
               Performance Monitor
             </Button>
             <Button
               onClick={() => window.open('https://github.com/tellerlin/gemini-app', '_blank')}
               variant="ghost"
-              className="w-full justify-start btn-modern text-gray-600 hover:text-gray-900 hover:bg-white/60 text-sm"
+              className="w-full justify-start btn-modern text-gray-600 hover:text-gray-900 hover:bg-white/60 text-xs py-1.5"
             >
-              <Github className="h-4 w-4 mr-2" />
+              <Github className="h-3 w-3 mr-1.5" />
               View on GitHub
             </Button>
           </div>

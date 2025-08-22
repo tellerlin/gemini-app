@@ -1794,7 +1794,7 @@ export class GeminiService {
     }
 
     if (modelId.includes('flash')) {
-      recommendations.push('Optimized for speed and cost efficiency');
+      recommendations.push('Optimized for speed');
     }
 
     if (modelId.includes('pro')) {

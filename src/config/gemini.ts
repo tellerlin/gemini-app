@@ -16,7 +16,7 @@ export const GEMINI_MODELS: Array<{
   {
     id: 'gemini-2.5-pro',
     name: 'Gemini 2.5 Pro',
-    description: 'Enhanced thinking and reasoning, multimodal understanding, advanced coding, and more - now in General Availability with thinking capability',
+    description: '',
     supportsVision: true,
     supportsAudio: true,
     supportsVideo: true,
@@ -30,7 +30,7 @@ export const GEMINI_MODELS: Array<{
   {
     id: 'gemini-2.5-flash',
     name: 'Gemini 2.5 Flash',
-    description: 'Adaptive thinking with cost efficiency - General Availability version with thinking budgets',
+    description: '',
     supportsVision: true,
     supportsAudio: true,
     supportsVideo: true,
@@ -43,7 +43,7 @@ export const GEMINI_MODELS: Array<{
   {
     id: 'gemini-2.5-flash-lite',
     name: 'Gemini 2.5 Flash-Lite',
-    description: 'Most cost-efficient model supporting high throughput and faster processing',
+    description: '',
     supportsVision: true,
     supportsAudio: true,
     supportsVideo: true,
@@ -56,7 +56,7 @@ export const GEMINI_MODELS: Array<{
   {
     id: 'gemini-2.0-flash',
     name: 'Gemini 2.0 Flash',
-    description: 'Advanced multimodal model with enhanced reasoning and performance capabilities',
+    description: '',
     supportsVision: true,
     supportsAudio: true,
     supportsVideo: true,
@@ -69,7 +69,7 @@ export const GEMINI_MODELS: Array<{
   {
     id: 'gemma-3-27b-it',
     name: 'Gemma 3 27B IT',
-    description: 'High-performance open-source model with 27 billion parameters, optimized for instruction-following and coding tasks',
+    description: '',
     supportsVision: false,
     supportsAudio: false,
     supportsVideo: false,
@@ -155,9 +155,9 @@ export const getModelSwitchExplanation = (fromModel: string, toModel: string): s
   const toTier = toModelInfo.costTier || 'medium';
   
   if (fromTier === 'high' && toTier === 'medium') {
-    return `Switched from ${fromModelInfo.name} to ${toModelInfo.name} for better cost efficiency while maintaining quality.`;
+    return `Switched from ${fromModelInfo.name} to ${toModelInfo.name}.`;
   } else if (fromTier === 'medium' && toTier === 'low') {
-    return `Switched from ${fromModelInfo.name} to ${toModelInfo.name} for maximum cost efficiency.`;
+    return `Switched from ${fromModelInfo.name} to ${toModelInfo.name}.`;
   } else if (fromTier === 'low' && toTier === 'medium') {
     return `Upgraded from ${fromModelInfo.name} to ${toModelInfo.name} for better performance and capabilities.`;
   } else if (fromTier === 'medium' && toTier === 'high') {
