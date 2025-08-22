@@ -22,10 +22,11 @@ export const GEMINI_MODELS: Array<{
     thinkingPerMillion?: number;
   };
 }> = [
+  // Gemini 2.5 Series - Latest with most advanced features
   {
     id: 'gemini-2.5-pro-preview-06-05',
     name: 'Gemini 2.5 Pro Preview',
-    description: 'Latest Gemini 2.5 Pro with enhanced reasoning, coding, and multimodal capabilities',
+    description: 'Latest Gemini 2.5 Pro with enhanced reasoning and thinking capabilities',
     supportsVision: true,
     supportsAudio: true,
     supportsVideo: true,
@@ -36,12 +37,12 @@ export const GEMINI_MODELS: Array<{
     maxTokens: 1048576, // 1M input, 65K output
     costTier: 'high',
     inputPricing: {
-      perMillion: 1.25, // ≤200k tokens
+      perMillion: 1.25,
       cachingPerMillion: 0.31
     },
     outputPricing: {
       perMillion: 10.00,
-      thinkingPerMillion: 10.00 // Included in output pricing
+      thinkingPerMillion: 10.00
     }
   },
   {
@@ -55,282 +56,467 @@ export const GEMINI_MODELS: Array<{
     supportsThinking: true,
     supportsGrounding: true,
     supportsUrlContext: true,
-    maxTokens: 1048576, // 1M input, 65K output
+    maxTokens: 1048576,
     costTier: 'medium',
     inputPricing: {
-      perMillion: 0.15, // text/image/video
+      perMillion: 0.15,
       cachingPerMillion: 0.0375
     },
     outputPricing: {
-      perMillion: 0.60, // non-thinking
-      thinkingPerMillion: 3.50 // thinking tokens
+      perMillion: 0.60,
+      thinkingPerMillion: 3.50
+    }
+  },
+  {
+    id: 'gemini-2.5-flash',
+    name: 'Gemini 2.5 Flash (Stable)',
+    description: 'Stable version of Gemini 2.5 Flash with thinking capabilities',
+    supportsVision: true,
+    supportsAudio: true,
+    supportsVideo: true,
+    supportsPdf: true,
+    supportsThinking: true,
+    supportsGrounding: true,
+    supportsUrlContext: true,
+    maxTokens: 1048576,
+    costTier: 'medium',
+    inputPricing: {
+      perMillion: 0.15,
+      cachingPerMillion: 0.0375
+    },
+    outputPricing: {
+      perMillion: 0.60,
+      thinkingPerMillion: 3.50
+    }
+  },
+  {
+    id: 'gemini-2.5-pro',
+    name: 'Gemini 2.5 Pro (Stable)',
+    description: 'Stable release of Gemini 2.5 Pro with thinking capabilities',
+    supportsVision: true,
+    supportsAudio: true,
+    supportsVideo: true,
+    supportsPdf: true,
+    supportsThinking: true,
+    supportsGrounding: true,
+    supportsUrlContext: true,
+    maxTokens: 1048576,
+    costTier: 'high',
+    inputPricing: {
+      perMillion: 1.25,
+      cachingPerMillion: 0.31
+    },
+    outputPricing: {
+      perMillion: 10.00,
+      thinkingPerMillion: 10.00
+    }
+  },
+  {
+    id: 'gemini-2.5-flash-lite',
+    name: 'Gemini 2.5 Flash-Lite (Stable)',
+    description: 'Cost-effective version of Gemini 2.5 Flash',
+    supportsVision: true,
+    supportsAudio: false,
+    supportsVideo: false,
+    supportsPdf: true,
+    supportsThinking: true,
+    supportsGrounding: true,
+    supportsUrlContext: true,
+    maxTokens: 1048576,
+    costTier: 'low',
+    inputPricing: {
+      perMillion: 0.075,
+      cachingPerMillion: 0.01875
+    },
+    outputPricing: {
+      perMillion: 0.30,
+      thinkingPerMillion: 1.75
+    }
+  },
+
+  // Gemini 2.0 Series - Mature and stable versions
+  {
+    id: 'gemini-2.0-flash-001',
+    name: 'Gemini 2.0 Flash (GA)',
+    description: 'Generally available stable version of Gemini 2.0 Flash',
+    supportsVision: true,
+    supportsAudio: false,
+    supportsVideo: false,
+    supportsPdf: true,
+    supportsThinking: false,
+    supportsGrounding: true,
+    supportsUrlContext: true,
+    maxTokens: 1048576,
+    costTier: 'medium',
+    inputPricing: {
+      perMillion: 0.15,
+      cachingPerMillion: 0.0375
+    },
+    outputPricing: {
+      perMillion: 0.60
     }
   },
   {
     id: 'gemini-2.0-flash',
     name: 'Gemini 2.0 Flash',
-    description: 'Next-generation features with multimodal capabilities',
+    description: 'Gemini 2.0 Flash with multimodal capabilities',
     supportsVision: true,
     supportsAudio: true,
     supportsVideo: true,
     supportsPdf: true,
-    supportsThinking: true,
+    supportsThinking: false,
     supportsGrounding: true,
     supportsUrlContext: true,
-    supportsImageGeneration: false,
-    maxTokens: 1000000,
+    maxTokens: 1048576,
     costTier: 'medium',
+    inputPricing: {
+      perMillion: 0.15,
+      cachingPerMillion: 0.0375
+    },
+    outputPricing: {
+      perMillion: 0.60
+    }
   },
   {
-    id: 'gemini-2.0-flash-live-001',
-    name: 'Gemini 2.0 Flash Live',
-    description: 'Optimized for low-latency bidirectional voice and video interactions',
+    id: 'gemini-2.0-flash-lite-001',
+    name: 'Gemini 2.0 Flash-Lite (GA)',
+    description: 'Stable cost-effective version of Gemini 2.0',
     supportsVision: true,
-    supportsAudio: true,
-    supportsVideo: true,
-    supportsLive: true,
+    supportsAudio: false,
+    supportsVideo: false,
+    supportsPdf: true,
     supportsThinking: false,
-    supportsGrounding: false,
-    supportsUrlContext: false,
-    maxTokens: 1000000,
-    costTier: 'medium',
-  },
-  {
-    id: 'gemini-2.0-flash-preview-image-generation',
-    name: 'Gemini 2.0 Flash Image Generation',
-    description: 'Specialized for conversational image generation and editing',
-    supportsVision: true,
-    supportsImageGeneration: true,
-    supportsThinking: false,
-    supportsGrounding: false,
-    supportsUrlContext: false,
-    maxTokens: 1000000,
-    costTier: 'high',
-  },
-  {
-    id: 'gemini-embedding-exp-03-07',
-    name: 'Gemini Embedding Experimental',
-    description: 'State-of-the-art text embeddings for semantic understanding',
-    supportsVision: false,
-    supportsThinking: false,
-    supportsGrounding: false,
-    supportsUrlContext: false,
-    maxTokens: 2048,
+    supportsGrounding: true,
+    supportsUrlContext: true,
+    maxTokens: 1048576,
     costTier: 'low',
+    inputPricing: {
+      perMillion: 0.075,
+      cachingPerMillion: 0.01875
+    },
+    outputPricing: {
+      perMillion: 0.30
+    }
   },
-  // Legacy models (maintaining backward compatibility)
+
+  // Gemini 1.5 Series - Backup options with proven stability
   {
-    id: 'gemini-2.5-pro',
-    name: 'Gemini 2.5 Pro (Legacy)',
-    description: 'Legacy version - use gemini-2.5-pro-preview-06-05 instead',
+    id: 'gemini-1.5-pro-002',
+    name: 'Gemini 1.5 Pro 002',
+    description: 'Stable Gemini 1.5 Pro with 2M token context (Sept 2024)',
     supportsVision: true,
-    supportsAudio: true,
-    supportsVideo: true,
+    supportsAudio: false,
+    supportsVideo: false,
     supportsPdf: true,
-    supportsThinking: true,
-    supportsGrounding: true,
-    supportsUrlContext: true,
-    maxTokens: 2000000,
+    supportsThinking: false,
+    supportsGrounding: false,
+    supportsUrlContext: false,
+    maxTokens: 2000000, // 2M tokens
     costTier: 'high',
+    inputPricing: {
+      perMillion: 1.25,
+      cachingPerMillion: 0.3125
+    },
+    outputPricing: {
+      perMillion: 5.00
+    }
   },
   {
-    id: 'gemini-2.5-flash',
-    name: 'Gemini 2.5 Flash (Legacy)',
-    description: 'Legacy version - use gemini-2.5-flash-preview-05-20 instead',
+    id: 'gemini-1.5-flash-002',
+    name: 'Gemini 1.5 Flash 002',
+    description: 'Stable Gemini 1.5 Flash with 1M token context (Sept 2024)',
     supportsVision: true,
-    supportsAudio: true,
-    supportsVideo: true,
-    supportsThinking: true,
-    supportsGrounding: true,
-    supportsUrlContext: true,
+    supportsAudio: false,
+    supportsVideo: false,
+    supportsPdf: true,
+    supportsThinking: false,
+    supportsGrounding: false,
+    supportsUrlContext: false,
     maxTokens: 1000000,
     costTier: 'medium',
+    inputPricing: {
+      perMillion: 0.15,
+      cachingPerMillion: 0.0375
+    },
+    outputPricing: {
+      perMillion: 0.60
+    }
   },
+  {
+    id: 'gemini-1.5-flash-8b-001',
+    name: 'Gemini 1.5 Flash-8B 001',
+    description: 'Smallest and most cost effective Flash model (Oct 2024)',
+    supportsVision: true,
+    supportsAudio: false,
+    supportsVideo: false,
+    supportsPdf: true,
+    supportsThinking: false,
+    supportsGrounding: false,
+    supportsUrlContext: false,
+    maxTokens: 1000000,
+    costTier: 'low',
+    inputPricing: {
+      perMillion: 0.0375,
+      cachingPerMillion: 0.009375
+    },
+    outputPricing: {
+      perMillion: 0.15
+    }
+  }
 ];
 
 export const DEFAULT_MODEL = 'gemini-2.5-flash-preview-05-20';
 
-// Model fallback chain for intelligent switching when quota is exhausted
-// Updated with latest 2025 model hierarchy
+// Intelligent model fallback chains based on actual availability and performance
 export const MODEL_FALLBACK_CHAINS: Record<string, string[]> = {
+  // Primary model fallbacks
   'gemini-2.5-pro-preview-06-05': [
-    'gemini-2.5-flash-preview-05-20', // Same generation, faster and cheaper
-    'gemini-2.0-flash', // Fallback to stable 2.0
-    'gemini-2.5-pro', // Legacy pro version
+    'gemini-2.5-flash-preview-05-20', // Same generation but faster
+    'gemini-2.5-pro', // Stable version
+    'gemini-2.5-flash', // Downgrade but still has thinking
+    'gemini-2.0-flash-001', // Downgrade to 2.0 GA
   ],
   'gemini-2.5-flash-preview-05-20': [
-    'gemini-2.0-flash', // Stable alternative
-    'gemini-2.5-flash', // Legacy flash version
-    'gemini-2.5-pro-preview-06-05', // Upgrade to pro if needed
-  ],
-  'gemini-2.0-flash': [
-    'gemini-2.5-flash-preview-05-20', // Upgrade to latest flash
-    'gemini-2.5-flash', // Legacy flash alternative
-    'gemini-2.5-pro-preview-06-05', // Premium alternative
-  ],
-  'gemini-2.0-flash-live-001': [
-    'gemini-2.0-flash', // Similar generation without live features
-    'gemini-2.5-flash-preview-05-20', // Latest general purpose model
-  ],
-  // Legacy model fallbacks
-  'gemini-2.5-pro': [
-    'gemini-2.5-pro-preview-06-05', // Upgrade to latest
-    'gemini-2.5-flash-preview-05-20', // Step down to flash
-    'gemini-2.0-flash', // Stable alternative
+    'gemini-2.5-flash', // Stable version
+    'gemini-2.0-flash-001', // Downgrade to GA version
+    'gemini-2.0-flash', // 2.0 preview version
+    'gemini-1.5-flash-002', // Last resort to 1.5
   ],
   'gemini-2.5-flash': [
-    'gemini-2.5-flash-preview-05-20', // Upgrade to latest
-    'gemini-2.0-flash', // Alternative option
-    'gemini-2.5-pro-preview-06-05', // Upgrade if needed
+    'gemini-2.5-flash-preview-05-20', // Upgrade to preview
+    'gemini-2.0-flash-001', // Downgrade to 2.0 GA
+    'gemini-2.5-flash-lite', // Downgrade to lite version
+    'gemini-1.5-flash-002', // Last resort backup
   ],
-};
-
-// Model capability helper
-export const getModelCapabilities = (modelId: string) => {
-  const model = GEMINI_MODELS.find(m => m.id === modelId);
-  if (!model) {
-    return {
-      supportsThinking: false,
-      supportsGrounding: false,
-      supportsUrlContext: false,
-      supportsImageGeneration: false,
-      maxContextTokens: 32768,
-    };
-  }
+  'gemini-2.5-pro': [
+    'gemini-2.5-pro-preview-06-05', // Upgrade to preview
+    'gemini-2.5-flash-preview-05-20', // Downgrade to flash
+    'gemini-2.5-flash', // Stable flash
+    'gemini-2.0-flash-001', // Final backup
+  ],
+  'gemini-2.5-flash-lite': [
+    'gemini-2.5-flash', // Upgrade to full version
+    'gemini-2.0-flash-lite-001', // Same tier 2.0 version
+    'gemini-1.5-flash-8b-001', // Small model backup
+    'gemini-1.5-flash-002', // Final backup
+  ],
   
-  return {
-    supportsThinking: model.supportsThinking || false,
-    supportsGrounding: model.supportsGrounding || false,
-    supportsUrlContext: model.supportsUrlContext || false,
-    maxContextTokens: model.maxTokens || 32768,
-  };
+  // 2.0 Series fallbacks
+  'gemini-2.0-flash-001': [
+    'gemini-2.0-flash', // Preview version
+    'gemini-2.5-flash-preview-05-20', // Upgrade to 2.5
+    'gemini-1.5-flash-002', // Downgrade to 1.5 stable
+    'gemini-1.5-flash-8b-001', // Smallest model
+  ],
+  'gemini-2.0-flash': [
+    'gemini-2.0-flash-001', // GA version
+    'gemini-2.5-flash-preview-05-20', // Upgrade to 2.5
+    'gemini-1.5-flash-002', // Downgrade backup
+    'gemini-2.0-flash-lite-001', // Lite version
+  ],
+  'gemini-2.0-flash-lite-001': [
+    'gemini-2.0-flash-001', // Upgrade to full version
+    'gemini-2.5-flash-lite', // Upgrade to 2.5 lite
+    'gemini-1.5-flash-8b-001', // Same tier small model
+    'gemini-1.5-flash-002', // Final backup
+  ],
+  
+  // 1.5 Series fallbacks
+  'gemini-1.5-pro-002': [
+    'gemini-2.5-pro-preview-06-05', // Upgrade to 2.5
+    'gemini-1.5-flash-002', // Same generation flash
+    'gemini-2.0-flash-001', // Upgrade to 2.0
+    'gemini-1.5-flash-8b-001', // Small model backup
+  ],
+  'gemini-1.5-flash-002': [
+    'gemini-2.5-flash-preview-05-20', // Upgrade to 2.5
+    'gemini-2.0-flash-001', // Upgrade to 2.0
+    'gemini-1.5-flash-8b-001', // Small model version
+    'gemini-1.5-pro-002', // Upgrade to pro
+  ],
+  'gemini-1.5-flash-8b-001': [
+    'gemini-1.5-flash-002', // Upgrade to full version
+    'gemini-2.0-flash-lite-001', // Upgrade to 2.0 lite
+    'gemini-2.5-flash-lite', // Upgrade to 2.5 lite
+    'gemini-2.0-flash-001', // Final upgrade option
+  ]
 };
 
-// Get the next best model when current model fails
-export const getNextBestModel = (currentModel: string): string | null => {
+// Model recommendations based on different use cases
+export const RECOMMENDED_MODELS = {
+  // Performance priority (cost no object)
+  performance: [
+    'gemini-2.5-pro-preview-06-05',
+    'gemini-2.5-pro',
+    'gemini-2.5-flash-preview-05-20'
+  ],
+  
+  // Balanced performance and cost
+  balanced: [
+    'gemini-2.5-flash-preview-05-20',
+    'gemini-2.5-flash',
+    'gemini-2.0-flash-001'
+  ],
+  
+  // Cost priority
+  costEffective: [
+    'gemini-2.5-flash-lite',
+    'gemini-2.0-flash-lite-001',
+    'gemini-1.5-flash-8b-001'
+  ],
+  
+  // Stability priority (GA versions only)
+  stable: [
+    'gemini-2.5-flash',
+    'gemini-2.5-pro',
+    'gemini-2.0-flash-001',
+    'gemini-1.5-flash-002'
+  ],
+  
+  // Thinking capability priority
+  thinking: [
+    'gemini-2.5-pro-preview-06-05',
+    'gemini-2.5-flash-preview-05-20',
+    'gemini-2.5-pro',
+    'gemini-2.5-flash'
+  ]
+};
+
+// Model capability quick lookups
+export const MODEL_CAPABILITIES = {
+  // Models supporting thinking
+  withThinking: GEMINI_MODELS
+    .filter(m => m.supportsThinking)
+    .map(m => m.id),
+    
+  // Models supporting vision
+  withVision: GEMINI_MODELS
+    .filter(m => m.supportsVision)
+    .map(m => m.id),
+    
+  // Models supporting audio
+  withAudio: GEMINI_MODELS
+    .filter(m => m.supportsAudio)
+    .map(m => m.id),
+    
+  // Cost-effective models
+  costEffective: GEMINI_MODELS
+    .filter(m => m.costTier === 'low')
+    .map(m => m.id),
+    
+  // Large context models (>1M tokens)
+  largeContext: GEMINI_MODELS
+    .filter(m => m.maxTokens >= 1000000)
+    .map(m => m.id)
+};
+
+// Utility functions for model switching logic
+export function getNextBestModel(currentModel: string): string | null {
   const fallbackChain = MODEL_FALLBACK_CHAINS[currentModel];
   if (!fallbackChain || fallbackChain.length === 0) {
-    return null;
+    // If no specific fallback chain, return the default model
+    return currentModel !== DEFAULT_MODEL ? DEFAULT_MODEL : null;
   }
-  return fallbackChain[0]; // Return the best alternative
-};
+  
+  // Return the first model in the fallback chain
+  return fallbackChain[0];
+}
 
-// Get user-friendly explanation for model switch
-export const getModelSwitchExplanation = (fromModel: string, toModel: string): string => {
+export function getModelSwitchExplanation(fromModel: string, toModel: string): string {
   const fromModelInfo = GEMINI_MODELS.find(m => m.id === fromModel);
   const toModelInfo = GEMINI_MODELS.find(m => m.id === toModel);
   
   if (!fromModelInfo || !toModelInfo) {
-    return `Switched from ${fromModel} to ${toModel} due to quota exhaustion.`;
+    return `Switched from ${fromModel} to ${toModel}`;
   }
   
-  const fromTier = fromModelInfo.costTier || 'medium';
-  const toTier = toModelInfo.costTier || 'medium';
+  // Determine the reason for switching
+  const fromGeneration = fromModel.includes('2.5') ? 2.5 : fromModel.includes('2.0') ? 2.0 : 1.5;
+  const toGeneration = toModel.includes('2.5') ? 2.5 : toModel.includes('2.0') ? 2.0 : 1.5;
   
-  if (fromTier === 'high' && toTier === 'medium') {
-    return `Switched from ${fromModelInfo.name} to ${toModelInfo.name}.`;
-  } else if (fromTier === 'medium' && toTier === 'low') {
-    return `Switched from ${fromModelInfo.name} to ${toModelInfo.name}.`;
-  } else if (fromTier === 'low' && toTier === 'medium') {
-    return `Upgraded from ${fromModelInfo.name} to ${toModelInfo.name} for better performance and capabilities.`;
-  } else if (fromTier === 'medium' && toTier === 'high') {
-    return `Upgraded to ${toModelInfo.name} for premium quality and advanced capabilities.`;
+  if (toGeneration > fromGeneration) {
+    return `Upgraded from ${fromModelInfo.name} to ${toModelInfo.name} for better performance`;
+  } else if (toGeneration < fromGeneration) {
+    return `Switched to ${toModelInfo.name} due to quota exhaustion on ${fromModelInfo.name}`;
   } else {
-    return `Switched to ${toModelInfo.name} for optimal performance.`;
+    // Same generation, compare cost tiers
+    const costTierOrder = { 'low': 1, 'medium': 2, 'high': 3 };
+    const fromCost = costTierOrder[fromModelInfo.costTier || 'medium'];
+    const toCost = costTierOrder[toModelInfo.costTier || 'medium'];
+    
+    if (toCost < fromCost) {
+      return `Switched to more cost-effective ${toModelInfo.name} from ${fromModelInfo.name}`;
+    } else if (toCost > fromCost) {
+      return `Upgraded to higher-tier ${toModelInfo.name} from ${fromModelInfo.name}`;
+    } else {
+      return `Switched to alternative ${toModelInfo.name} from ${fromModelInfo.name}`;
+    }
   }
-};
+}
 
-// Smart thinking configuration based on task type
-export const getOptimalThinkingConfig = (messageContent: string, model: string) => {
-  const capabilities = getModelCapabilities(model);
-  
-  if (!capabilities.supportsThinking) {
-    return { enabled: false, budget: 0 };
-  }
+// Get model information by ID
+export function getModelInfo(modelId: string) {
+  return GEMINI_MODELS.find(m => m.id === modelId);
+}
 
-  // Analyze message content to determine optimal thinking budget
-  const content = messageContent.toLowerCase();
-  
-  // Complex reasoning tasks - high thinking budget
-  if (
-    content.includes('analyze') ||
-    content.includes('explain') ||
-    content.includes('reasoning') ||
-    content.includes('logic') ||
-    content.includes('problem') ||
-    content.includes('solution') ||
-    content.includes('compare') ||
-    content.includes('evaluate') ||
-    content.includes('pros and cons') ||
-    content.includes('advantages') ||
-    content.includes('disadvantages')
-  ) {
-    return { enabled: true, budget: 50000 }; // High thinking for complex reasoning
-  }
-  
-  // Coding/technical tasks - medium thinking budget
-  if (
-    content.includes('code') ||
-    content.includes('program') ||
-    content.includes('function') ||
-    content.includes('algorithm') ||
-    content.includes('debug') ||
-    content.includes('implement') ||
-    content.includes('technical') ||
-    content.includes('architecture') ||
-    content.includes('design pattern')
-  ) {
-    return { enabled: true, budget: 30000 }; // Medium thinking for coding
-  }
-  
-  // Math/calculation tasks - medium thinking budget
-  if (
-    content.includes('calculate') ||
-    content.includes('math') ||
-    content.includes('equation') ||
-    content.includes('formula') ||
-    content.includes('solve') ||
-    content.includes('computation')
-  ) {
-    return { enabled: true, budget: 25000 }; // Medium thinking for math
-  }
-  
-  // Creative tasks - low thinking budget
-  if (
-    content.includes('write') ||
-    content.includes('story') ||
-    content.includes('poem') ||
-    content.includes('creative') ||
-    content.includes('imagine') ||
-    content.includes('describe')
-  ) {
-    return { enabled: true, budget: 10000 }; // Low thinking for creativity
-  }
-  
-  // Simple questions - minimal thinking
-  if (
-    content.includes('what is') ||
-    content.includes('who is') ||
-    content.includes('when is') ||
-    content.includes('where is') ||
-    content.includes('define') ||
-    content.includes('meaning')
-  ) {
-    return { enabled: true, budget: 5000 }; // Minimal thinking for simple questions
-  }
-  
-  // Quick requests - no thinking for speed
-  if (
-    content.includes('quick') ||
-    content.includes('fast') ||
-    content.includes('brief') ||
-    content.includes('summary') ||
-    content.length < 50
-  ) {
-    return { enabled: false, budget: 0 }; // No thinking for speed
-  }
-  
-  // Default: moderate thinking
-  return { enabled: true, budget: 15000 };
-};
+// Check if model supports a specific capability
+export function modelSupports(modelId: string, capability: keyof typeof MODEL_CAPABILITIES): boolean {
+  return MODEL_CAPABILITIES[capability].includes(modelId);
+}
 
+// Get recommended model for specific use case
+export function getRecommendedModel(useCase: keyof typeof RECOMMENDED_MODELS): string {
+  return RECOMMENDED_MODELS[useCase][0];
+}
+
+// Get model capabilities (compatibility function)
+export function getModelCapabilities(modelId: string) {
+  const model = getModelInfo(modelId);
+  if (!model) return null;
+  
+  return {
+    supportsVision: model.supportsVision,
+    supportsAudio: model.supportsAudio,
+    supportsVideo: model.supportsVideo,
+    supportsPdf: model.supportsPdf,
+    supportsThinking: model.supportsThinking,
+    supportsGrounding: model.supportsGrounding,
+    supportsUrlContext: model.supportsUrlContext,
+    maxTokens: model.maxTokens,
+    costTier: model.costTier
+  };
+}
+
+// Get optimal thinking configuration for a model
+export function getOptimalThinkingConfig(modelId: string) {
+  const model = getModelInfo(modelId);
+  if (!model || !model.supportsThinking) {
+    return { enabled: false };
+  }
+  
+  // Configure thinking based on model characteristics
+  if (model.id.includes('pro')) {
+    return {
+      enabled: true,
+      showThinking: true,
+      maxThinkingTokens: 65536,
+      confidence: 'high'
+    };
+  } else if (model.id.includes('flash')) {
+    return {
+      enabled: true,
+      showThinking: false,
+      maxThinkingTokens: 32768,
+      confidence: 'medium'
+    };
+  } else {
+    return {
+      enabled: true,
+      showThinking: false,
+      maxThinkingTokens: 16384,
+      confidence: 'low'
+    };
+  }
+}
+
+export default GEMINI_MODELS;

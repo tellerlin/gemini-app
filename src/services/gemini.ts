@@ -580,7 +580,7 @@ export class GeminiService {
    */
   async* generateStreamingResponseWithModelSwitch(
     messages: Message[],
-    preferredModel: string = 'gemini-2.0-flash',
+    preferredModel: string = 'gemini-2.5-flash-preview-05-20',
     config?: GeminiGenerationConfig
   ): AsyncGenerator<{ 
     text?: string; 
@@ -1408,7 +1408,7 @@ export class GeminiService {
    */
   async generateResponseWithModelSwitch(
     messages: Message[],
-    preferredModel: string = 'gemini-2.0-flash',
+    preferredModel: string = 'gemini-2.5-flash-preview-05-20',
     config?: GeminiGenerationConfig
   ): Promise<{
     response: string | GeminiResponse;
