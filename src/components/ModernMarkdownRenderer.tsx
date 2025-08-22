@@ -28,7 +28,7 @@ export const ModernMarkdownRenderer = React.memo(function ModernMarkdownRenderer
   isStreaming = false
 }: ModernMarkdownRendererProps) {
 
-  // 智能预处理 - 处理代码块保护和数学公式冲突
+  // Smart preprocessing - handle code block protection and math formula conflicts
   const preprocessContent = (rawContent: string): string => {
     try {
       let processed = rawContent;
@@ -50,57 +50,71 @@ export const ModernMarkdownRenderer = React.memo(function ModernMarkdownRenderer
         }
       }
       
-      // 1. 保护代码块，避免处理其中的$符号
+      // 1. Protect code blocks to avoid processing $ symbols inside them
       const codeBlocks: string[] = [];
       processed = processed.replace(/```[\s\S]*?```/g, (match) => {
         codeBlocks.push(match);
         return `__CODE_BLOCK_${codeBlocks.length - 1}__`;
       });
       
-      // 2. 保护内联代码
+      // 2. Protect inline code
       const inlineCodes: string[] = [];
       processed = processed.replace(/`[^`]*?`/g, (match) => {
         inlineCodes.push(match);
         return `__INLINE_CODE_${inlineCodes.length - 1}__`;
       });
       
-      // 3. 智能数学公式处理 - 使用占位符机制避免冲突
-      // 创建数学公式占位符数组
+      // 3. Smart math formula handling - use placeholder mechanism to avoid conflicts
+      // Create math formula placeholders array
       const mathBlockPlaceholders: string[] = [];
       
-      // 先处理块级数学公式
+      // Process display math formulas first
       processed = processed.replace(/\$\$\n?([\s\S]*?)\n?\$\$/g, (match, content) => {
         const placeholder = `__MATH_BLOCK_${mathBlockPlaceholders.length}__`;
-        mathBlockPlaceholders.push(match); // 保留原始格式
+        // Clean math content: remove newlines in display mode
+        let cleanedContent = content
+          .replace(/\\\\/g, ' ') // Remove \\ line breaks
+          .replace(/\\newline/g, ' ') // Remove \newline
+          .replace(/\n\s*\+/g, ' + ') // Merge + signs after newlines to same line
+          .replace(/\n\s*/g, ' ') // Remove other newlines
+          .trim();
+        mathBlockPlaceholders.push(`$$${cleanedContent}$$`); // Use cleaned content
         return placeholder;
       });
       
-      // 修复中文和数学公式混合的问题
-      // 将类似 "以下代码块部分显示不太正常 -> $ \alpha + \beta = \gamma $" 中的箭头形式转换为反引号
+      // Fix Chinese and math formula mixing issues
+      // Convert arrow format like "some text -> $ \alpha + \beta = \gamma $" to backticks
       processed = processed.replace(
         /([\u4e00-\u9fff\s]+)->\s*\$\s*([^$]+)\s*\$/g,
         '$1-> `$2`'
       );
       
-      // 处理混合内容中的数学表达式 - 确保真正的数学公式格式正确
-      // 修复块级数学公式格式
+      // Handle math expressions in mixed content - ensure proper math formula format
+      // Fix display math formula format
       processed = processed.replace(/```math\n([\s\S]*?)\n```/g, (match, content) => {
         const placeholder = `__MATH_BLOCK_${mathBlockPlaceholders.length}__`;
-        mathBlockPlaceholders.push(`$$\n${content.trim()}\n$$`);
+        // Clean math content: remove newlines in display mode
+        let cleanedContent = content
+          .replace(/\\\\/g, ' ') // Remove \\ line breaks
+          .replace(/\\newline/g, ' ') // Remove \newline
+          .replace(/\n\s*\+/g, ' + ') // Merge + signs after newlines to same line
+          .replace(/\n\s*/g, ' ') // Remove other newlines
+          .trim();
+        mathBlockPlaceholders.push(`$$${cleanedContent}$$`);
         return placeholder;
       });
       
-      // 恢复数学公式占位符
+      // Restore math formula placeholders
       mathBlockPlaceholders.forEach((mathContent, index) => {
         processed = processed.replace(`__MATH_BLOCK_${index}__`, mathContent);
       });
       
-      // 5. 恢复代码块
+      // 5. Restore code blocks
       codeBlocks.forEach((code, index) => {
         processed = processed.replace(`__CODE_BLOCK_${index}__`, code);
       });
       
-      // 6. 恢复内联代码
+      // 6. Restore inline code
       inlineCodes.forEach((code, index) => {
         processed = processed.replace(`__INLINE_CODE_${index}__`, code);
       });
@@ -274,18 +288,19 @@ export const ModernMarkdownRenderer = React.memo(function ModernMarkdownRenderer
       <ReactMarkdown
         remarkPlugins={[
           remarkGfm, 
-          remarkMath  // 使用默认配置，自动支持 $...$ 和 $$...$$
+          remarkMath  // Use default config, automatically support $...$ and $$...$$
         ]}
         rehypePlugins={[[rehypeKatex, { 
           output: 'htmlAndMathml',
           throwOnError: false,
           errorColor: '#dc2626',
-          strict: 'warn',
+          strict: false, // Set to false to reduce strict mode warnings
           fleqn: false,
           macros: {},
           maxSize: Infinity,
           maxExpand: 1000,
-          trust: false
+          trust: false,
+          displayMode: true // Enable display mode support
         }]]}
         components={components}
       >
