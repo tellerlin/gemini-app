@@ -53,14 +53,33 @@ npm run dev
 **Configuration:**
 1. Get API keys from [Google AI Studio](https://makersuite.google.com/app/apikey)
 2. Click settings icon in the app to add API keys
-3. Or set environment variables:
+3. **Connection Mode**: Choose your API connection method:
+
+**Option A: Auto-detect (Recommended)**
 ```bash
-export VITE_GEMINI_API_KEYS=key1,key2,key3
+# No configuration needed - automatically detects:
+# Local: Direct connection to Google API
+# Production: Uses /api/gemini proxy
+npm run dev
+```
+
+**Option B: Force Direct Connection**
+```bash
+# Create .env file
+echo "VITE_GEMINI_API_MODE=direct" > .env
+npm run dev
+```
+
+**Option C: Force Proxy Mode**
+```bash
+# Create .env file  
+echo "VITE_GEMINI_API_MODE=proxy" > .env
+npm run dev
 ```
 
 ### 2. 🐳 Docker Deployment
 
-**Quick Start:**
+**Quick Start (Direct Connection - Recommended):**
 ```bash
 docker run -p 8080:8080 tellerlin/gemini-app
 ```
@@ -74,7 +93,12 @@ docker-compose up -d
 
 **Environment Variables:**
 ```env
-VITE_GEMINI_API_KEYS=your_api_key_1,your_api_key_2
+# Force direct connection (recommended for Docker)
+VITE_GEMINI_API_MODE=direct
+
+# Or use proxy mode if needed
+# VITE_GEMINI_API_MODE=proxy
+# VITE_GEMINI_PROXY_URL=https://your-proxy.com/api/gemini
 ```
 
 ### 3. ☁️ Cloudflare Pages (Recommended)
@@ -87,8 +111,11 @@ VITE_GEMINI_API_KEYS=your_api_key_1,your_api_key_2
 
 **Step 3: Configure Environment Variables**
 ```env
-VITE_GEMINI_API_KEYS=your_api_keys
-VITE_GEMINI_PROXY_URL=https://your-worker.workers.dev
+# Force proxy mode for Cloudflare deployment
+VITE_GEMINI_API_MODE=proxy
+
+# Or specify custom proxy URL
+# VITE_GEMINI_PROXY_URL=https://your-worker.workers.dev
 ```
 
 #### 🌐 Custom Domain Setup (Optional)
@@ -113,13 +140,57 @@ For a professional setup using your own domain:
 
 ## 🔧 Configuration
 
-### API Keys
-Get your API keys from [Google AI Studio](https://makersuite.google.com/app/apikey) and configure them either:
-- In the app settings (click the settings icon)
-- As environment variables: `VITE_GEMINI_API_KEYS=key1,key2,key3`
+### 🌐 API Connection Modes
 
-### CORS Solution
-For production deployments, use the [Gemini Proxy Worker](https://github.com/tellerlin/gemini-proxy-worker) to handle API requests and avoid CORS issues.
+This application supports three connection modes to accommodate different deployment environments:
+
+#### 1. **Auto-detect Mode (Default)**
+Automatically chooses the best connection method:
+- **Local Development** (`localhost`, `127.0.0.1`, `0.0.0.0`): Direct connection to Google API
+- **Production Deployment**: Uses `/api/gemini` proxy endpoint
+
+```env
+VITE_GEMINI_API_MODE=auto  # or omit (default behavior)
+```
+
+#### 2. **Direct Connection Mode**  
+Always connects directly to `generativelanguage.googleapis.com`  
+✅ **Best for**: Local development, Docker containers, environments with direct internet access
+
+```env
+VITE_GEMINI_API_MODE=direct
+```
+
+#### 3. **Proxy Mode**
+Always uses `/api/gemini` proxy endpoint  
+✅ **Best for**: Cloudflare Workers, Vercel Edge Functions, corporate networks
+
+```env
+VITE_GEMINI_API_MODE=proxy
+```
+
+#### 4. **Custom Proxy URL**
+Use a custom proxy endpoint (overrides all other settings)
+
+```env
+VITE_GEMINI_PROXY_URL=https://your-custom-proxy.com/api/gemini
+```
+
+### 🔑 API Keys
+Get your API keys from [Google AI Studio](https://makersuite.google.com/app/apikey) and configure them either:
+- **In-App Settings** (Recommended): Click the settings icon in the app
+- **Environment Variables**: Not recommended for production (see [.env.example](.env.example))
+
+### 📁 Environment Setup
+Copy `.env.example` to `.env` and configure for your environment:
+
+```bash
+cp .env.example .env
+# Edit .env with your preferred settings
+```
+
+### 🚨 Security Note
+**Never put API keys in environment variables for production deployments.** Always use the in-app settings to maintain security and prevent exposure in build artifacts.
 
 ## 🎯 Core Features
 

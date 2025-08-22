@@ -321,30 +321,41 @@ export class GeminiService {
     const apiKey = this.getCurrentApiKey();
     
     // Determine the appropriate base URL based on environment
-    let baseUrl: string;
+    let baseUrl: string | undefined;
     
-    // Check for custom proxy URL in environment
+    // Check environment variable for API mode
+    const apiMode = import.meta.env.VITE_GEMINI_API_MODE;
     const customProxyUrl = import.meta.env.VITE_GEMINI_PROXY_URL;
     
-    if (customProxyUrl) {
-      // Use custom proxy URL (for production deployments)
-      baseUrl = customProxyUrl;
-    } else if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-      // Use Vite dev proxy for local development
-      baseUrl = `${window.location.origin}/api/gemini`;
+    if (apiMode === 'direct') {
+      // Force direct connection to Google API
+      baseUrl = undefined; // Use default Google API endpoint
+      console.log(`🌐 Using direct connection to Google Gemini API`);
+    } else if (apiMode === 'proxy' || customProxyUrl) {
+      // Force proxy mode with custom URL or default proxy path
+      baseUrl = customProxyUrl || `${window.location.origin}/api/gemini`;
+      console.log(`🌐 Using proxy connection: ${baseUrl}`);
     } else {
-      // For production without proxy, use Cloudflare Worker path
-      baseUrl = `${window.location.origin}/api/gemini`;
+      // Auto-detect mode based on environment (default behavior)
+      if (window.location.hostname === 'localhost' || 
+          window.location.hostname === '127.0.0.1' || 
+          window.location.hostname === '0.0.0.0') {
+        // Local development - use direct connection by default
+        baseUrl = undefined;
+        console.log(`🌐 Auto-detected local development - using direct connection to Google Gemini API`);
+      } else {
+        // Production deployment - use proxy by default (for Cloudflare, Vercel, etc.)
+        baseUrl = `${window.location.origin}/api/gemini`;
+        console.log(`🌐 Auto-detected production deployment - using proxy: ${baseUrl}`);
+      }
     }
     
-    console.log(`🌐 Using Gemini API proxy: ${baseUrl}`);
+    const genAIConfig: any = { apiKey };
+    if (baseUrl) {
+      genAIConfig.httpOptions = { baseUrl };
+    }
     
-    return new GoogleGenAI({ 
-      apiKey,
-      httpOptions: {
-        baseUrl
-      }
-    });
+    return new GoogleGenAI(genAIConfig);
   }
 
   /**
