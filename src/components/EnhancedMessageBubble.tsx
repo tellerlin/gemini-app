@@ -142,14 +142,14 @@ export const EnhancedMessageBubble = React.memo(function EnhancedMessageBubble({
             {isStreaming && !isUser && (
               <div className="mt-2 flex items-center justify-between">
                 <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <div className="flex gap-1">
-                    <div className="w-1 h-1 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <div className="w-1 h-1 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <div className="w-1 h-1 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                  <div className="flex gap-1 items-end">
+                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce [animation-duration:1s]" style={{ animationDelay: '0ms' }} />
+                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce [animation-duration:1s]" style={{ animationDelay: '200ms' }} />
+                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce [animation-duration:1s]" style={{ animationDelay: '400ms' }} />
                   </div>
                   <span>Generating answer...</span>
                   {conversationConfig?.streamingEnabled !== false && (
-                    <span className="inline-block w-2 h-3 bg-blue-500 ml-1 animate-pulse" />
+                    <span className="inline-block w-3 h-4 bg-blue-500 ml-1 animate-pulse [animation-duration:800ms]" />
                   )}
                 </div>
                 {onStopGeneration && (
