@@ -96,17 +96,18 @@ function App() {
 
   return (
     <GlobalErrorBoundary>
-      <div className="flex h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 overflow-hidden">
+      <div className="flex h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 overflow-hidden">
       <Toaster
         position="top-center"
         toastOptions={{
           duration: 3000,
           style: {
-            background: 'rgba(55, 65, 81, 0.95)',
+            background: 'rgba(30, 41, 59, 0.95)',
             color: '#fff',
             maxWidth: '90vw',
             fontSize: '14px',
-            borderRadius: '12px',
+            fontWeight: '500',
+            borderRadius: '16px',
             backdropFilter: 'blur(20px)',
             border: '1px solid rgba(255, 255, 255, 0.1)',
             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
@@ -139,29 +140,28 @@ function App() {
           {/* Main Chat Area */}
           <div className="flex-1 flex flex-col min-w-0 relative">
             {/* Mobile Header with enhanced design */}
-            <div className="flex items-center justify-between mobile-p-safe border-b bg-white/80 backdrop-blur-modern lg:hidden shadow-modern">
+            <div className="flex items-center justify-between mobile-px-safe py-3 border-b bg-white/90 backdrop-blur-sm lg:hidden shadow-sm border-slate-200/60">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setSidebarOpen(true)}
-                className="sidebar-toggle touch-target-xl hover:bg-white/60 rounded-xl transition-smooth mobile-interactive"
+                className="sidebar-toggle touch-target-xl hover:bg-white/80 rounded-xl transition-all duration-200 mobile-interactive font-semibold"
               >
-                <Menu className="h-6 w-6 text-gray-700" />
+                <Menu className="h-6 w-6 text-slate-700" />
               </Button>
-              <div className="flex items-center space-x-2">
-                <div className="w-7 h-7 bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 rounded-lg flex items-center justify-center shadow-sm">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 rounded-xl flex items-center justify-center shadow-lg">
                   <span className="text-white font-bold text-sm">G</span>
                 </div>
-                <h1 className="text-fluid-base font-semibold gradient-text truncate">
+                <h1 className="text-base font-bold bg-gradient-to-r from-slate-800 via-slate-700 to-slate-900 bg-clip-text text-transparent truncate">
                   {currentConversation?.title || 'New Conversation'}
                 </h1>
               </div>
-              <div className="w-12" /> {/* Spacer for centering */}
-            </div>
+              <div className="w-12" />
             </div>
 
             {/* Chat Content with enhanced styling */}
-            <div className="flex-1 min-h-0 relative bg-gradient-to-b from-transparent to-white/20">
+            <div className="flex-1 min-h-0 relative bg-gradient-to-b from-transparent via-white/10 to-white/30">
               <ChatArea
                 messages={currentConversation?.messages || []}
                 onSendMessage={sendMessage}

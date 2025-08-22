@@ -57,10 +57,10 @@ export function ChatInput({ onSendMessage, onGenerateImage, isLoading, disabled,
   }, [message, isMobile]);
 
   return (
-    <div className="border-t border-white/40 bg-white/80 backdrop-blur-modern mobile-p-safe shadow-modern">
+    <div className="border-t border-slate-200/60 bg-white/90 backdrop-blur-sm mobile-px-safe py-3 shadow-lg">
       {/* File Upload Section */}
       {showFileUpload && (
-        <div className="mb-4">
+        <div className="mb-3">
           <FileUpload
             files={files}
             onFilesChange={setFiles}
@@ -82,12 +82,12 @@ export function ChatInput({ onSendMessage, onGenerateImage, isLoading, disabled,
               disabled={disabled}
               rows={1}
               className={cn(
-                'w-full px-4 py-3 pr-14 border border-white/40 rounded-2xl resize-none',
+                'w-full px-4 py-3 pr-14 border border-slate-200/80 rounded-2xl resize-none',
                 'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
-                'disabled:bg-gray-50 disabled:cursor-not-allowed',
-                'placeholder-gray-500 mobile-text-enhanced',
-                'transition-smooth shadow-modern hover:shadow-modern-hover',
-                'bg-white/90 backdrop-blur-sm'
+                'disabled:bg-slate-50 disabled:cursor-not-allowed',
+                'placeholder-slate-500 text-slate-800 text-sm font-medium',
+                'transition-all duration-200 shadow-sm hover:shadow-md focus:shadow-lg',
+                'bg-white/95 backdrop-blur-sm'
               )}
               style={{ 
                 minHeight: isMobile ? '48px' : '52px', 
@@ -100,10 +100,10 @@ export function ChatInput({ onSendMessage, onGenerateImage, isLoading, disabled,
               type="button"
               onClick={() => setShowFileUpload(!showFileUpload)}
               className={cn(
-                'absolute right-2 top-1/2 transform -translate-y-1/2 touch-target mobile-interactive',
-                'text-gray-400 hover:text-blue-500 transition-smooth rounded-lg',
-                'active:scale-95 hover:bg-blue-50/60',
-                showFileUpload && 'text-blue-500 bg-blue-50/60',
+                'absolute right-3 top-1/2 transform -translate-y-1/2 touch-target mobile-interactive',
+                'text-slate-500 hover:text-blue-600 transition-all duration-200 rounded-lg',
+                'active:scale-95 hover:bg-blue-50/80 border border-transparent hover:border-blue-200/50',
+                showFileUpload && 'text-blue-600 bg-blue-50/80 border-blue-200/50',
                 isMobile && 'touch-target-xl'
               )}
               title="Attach files"
@@ -118,7 +118,7 @@ export function ChatInput({ onSendMessage, onGenerateImage, isLoading, disabled,
 
           {/* File Count Indicator */}
           {files.length > 0 && (
-            <div className="mt-1 text-xs text-gray-500">
+            <div className="mt-2 text-xs text-slate-600 font-medium">
               {files.length} file{files.length > 1 ? 's' : ''} attached
             </div>
           )}
@@ -138,8 +138,8 @@ export function ChatInput({ onSendMessage, onGenerateImage, isLoading, disabled,
               isLoading={isLoading}
               variant="outline"
               className={cn(
-                "rounded-2xl p-0 transition-all duration-200 active:scale-95 touch-manipulation mobile-interactive",
-                isMobile ? "h-12 w-12 touch-target" : "h-14 w-14 hover:scale-105"
+                "rounded-2xl p-0 transition-all duration-200 active:scale-95 touch-manipulation mobile-interactive border-2 border-slate-300/80 hover:border-slate-400/80",
+                isMobile ? "h-12 w-12 touch-target" : "h-14 w-14 hover:-translate-y-0.5"
               )}
               title="Generate Image"
             >
@@ -155,8 +155,8 @@ export function ChatInput({ onSendMessage, onGenerateImage, isLoading, disabled,
             disabled={disabled || (!message.trim() && files.length === 0)}
             isLoading={isLoading}
             className={cn(
-              "rounded-2xl p-0 transition-all duration-200 active:scale-95 touch-manipulation mobile-interactive",
-              isMobile ? "h-12 w-12 touch-target" : "h-14 w-14 hover:scale-105"
+              "rounded-2xl p-0 transition-all duration-200 active:scale-95 touch-manipulation mobile-interactive bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 hover:from-blue-700 hover:via-blue-800 hover:to-indigo-800 shadow-lg hover:shadow-xl",
+              isMobile ? "h-12 w-12 touch-target" : "h-14 w-14 hover:-translate-y-0.5"
             )}
           >
             <Send className={cn(

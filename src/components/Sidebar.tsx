@@ -93,23 +93,23 @@ export function Sidebar({
       >
         <div className="flex flex-col h-full">
           {/* Header with enhanced styling and logo */}
-          <div className="flex items-center justify-between px-3 py-2 border-b border-white/20 bg-gradient-to-r from-white/80 to-white/60">
-            <div className="flex items-center space-x-2">
-              <div className="w-7 h-7 bg-gradient-to-br from-blue-500 via-indigo-600 to-purple-600 rounded-lg flex items-center justify-center shadow-modern">
-                <span className="text-white font-bold text-xs">G</span>
+          <div className="flex items-center justify-between mobile-px-safe py-3 border-b border-slate-200/60 bg-gradient-to-r from-white/95 to-slate-50/95 backdrop-blur-sm">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 rounded-xl flex items-center justify-center shadow-lg">
+                <span className="text-white font-bold text-sm">G</span>
               </div>
-              <h1 className="text-base font-bold gradient-text">Gemini Chat</h1>
+              <h1 className="text-lg font-bold bg-gradient-to-r from-slate-800 via-slate-700 to-slate-900 bg-clip-text text-transparent">Gemini Chat</h1>
             </div>
             <button
               onClick={onClose}
-              className="touch-target rounded-xl text-gray-400 hover:text-gray-600 hover:bg-white/60 transition-smooth lg:hidden"
+              className="touch-target-xl rounded-xl text-slate-500 hover:text-slate-700 hover:bg-white/80 transition-all duration-200 lg:hidden active:scale-95"
             >
               <X className="h-5 w-5" />
             </button>
           </div>
 
           {/* Model Selection with modern design */}
-          <div className="px-3 py-2 border-b border-white/20 bg-gradient-to-r from-blue-50/50 to-indigo-50/50">
+          <div className="mobile-px-safe py-3 border-b border-slate-200/60 bg-gradient-to-r from-blue-50/60 via-indigo-50/60 to-purple-50/60 backdrop-blur-sm">
             <Select
               label="Model"
               value={selectedModel}
@@ -123,62 +123,61 @@ export function Sidebar({
 
           {/* New Conversation Button with enhanced style */}
           <div className={cn(
-            "px-3",
-            isMobile ? "py-2" : "py-3"
+            "mobile-px-safe",
+            isMobile ? "py-3" : "py-4"
           )}>
             <Button
               onClick={onNewConversation}
               className={cn(
-                "w-full justify-start btn-modern bg-gradient-to-r from-blue-600 to-indigo-600 text-white",
-                "hover:from-blue-700 hover:to-indigo-700 shadow-modern",
-                isMobile ? "hover:scale-[1.02]" : "hover:scale-105 desktop-hover"
+                "w-full justify-start bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 text-white font-semibold",
+                "hover:from-blue-700 hover:via-blue-800 hover:to-indigo-800 shadow-lg hover:shadow-xl",
+                "transform hover:-translate-y-0.5 transition-all duration-200",
+                isMobile ? "text-sm py-3" : "text-sm py-3.5"
               )}
               variant="primary"
             >
               <Plus className={cn(
-                "mr-2",
+                "mr-3",
                 isMobile ? "h-4 w-4" : "h-5 w-5"
               )} />
-              <span className={cn(
-                isMobile ? "mobile-button-text" : "desktop-text-enhanced"
-              )}>
+              <span className="font-semibold tracking-wide">
                 New Conversation
               </span>
             </Button>
           </div>
 
           {/* Conversations List with enhanced design and minimal padding */}
-          <div className="flex-1 overflow-y-auto px-1">
-            <div className="space-y-1">
+          <div className="flex-1 overflow-y-auto px-2">
+            <div className="space-y-1.5">
               {conversations.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="text-center py-8 text-slate-600">
+                  <div className="w-16 h-16 bg-gradient-to-br from-blue-100 via-indigo-100 to-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm">
                     <MessageCircle className="h-8 w-8 text-blue-600" />
                   </div>
-                  <p className="mobile-text-enhanced font-medium">No conversations yet</p>
-                  <p className="mobile-text-sm-enhanced">Start a new conversation to begin</p>
+                  <p className="text-sm font-semibold text-slate-800 mb-1">No conversations yet</p>
+                  <p className="text-xs text-slate-500">Start a new conversation to begin</p>
                 </div>
               ) : (
                 conversations.map((conversation) => (
                   <div
                     key={conversation.id}
                     className={cn(
-                      'group flex items-center rounded-xl cursor-pointer transition-smooth card-modern',
-                      isMobile ? 'hover:shadow-modern-hover active:scale-[0.98]' : 'desktop-hover hover:shadow-xl',
+                      'group flex items-center rounded-xl cursor-pointer transition-all duration-200 bg-white/80 hover:bg-white hover:shadow-md',
+                      'transform hover:-translate-y-0.5 active:scale-[0.98]',
                       currentConversationId === conversation.id
-                        ? 'bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 shadow-modern'
-                        : 'bg-white/60 hover:bg-white/80 border border-white/40'
+                        ? 'bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border-2 border-blue-300/60 shadow-md'
+                        : 'border border-slate-200/60 hover:border-slate-300/80'
                     )}
                     onClick={() => onSelectConversation(conversation.id)}
                   >
                     {/* 桌面和移动端适配的图标区域 */}
                     <div className={cn(
                       "flex items-center",
-                      isMobile ? "py-1 pl-1.5" : "py-2 pl-3"
+                      isMobile ? "py-2 pl-2" : "py-2.5 pl-3"
                     )}>
                       <div className={cn(
-                        "rounded bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center flex-shrink-0",
-                        isMobile ? "w-3 h-3" : "w-4 h-4"
+                        "rounded-lg bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 flex items-center justify-center flex-shrink-0 shadow-sm",
+                        isMobile ? "w-3.5 h-3.5" : "w-4 h-4"
                       )}>
                         <MessageCircle className={cn(
                           "text-white",
@@ -190,16 +189,16 @@ export function Sidebar({
                     {/* 响应式文字区域 */}
                     <div className={cn(
                       "flex-1 min-w-0",
-                      isMobile ? "py-1 px-1" : "py-2 px-3"
+                      isMobile ? "py-2 px-2" : "py-2.5 px-3"
                     )}>
                       <p className={cn(
-                        "font-medium text-gray-900 truncate leading-tight mb-0.5",
-                        isMobile ? "text-xs sm:text-sm" : "text-sm lg:text-base"
+                        "font-semibold text-slate-800 truncate leading-tight mb-0.5",
+                        isMobile ? "text-sm" : "text-sm lg:text-base"
                       )}>
                         {conversation.title}
                       </p>
                       <p className={cn(
-                        "text-gray-500 leading-tight",
+                        "text-slate-500 leading-tight font-medium",
                         isMobile ? "text-xs" : "text-xs lg:text-sm"
                       )}>
                         {formatDate(conversation.updatedAt)}
@@ -207,8 +206,8 @@ export function Sidebar({
                     </div>
                     {/* 响应式操作按钮区域 */}
                     <div className={cn(
-                      "flex items-center opacity-0 group-hover:opacity-100 transition-smooth",
-                      isMobile ? "py-1 pr-1" : "py-2 pr-2 space-x-1"
+                      "flex items-center opacity-0 group-hover:opacity-100 transition-all duration-200",
+                      isMobile ? "py-2 pr-2" : "py-2.5 pr-2.5 space-x-1"
                     )}>
                       <div className="relative export-dropdown">
                         <button
@@ -219,20 +218,20 @@ export function Sidebar({
                             );
                           }}
                           className={cn(
-                            "text-gray-400 hover:text-blue-500 transition-smooth rounded flex items-center justify-center hover:bg-white/60",
-                            isMobile ? "w-4 h-4" : "w-6 h-6 hover:scale-110"
+                            "text-slate-500 hover:text-blue-600 transition-all duration-200 rounded-lg flex items-center justify-center hover:bg-blue-50/80 border border-transparent hover:border-blue-200/50",
+                            isMobile ? "w-6 h-6" : "w-7 h-7"
                           )}
                           title="Export conversation"
                         >
-                          <svg width={isMobile ? "8" : "10"} height={isMobile ? "8" : "10"} viewBox={isMobile ? "0 0 8 8" : "0 0 10 10"} fill="none" className="text-current">
-                            <path d={isMobile ? "M4 0.5v5M1.5 3.5l2.5 2.5 2.5-2.5" : "M5 1v6M2 4l3 3 3-3"} stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round"/>
+                          <svg width={isMobile ? "10" : "12"} height={isMobile ? "10" : "12"} viewBox="0 0 12 12" fill="none" className="text-current">
+                            <path d="M6 1v8M2.5 6.5l3.5 3.5 3.5-3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                           </svg>
                         </button>
                         
                         {exportDropdownOpen === conversation.id && (
                           <div className={cn(
-                            "absolute right-0 mt-1 bg-white/95 backdrop-blur-modern border border-white/40 rounded-lg shadow-modern z-50",
-                            isMobile ? "w-14" : "w-20"
+                            "absolute right-0 mt-1 bg-white/95 backdrop-blur-sm border border-slate-200/80 rounded-xl shadow-lg z-50",
+                            isMobile ? "w-16" : "w-20"
                           )}>
                             <button
                               onClick={(e) => {
@@ -240,7 +239,7 @@ export function Sidebar({
                                 onExportConversation(conversation.id, 'txt');
                                 setExportDropdownOpen(null);
                               }}
-                              className="w-full px-1.5 py-1 text-left text-xs text-gray-700 hover:bg-white/80 first:rounded-t-lg transition-smooth"
+                              className="w-full px-3 py-2 text-left text-xs font-medium text-slate-700 hover:bg-slate-50 first:rounded-t-xl transition-colors duration-150"
                             >
                               TXT
                             </button>
@@ -250,7 +249,7 @@ export function Sidebar({
                                 onExportConversation(conversation.id, 'html');
                                 setExportDropdownOpen(null);
                               }}
-                              className="w-full px-1.5 py-1 text-left text-xs text-gray-700 hover:bg-white/80 transition-smooth"
+                              className="w-full px-3 py-2 text-left text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors duration-150"
                             >
                               HTML
                             </button>
@@ -260,7 +259,7 @@ export function Sidebar({
                                 onExportConversation(conversation.id, 'pdf');
                                 setExportDropdownOpen(null);
                               }}
-                              className="w-full px-1.5 py-1 text-left text-xs text-gray-700 hover:bg-white/80 last:rounded-b-lg transition-smooth"
+                              className="w-full px-3 py-2 text-left text-xs font-medium text-slate-700 hover:bg-slate-50 last:rounded-b-xl transition-colors duration-150"
                             >
                               PDF
                             </button>
@@ -274,13 +273,13 @@ export function Sidebar({
                           onDeleteConversation(conversation.id);
                         }}
                         className={cn(
-                          "text-gray-400 hover:text-red-500 transition-smooth rounded flex items-center justify-center hover:bg-red-50/80",
-                          isMobile ? "w-4 h-4 ml-0.5" : "w-6 h-6 ml-1 hover:scale-110"
+                          "text-slate-500 hover:text-red-600 transition-all duration-200 rounded-lg flex items-center justify-center hover:bg-red-50/80 border border-transparent hover:border-red-200/50",
+                          isMobile ? "w-6 h-6 ml-1" : "w-7 h-7 ml-1.5"
                         )}
                         title="Delete conversation"
                       >
-                        <svg width={isMobile ? "6" : "8"} height={isMobile ? "6" : "8"} viewBox={isMobile ? "0 0 6 6" : "0 0 8 8"} fill="none" className="text-current">
-                          <path d={isMobile ? "M0.5 0.5l5 5M5.5 0.5l-5 5" : "M1 1l6 6M7 1l-6 6"} stroke="currentColor" strokeWidth="1" strokeLinecap="round"/>
+                        <svg width={isMobile ? "8" : "10"} height={isMobile ? "8" : "10"} viewBox="0 0 10 10" fill="none" className="text-current">
+                          <path d="M1.5 1.5l7 7M8.5 1.5l-7 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                         </svg>
                       </button>
                     </div>
@@ -292,23 +291,23 @@ export function Sidebar({
 
           {/* Settings Buttons with enhanced design */}
           <div className={cn(
-            "border-t border-white/20 bg-gradient-to-r from-white/60 to-white/40 backdrop-blur-sm space-y-1",
-            isMobile ? "px-3 py-2" : "px-4 py-3"
+            "border-t border-slate-200/60 bg-gradient-to-r from-white/80 via-slate-50/80 to-white/80 backdrop-blur-sm",
+            isMobile ? "mobile-px-safe py-3 space-y-2" : "px-4 py-4 space-y-2"
           )}>
             <Button
               onClick={onOpenSettings}
               variant="ghost"
               className={cn(
-                "w-full justify-start btn-modern hover:bg-white/60",
-                isMobile ? "text-xs py-1.5" : "text-sm py-2 desktop-hover",
-                !hasApiKey && "animate-pulse bg-gradient-to-r from-yellow-50 to-orange-50 hover:from-yellow-100 hover:to-orange-100 text-yellow-700 border border-yellow-200 shadow-modern"
+                "w-full justify-start font-semibold hover:bg-white/90 hover:border-slate-200/60 border border-transparent",
+                isMobile ? "text-sm py-2.5" : "text-sm py-3",
+                !hasApiKey && "animate-pulse bg-gradient-to-r from-amber-50 via-yellow-50 to-orange-50 hover:from-amber-100 hover:via-yellow-100 hover:to-orange-100 text-amber-800 border-2 border-amber-300/60 shadow-md font-semibold"
               )}
             >
               <Settings className={cn(
-                "mr-1.5",
-                isMobile ? "h-3 w-3" : "h-4 w-4"
+                "mr-3",
+                isMobile ? "h-4 w-4" : "h-4 w-4"
               )} />
-              <span className={isMobile ? "mobile-button-text" : "desktop-text-enhanced"}>
+              <span className="tracking-wide">
                 API Settings
               </span>
             </Button>
@@ -316,15 +315,15 @@ export function Sidebar({
               onClick={onOpenAdvancedSettings}
               variant="ghost"
               className={cn(
-                "w-full justify-start btn-modern hover:bg-white/60",
-                isMobile ? "text-xs py-1.5" : "text-sm py-2 desktop-hover"
+                "w-full justify-start font-semibold hover:bg-white/90 hover:border-slate-200/60 border border-transparent",
+                isMobile ? "text-sm py-2.5" : "text-sm py-3"
               )}
             >
               <Sliders className={cn(
-                "mr-1.5",
-                isMobile ? "h-3 w-3" : "h-4 w-4"
+                "mr-3",
+                isMobile ? "h-4 w-4" : "h-4 w-4"
               )} />
-              <span className={isMobile ? "mobile-button-text" : "desktop-text-enhanced"}>
+              <span className="tracking-wide">
                 Advanced Settings
               </span>
             </Button>
@@ -332,15 +331,15 @@ export function Sidebar({
               onClick={onOpenPerformanceMonitor}
               variant="ghost"
               className={cn(
-                "w-full justify-start btn-modern hover:bg-white/60",
-                isMobile ? "text-xs py-1.5" : "text-sm py-2 desktop-hover"
+                "w-full justify-start font-semibold hover:bg-white/90 hover:border-slate-200/60 border border-transparent",
+                isMobile ? "text-sm py-2.5" : "text-sm py-3"
               )}
             >
               <Activity className={cn(
-                "mr-1.5",
-                isMobile ? "h-3 w-3" : "h-4 w-4"
+                "mr-3",
+                isMobile ? "h-4 w-4" : "h-4 w-4"
               )} />
-              <span className={isMobile ? "mobile-button-text" : "desktop-text-enhanced"}>
+              <span className="tracking-wide">
                 Performance Monitor
               </span>
             </Button>
@@ -348,15 +347,15 @@ export function Sidebar({
               onClick={() => window.open('https://github.com/tellerlin/gemini-app', '_blank')}
               variant="ghost"
               className={cn(
-                "w-full justify-start btn-modern text-gray-600 hover:text-gray-900 hover:bg-white/60",
-                isMobile ? "text-xs py-1.5" : "text-sm py-2 desktop-hover"
+                "w-full justify-start font-semibold text-slate-600 hover:text-slate-800 hover:bg-white/90 hover:border-slate-200/60 border border-transparent",
+                isMobile ? "text-sm py-2.5" : "text-sm py-3"
               )}
             >
               <Github className={cn(
-                "mr-1.5",
-                isMobile ? "h-3 w-3" : "h-4 w-4"
+                "mr-3",
+                isMobile ? "h-4 w-4" : "h-4 w-4"
               )} />
-              <span className={isMobile ? "mobile-button-text" : "desktop-text-enhanced"}>
+              <span className="tracking-wide">
                 View on GitHub
               </span>
             </Button>
