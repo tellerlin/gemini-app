@@ -63,24 +63,24 @@ export const ChatArea = memo(function ChatArea({
   if (!hasApiKey) {
     return (
       <div className="flex flex-col h-full">
-        <div className="flex-1 flex items-center justify-center p-4">
-          <div className="text-center max-w-md mx-auto p-4 sm:p-8">
-            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Bot className="h-8 w-8 text-blue-600" />
+        <div className="flex-1 flex items-center justify-center mobile-p-safe">
+          <div className="text-center max-w-md mx-auto card-modern">
+            <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-modern">
+              <Bot className="h-10 w-10 text-white" />
             </div>
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">
+            <h2 className="text-fluid-lg font-semibold gradient-text mb-4">
               Welcome to Gemini Chat
             </h2>
-            <p className="text-sm sm:text-base text-gray-600 mb-4">
+            <p className="text-fluid-sm text-gray-600 mb-6 leading-relaxed">
               To get started, please configure your Gemini API key using the settings in the sidebar.
             </p>
-            <div className="text-xs sm:text-sm text-gray-500">
-              <p>Features available:</p>
-              <ul className="list-disc list-inside mt-2 space-y-1">
-                <li>Real-time AI conversations</li>
-                <li>Image and document uploads</li>
-                <li>Conversation history</li>
-                <li>Multiple Gemini models</li>
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 backdrop-blur-sm">
+              <p className="mobile-text-enhanced font-medium text-gray-700 mb-3">✨ Features available:</p>
+              <ul className="mobile-text-sm-enhanced text-gray-600 space-y-2 text-left">
+                <li className="flex items-center"><span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>Real-time AI conversations</li>
+                <li className="flex items-center"><span className="w-2 h-2 bg-indigo-500 rounded-full mr-3"></span>Image and document uploads</li>
+                <li className="flex items-center"><span className="w-2 h-2 bg-purple-500 rounded-full mr-3"></span>Conversation history</li>
+                <li className="flex items-center"><span className="w-2 h-2 bg-pink-500 rounded-full mr-3"></span>Multiple Gemini models</li>
               </ul>
             </div>
           </div>
@@ -99,25 +99,42 @@ export const ChatArea = memo(function ChatArea({
   if (messages.length === 0) {
     return (
       <div className="flex flex-col h-full">
-        <div className="flex-1 flex items-center justify-center p-4">
-          <div className="text-center max-w-md mx-auto p-4 sm:p-8">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Sparkles className="h-8 w-8 text-white" />
+        <div className="flex-1 flex items-center justify-center mobile-p-safe">
+          <div className="text-center max-w-lg mx-auto card-modern">
+            <div className="w-20 h-20 bg-gradient-to-br from-purple-500 via-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-modern animate-pulse">
+              <Sparkles className="h-10 w-10 text-white" />
             </div>
-            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">
+            <h2 className="text-fluid-lg font-semibold gradient-text mb-4">
               Start a new conversation
             </h2>
-            <p className="text-sm sm:text-base text-gray-600 mb-4">
+            <p className="text-fluid-sm text-gray-600 mb-6 leading-relaxed">
               Ask me anything! I can help with questions, analysis, creative tasks, and more.
             </p>
-            <div className="grid grid-cols-1 gap-2 text-xs sm:text-sm">
-              <div className="p-3 bg-gray-50 rounded-lg text-left">
-                <p className="font-medium text-gray-700">💡 Example prompts:</p>
-                <ul className="mt-1 text-gray-600 space-y-1">
-                  <li>• "Explain quantum computing"</li>
-                  <li>• "Write a Python function to..."</li>
-                  <li>• "Analyze this image" (with upload)</li>
-                  <li>• "Generate an image of..." (image generation)</li>
+            <div className="grid grid-cols-1 gap-4">
+              <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 rounded-xl p-5 text-left backdrop-blur-sm border border-white/40">
+                <p className="font-semibold text-gray-700 mb-3 flex items-center">
+                  <span className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center mr-3">
+                    💡
+                  </span>
+                  Example prompts:
+                </p>
+                <ul className="mobile-text-sm-enhanced text-gray-600 space-y-3">
+                  <li className="flex items-start">
+                    <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                    "Explain quantum computing in simple terms"
+                  </li>
+                  <li className="flex items-start">
+                    <span className="w-2 h-2 bg-indigo-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                    "Write a Python function to sort data"
+                  </li>
+                  <li className="flex items-start">
+                    <span className="w-2 h-2 bg-purple-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                    "Analyze this image" <span className="text-xs bg-purple-100 px-2 py-1 rounded-full ml-1">with upload</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="w-2 h-2 bg-pink-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                    "Generate an image of a sunset" <span className="text-xs bg-pink-100 px-2 py-1 rounded-full ml-1">image generation</span>
+                  </li>
                 </ul>
               </div>
             </div>
@@ -135,8 +152,8 @@ export const ChatArea = memo(function ChatArea({
 
   return (
     <div className="flex flex-col h-full">
-      {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-2 sm:p-4 space-y-3 sm:space-y-4">
+      {/* Messages Area with enhanced styling */}
+      <div className="flex-1 overflow-y-auto mobile-p-safe space-y-4 bg-gradient-to-b from-transparent via-white/10 to-white/20">
         {memoizedMessages.map((message) => (
           <EnhancedMessageBubble 
             key={message.id} 

@@ -22,18 +22,18 @@ export function Select({
   return (
     <div className="w-full">
       {label && (
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block mobile-text-enhanced font-medium gradient-text mb-2">
           {label}
         </label>
       )}
       <select
         className={cn(
-          'w-full px-3 py-2 border border-gray-300 rounded-lg',
+          'w-full px-4 py-3 border border-white/40 rounded-xl',
           'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
           'disabled:bg-gray-50 disabled:cursor-not-allowed',
-          'text-sm sm:text-base',
-          'transition-all duration-200',
-          'appearance-none bg-white',
+          'mobile-text-enhanced min-h-[48px]',
+          'transition-smooth shadow-modern hover:shadow-modern-hover',
+          'appearance-none bg-white/80 backdrop-blur-sm',
           error && 'border-red-300 focus:ring-red-500',
           className
         )}

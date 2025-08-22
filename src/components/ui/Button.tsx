@@ -18,20 +18,20 @@ export function Button({
   disabled,
   ...props
 }: ButtonProps) {
-  const baseClasses = 'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 touch-manipulation';
+  const baseClasses = 'inline-flex items-center justify-center font-medium rounded-xl transition-smooth focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 touch-manipulation shadow-modern hover:shadow-modern-hover';
 
   const variantClasses = {
-    primary: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 shadow-sm',
-    secondary: 'bg-gray-100 text-gray-900 hover:bg-gray-200 focus:ring-gray-500',
-    ghost: 'text-gray-700 hover:bg-gray-100 focus:ring-gray-500',
-    outline: 'border border-gray-300 text-gray-700 hover:bg-gray-50 focus:ring-gray-500',
-    destructive: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
+    primary: 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 focus:ring-blue-500 backdrop-blur-sm',
+    secondary: 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-900 hover:from-gray-200 hover:to-gray-300 focus:ring-gray-500 backdrop-blur-sm',
+    ghost: 'text-gray-700 hover:bg-white/60 focus:ring-gray-500 backdrop-blur-sm border border-transparent hover:border-white/40',
+    outline: 'border border-gray-300/60 text-gray-700 hover:bg-white/60 focus:ring-gray-500 backdrop-blur-sm hover:border-gray-400/60',
+    destructive: 'bg-gradient-to-r from-red-600 to-pink-600 text-white hover:from-red-700 hover:to-pink-700 focus:ring-red-500 backdrop-blur-sm',
   };
 
   const sizeClasses = {
-    sm: 'px-3 py-1.5 text-sm',
-    md: 'px-4 py-2 text-sm',
-    lg: 'px-6 py-3 text-base',
+    sm: 'px-4 py-2 mobile-text-sm-enhanced min-h-[44px]',
+    md: 'px-5 py-2.5 mobile-text-enhanced min-h-[48px]',
+    lg: 'px-6 py-3 text-fluid-base min-h-[52px]',
   };
 
   return (

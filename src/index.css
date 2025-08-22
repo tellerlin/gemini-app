@@ -1,9 +1,28 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* Mathematical expressions overflow control */
 @layer base {
+  /* Root variables for consistent theming */
+  :root {
+    --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    --glass-bg: rgba(255, 255, 255, 0.1);
+    --glass-border: rgba(255, 255, 255, 0.2);
+    --shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.1);
+    --shadow-hover: 0 12px 40px rgba(0, 0, 0, 0.15);
+    --border-radius: 16px;
+  }
+
+  /* Modern typography */
+  html {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  }
+
   /* KaTeX math formulas responsive handling */
   .katex-display {
     overflow-x: auto;
@@ -89,27 +108,109 @@
     scroll-behavior: smooth;
   }
   
-  /* Custom scrollbar for webkit browsers */
+  /* Modern custom scrollbar */
   ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+    width: 8px;
+    height: 8px;
   }
   
   ::-webkit-scrollbar-track {
-    background: transparent;
+    background: rgba(243, 244, 246, 0.3);
+    border-radius: 10px;
   }
   
   ::-webkit-scrollbar-thumb {
-    background: #d1d5db;
-    border-radius: 3px;
+    background: linear-gradient(135deg, #a855f7, #3b82f6);
+    border-radius: 10px;
+    border: 2px solid transparent;
+    background-clip: content-box;
   }
   
   ::-webkit-scrollbar-thumb:hover {
-    background: #9ca3af;
+    background: linear-gradient(135deg, #9333ea, #2563eb);
+    background-clip: content-box;
   }
 }
 
 @layer components {
+  /* Glass morphism effect */
+  .glass {
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-soft);
+  }
+
+  /* Modern gradient backgrounds */
+  .gradient-primary {
+    background: var(--primary-gradient);
+  }
+
+  .gradient-secondary {
+    background: var(--secondary-gradient);
+  }
+
+  .gradient-success {
+    background: var(--success-gradient);
+  }
+
+  /* Enhanced button styles */
+  .btn-modern {
+    @apply relative overflow-hidden transition-all duration-300 ease-out transform;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-soft);
+  }
+
+  .btn-modern:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+  }
+
+  .btn-modern:active {
+    transform: translateY(0);
+  }
+
+  /* Floating action button */
+  .fab {
+    @apply fixed bottom-6 right-6 w-14 h-14 rounded-full shadow-lg;
+    background: var(--primary-gradient);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .fab:hover {
+    transform: scale(1.1);
+    box-shadow: var(--shadow-hover);
+  }
+
+  /* Modern card styles */
+  .card-modern {
+    @apply bg-white rounded-2xl p-6;
+    box-shadow: var(--shadow-soft);
+    border: 1px solid rgba(243, 244, 246, 0.8);
+    transition: all 0.3s ease;
+  }
+
+  .card-modern:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-4px);
+  }
+
+  /* Animated gradient text */
+  .gradient-text {
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-size: 200% 200%;
+    animation: gradient-shift 3s ease infinite;
+  }
+
+  @keyframes gradient-shift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
   /* Mobile-friendly focus styles */
   .focus-visible {
     outline: 2px solid #3b82f6;
@@ -129,13 +230,117 @@
     user-select: none;
   }
   
-  /* Mobile-optimized transitions */
-  .mobile-transition {
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Enhanced transitions */
+  .transition-smooth {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .transition-bounce {
+    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   }
 }
 
 @layer utilities {
+  /* Enhanced spacing for mobile */
+  .mobile-safe-area {
+    padding-top: max(env(safe-area-inset-top), 12px);
+    padding-bottom: max(env(safe-area-inset-bottom), 12px);
+    padding-left: max(env(safe-area-inset-left), 16px);
+    padding-right: max(env(safe-area-inset-right), 16px);
+  }
+
+  /* Dynamic spacing */
+  .space-dynamic {
+    @apply p-4 sm:p-6 lg:p-8;
+  }
+
+  .space-dynamic-x {
+    @apply px-4 sm:px-6 lg:px-8;
+  }
+
+  .space-dynamic-y {
+    @apply py-3 sm:py-4 lg:py-6;
+  }
+
+  /* Text sizing with better mobile readability */
+  .text-fluid-sm {
+    @apply text-sm sm:text-base lg:text-lg;
+  }
+
+  .text-fluid-base {
+    @apply text-base sm:text-lg lg:text-xl;
+  }
+
+  .text-fluid-lg {
+    @apply text-lg sm:text-xl lg:text-2xl;
+  }
+
+  /* Modern shadows */
+  .shadow-modern {
+    box-shadow: var(--shadow-soft);
+  }
+
+  .shadow-modern-hover {
+    box-shadow: var(--shadow-hover);
+  }
+
+  /* Enhanced mobile interactions */
+  .mobile-tap {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Enhanced mobile touch targets */
+  .touch-target {
+    @apply min-h-[48px] min-w-[48px] flex items-center justify-center;
+    touch-action: manipulation;
+  }
+
+  /* Smooth performance animations */
+  .gpu-accelerated {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+  }
+
+  /* Modern loading states */
+  .loading-shimmer {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  /* Dark mode support preparation */
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --glass-bg: rgba(0, 0, 0, 0.1);
+      --glass-border: rgba(255, 255, 255, 0.1);
+    }
+  }
+
+  /* Reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* Backdrop blur utilities */
+  .backdrop-blur-modern {
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
   /* Safe area utilities for notched devices */
   .safe-top {
     padding-top: env(safe-area-inset-top);
@@ -153,25 +358,29 @@
     padding-right: env(safe-area-inset-right);
   }
   
-  /* Mobile-specific spacing */
-  .mobile-p {
-    @apply p-3 sm:p-4;
+  /* Enhanced mobile-specific spacing */
+  .mobile-p-safe {
+    @apply p-4 sm:p-6;
+    padding-top: max(env(safe-area-inset-top, 16px), 16px);
+    padding-bottom: max(env(safe-area-inset-bottom, 16px), 16px);
   }
-  
-  .mobile-px {
-    @apply px-3 sm:px-4;
+
+  .mobile-px-safe {
+    @apply px-4 sm:px-6;
+    padding-left: max(env(safe-area-inset-left, 16px), 16px);
+    padding-right: max(env(safe-area-inset-right, 16px), 16px);
   }
-  
-  .mobile-py {
-    @apply py-2 sm:py-3;
-  }
-  
-  /* Mobile text sizes */
-  .mobile-text {
+
+  /* Enhanced mobile text with better contrast */
+  .mobile-text-enhanced {
     @apply text-sm sm:text-base;
+    line-height: 1.6;
+    letter-spacing: 0.025em;
   }
-  
-  .mobile-text-sm {
+
+  .mobile-text-sm-enhanced {
     @apply text-xs sm:text-sm;
+    line-height: 1.5;
+    letter-spacing: 0.025em;
   }
 }

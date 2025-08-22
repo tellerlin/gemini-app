@@ -57,10 +57,10 @@ export function ChatInput({ onSendMessage, onGenerateImage, isLoading, disabled,
   }, [message, isMobile]);
 
   return (
-    <div className="border-t bg-white p-3 sm:p-4">
+    <div className="border-t border-white/40 bg-white/80 backdrop-blur-modern mobile-p-safe shadow-modern">
       {/* File Upload Section */}
       {showFileUpload && (
-        <div className="mb-3 sm:mb-4">
+        <div className="mb-4">
           <FileUpload
             files={files}
             onFilesChange={setFiles}
@@ -69,8 +69,8 @@ export function ChatInput({ onSendMessage, onGenerateImage, isLoading, disabled,
         </div>
       )}
 
-      {/* Input Form */}
-      <form onSubmit={handleSubmit} className="flex items-end space-x-2">
+      {/* Input Form with enhanced styling */}
+      <form onSubmit={handleSubmit} className="flex items-end space-x-3">
         <div className="flex-1">
           <div className="relative">
             <textarea
@@ -82,27 +82,28 @@ export function ChatInput({ onSendMessage, onGenerateImage, isLoading, disabled,
               disabled={disabled}
               rows={1}
               className={cn(
-                'w-full px-3 sm:px-4 py-2 sm:py-3 pr-12 border border-gray-300 rounded-2xl resize-none',
+                'w-full px-4 py-3 pr-14 border border-white/40 rounded-2xl resize-none',
                 'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
                 'disabled:bg-gray-50 disabled:cursor-not-allowed',
-                'placeholder-gray-500 text-sm sm:text-base',
-                'transition-all duration-200'
+                'placeholder-gray-500 mobile-text-enhanced',
+                'transition-smooth shadow-modern hover:shadow-modern-hover',
+                'bg-white/90 backdrop-blur-sm'
               )}
               style={{ 
-                minHeight: isMobile ? '44px' : '48px', 
-                maxHeight: isMobile ? '100px' : '120px' 
+                minHeight: isMobile ? '48px' : '52px', 
+                maxHeight: isMobile ? '120px' : '140px' 
               }}
             />
             
-            {/* File Upload Toggle */}
+            {/* File Upload Toggle with enhanced design */}
             <button
               type="button"
               onClick={() => setShowFileUpload(!showFileUpload)}
               className={cn(
-                'absolute right-2 top-1/2 transform -translate-y-1/2 p-2',
-                'text-gray-400 hover:text-gray-600 transition-colors',
-                'active:scale-95 touch-manipulation',
-                showFileUpload && 'text-blue-500'
+                'absolute right-2 top-1/2 transform -translate-y-1/2 touch-target',
+                'text-gray-400 hover:text-blue-500 transition-smooth rounded-lg',
+                'active:scale-95 hover:bg-blue-50/60',
+                showFileUpload && 'text-blue-500 bg-blue-50/60'
               )}
               title="Attach files"
             >

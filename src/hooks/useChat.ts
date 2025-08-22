@@ -10,7 +10,6 @@ import { geminiService } from '../services/gemini';
 import type { GeminiResponse } from '../services/gemini';
 import { getModelCapabilities, getOptimalThinkingConfig } from '../config/gemini';
 import { useLocalStorage, useConversations } from './useLocalStorage';
-import { loadApiKeysFromEnv } from '../utils/env';
 import { ContextManager, type ContextConfig } from '../utils/contextManager';
 import { generateAdvancedHTMLExport } from '../utils/exportRenderer';
 
@@ -290,19 +289,6 @@ export function useChat() {
 
   // Create context manager instance
   const contextManager = useMemo(() => new ContextManager(contextConfig), [contextConfig]);
-
-  // Load API keys from environment variables on initialization
-  useEffect(() => {
-    const envApiKeys = loadApiKeysFromEnv();
-    if (envApiKeys.length > 0) {
-      // Merge environment keys with stored keys, avoiding duplicates
-      const allKeys = [...new Set([...envApiKeys, ...apiKeys])];
-      if (allKeys.length !== apiKeys.length) {
-        setApiKeys(allKeys);
-        toast.success(`Loaded ${envApiKeys.length} API key(s) from environment variables`);
-      }
-    }
-  }, [apiKeys, setApiKeys]); // Only run once on mount
 
   const currentConversation = conversations.find(conv => conv.id === currentConversationId);
 

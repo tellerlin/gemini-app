@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://gemini.xuexiao.eu.org/sitemap.xml
+
+# Block access to sensitive directories
+Disallow: /src/
+Disallow: /node_modules/
+Disallow: /.git/
+Disallow: /dist/build/
+Disallow: /docs/
