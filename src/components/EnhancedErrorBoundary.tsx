@@ -148,61 +148,61 @@ export class EnhancedErrorBoundary extends Component<Props, State> {
       const errorDescription = this.getErrorDescription(this.state.error);
 
       return (
-        <div className=\"min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8\">
-          <div className=\"sm:mx-auto sm:w-full sm:max-w-md\">
-            <div className=\"bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10\">
-              <div className=\"text-center\">
-                <div className=\"mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100\">
-                  <AlertTriangle className=\"h-6 w-6 text-red-600\" />
+        <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+          <div className="sm:mx-auto sm:w-full sm:max-w-md">
+            <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+              <div className="text-center">
+                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+                  <AlertTriangle className="h-6 w-6 text-red-600" />
                 </div>
                 
-                <h2 className=\"mt-4 text-lg font-medium text-gray-900\">
+                <h2 className="mt-4 text-lg font-medium text-gray-900">
                   Oops! Something went wrong
                 </h2>
                 
-                <p className=\"mt-2 text-sm text-gray-600\">
+                <p className="mt-2 text-sm text-gray-600">
                   {errorDescription}
                 </p>
                 
-                <div className=\"mt-4 p-3 bg-gray-50 rounded-md text-left\">
-                  <div className=\"flex items-start\">
-                    <Bug className=\"h-4 w-4 text-gray-400 mt-0.5 mr-2 flex-shrink-0\" />
+                <div className="mt-4 p-3 bg-gray-50 rounded-md text-left">
+                  <div className="flex items-start">
+                    <Bug className="h-4 w-4 text-gray-400 mt-0.5 mr-2 flex-shrink-0" />
                     <div>
-                      <p className=\"text-xs font-medium text-gray-900\">
+                      <p className="text-xs font-medium text-gray-900">
                         Error Details:
                       </p>
-                      <p className=\"text-xs text-gray-600 mt-1 font-mono break-all\">
+                      <p className="text-xs text-gray-600 mt-1 font-mono break-all">
                         {this.state.error.name}: {this.state.error.message}
                       </p>
-                      <p className=\"text-xs text-gray-500 mt-1\">
+                      <p className="text-xs text-gray-500 mt-1">
                         ID: {this.state.errorId}
                       </p>
                     </div>
                   </div>
                 </div>
                 
-                <div className=\"mt-6 flex flex-col sm:flex-row gap-3 justify-center\">
+                <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
                   {canRetry && (
                     <button
                       onClick={this.handleRetry}
-                      className=\"inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500\"
+                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                     >
-                      <RefreshCw className=\"h-4 w-4 mr-2\" />
+                      <RefreshCw className="h-4 w-4 mr-2" />
                       Try Again ({this.maxRetries - this.state.retryCount} left)
                     </button>
                   )}
                   
                   <button
                     onClick={this.handleRefresh}
-                    className=\"inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500\"
+                    className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                   >
-                    <RefreshCw className=\"h-4 w-4 mr-2\" />
+                    <RefreshCw className="h-4 w-4 mr-2" />
                     Refresh Page
                   </button>
                 </div>
                 
-                <div className=\"mt-4 pt-4 border-t border-gray-200\">
-                  <p className=\"text-xs text-gray-500\">
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <p className="text-xs text-gray-500">
                     If this problem persists, please contact support with Error ID: {this.state.errorId}
                   </p>
                 </div>

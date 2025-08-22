@@ -64,7 +64,7 @@ export function MermaidResponsiveDemo() {
     <div className="p-8 max-w-7xl mx-auto">
       <h1 className="text-3xl font-bold mb-6">Mermaid Responsive Chart Demo</h1>
       
-      {/* 控制面板 */}
+      {/* Control panel */}}
       <div className="mb-8 space-y-4">
         <div>
           <label className="block text-sm font-medium mb-2">Select chart type:</label>
@@ -101,7 +101,7 @@ export function MermaidResponsiveDemo() {
         </div>
       </div>
 
-      {/* 图表展示区域 */}
+      {/* Chart display area */}}
       <div className="space-y-8">
         <div>
           <h2 className="text-xl font-semibold mb-4">MermaidDiagram Component</h2>
@@ -117,7 +117,7 @@ export function MermaidResponsiveDemo() {
           </div>
         </div>
 
-        {/* 代码展示 */}
+        {/* Code display */}}
         <div>
           <h3 className="text-lg font-medium mb-2">Mermaid Code:</h3>
           <pre className="bg-gray-100 p-4 rounded-lg overflow-x-auto text-sm">
@@ -125,7 +125,7 @@ export function MermaidResponsiveDemo() {
           </pre>
         </div>
 
-        {/* 响应式说明 */}
+        {/* Responsive description */}}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
           <h3 className="text-lg font-medium mb-3">Responsive Features:</h3>
           <ul className="list-disc list-inside space-y-2 text-sm">

@@ -51,7 +51,7 @@ export function ModelSwitchIndicator({ className = '' }: ModelSwitchIndicatorPro
         <div className="flex items-center gap-2 mb-2">
           <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
           <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
-            智能模型切换
+            Smart Model Switch
           </span>
         </div>
         
@@ -76,7 +76,7 @@ export function ModelSwitchIndicator({ className = '' }: ModelSwitchIndicatorPro
         <button
           onClick={() => setIsVisible(false)}
           className="absolute top-1 right-1 text-blue-400 hover:text-blue-600 dark:text-blue-500 dark:hover:text-blue-300"
-          aria-label="关闭"
+          aria-label="Close"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

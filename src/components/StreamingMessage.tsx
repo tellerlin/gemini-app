@@ -90,7 +90,7 @@ export function StreamingMessage({
             className="text-red-600 border-red-200 hover:bg-red-50"
           >
             <Square className="h-3 w-3 mr-1" />
-            停止生成
+            Stop Generation
           </Button>
         )}
         
@@ -103,7 +103,7 @@ export function StreamingMessage({
               className="text-gray-500 hover:text-gray-700"
             >
               <Copy className="h-3 w-3 mr-1" />
-              复制
+              Copy
             </Button>
             <Button
               variant="ghost"
@@ -112,7 +112,7 @@ export function StreamingMessage({
               className="text-gray-500 hover:text-gray-700"
             >
               <Download className="h-3 w-3 mr-1" />
-              下载
+              Download
             </Button>
           </>
         )}
@@ -126,7 +126,7 @@ export function StreamingMessage({
             <div className="w-1 h-1 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
             <div className="w-1 h-1 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
           </div>
-          <span>正在生成回答...</span>
+          <span>Generating response...</span>
         </div>
       )}
     </div>

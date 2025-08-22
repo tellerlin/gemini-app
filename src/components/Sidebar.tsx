@@ -170,7 +170,7 @@ export function Sidebar({
                     )}
                     onClick={() => onSelectConversation(conversation.id)}
                   >
-                    {/* 桌面和移动端适配的图标区域 */}
+                    {/* Icon area with desktop and mobile responsive design */}
                     <div className={cn(
                       "flex items-center",
                       isMobile ? "py-2 pl-2" : "py-2.5 pl-3"
@@ -186,7 +186,7 @@ export function Sidebar({
                       </div>
                     </div>
                     
-                    {/* 响应式文字区域 */}
+                    {/* Responsive text area */}
                     <div className={cn(
                       "flex-1 min-w-0",
                       isMobile ? "py-2 px-2" : "py-2.5 px-3"
@@ -204,7 +204,7 @@ export function Sidebar({
                         {formatDate(conversation.updatedAt)}
                       </p>
                     </div>
-                    {/* 响应式操作按钮区域 */}
+                    {/* Responsive action button area */}
                     <div className={cn(
                       "flex items-center opacity-0 group-hover:opacity-100 transition-all duration-200",
                       isMobile ? "py-2 pr-2" : "py-2.5 pr-2.5 space-x-1"

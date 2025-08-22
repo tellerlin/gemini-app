@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Toaster } from 'react-hot-toast';
 import { Menu } from 'lucide-react';
 import { Sidebar } from './components/Sidebar';
@@ -7,7 +7,6 @@ import { ApiKeyModal } from './components/ApiKeyModal';
 import { AdvancedSettingsModal } from './components/AdvancedSettingsModal';
 import { PerformanceMonitor } from './components/PerformanceMonitor';
 import { ModelSwitchIndicator } from './components/ModelSwitchIndicator';
-import { MermaidDiagram } from './components/MermaidDiagram';
 import { useChat } from './hooks/useChat';
 import { useResponsive } from './hooks/useLocalStorage';
 import { Button } from './components/ui/Button';
@@ -65,18 +64,14 @@ function App() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isMobile, sidebarOpen]);
 
-  const handleSaveApiKeys = (newApiKeys: string[]) => {
-    setApiKeys(newApiKeys);
-  };
-
-  const handleConversationSelect = (id: string) => {
+  const handleConversationSelect = useCallback((id: string) => {
     selectConversation(id);
     if (isMobile) {
       setSidebarOpen(false);
     }
-  };
+  }, [selectConversation, isMobile]);
 
-  // 稳定化 conversationConfig 引用以避免不必要的重新渲染
+  // Stabilize conversationConfig reference to avoid unnecessary re-renders
   const stableConversationConfig = useMemo(() => {
     return currentConversation?.config || defaultConversationConfig;
   }, [currentConversation?.config, defaultConversationConfig]);
@@ -86,13 +81,8 @@ function App() {
     handleSaveApiKeys: (newApiKeys: string[]) => {
       setApiKeys(newApiKeys);
     },
-    handleConversationSelect: (id: string) => {
-      selectConversation(id);
-      if (isMobile) {
-        setSidebarOpen(false);
-      }
-    },
-  }), [setApiKeys, selectConversation, isMobile]);
+    handleConversationSelect,
+  }), [setApiKeys, handleConversationSelect]);
 
   return (
     <GlobalErrorBoundary>

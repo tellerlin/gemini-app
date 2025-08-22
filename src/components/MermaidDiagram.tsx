@@ -36,7 +36,7 @@ export function MermaidDiagram({
       const processedCode = fixMermaidSyntax(code.trim());
       
       if (!processedCode || processedCode === 'UNSUPPORTED_TABLE_SYNTAX') {
-        setError('不支持的图表格式');
+        setError('Unsupported chart format');
         setIsLoading(false);
         return;
       }
@@ -85,7 +85,7 @@ export function MermaidDiagram({
       if (renderResult && renderResult.svg) {
         setSvg(renderResult.svg);
       } else {
-        throw new Error('渲染失败：未返回SVG内容');
+        throw new Error('Rendering failed: No SVG content returned');
       }
 
     } catch (err) {
@@ -96,14 +96,14 @@ export function MermaidDiagram({
       let userFriendlyError = '';
       if (errorMessage.includes('Parse error') || errorMessage.includes('Syntax validation failed')) {
         if (/[\u4e00-\u9fff]/.test(code)) {
-          userFriendlyError = '中文语法解析错误 - 请检查边缘标签格式';
+          userFriendlyError = 'Chinese syntax parsing error - please check edge label format';
         } else {
-          userFriendlyError = '语法解析错误 - 请检查Mermaid语法是否正确';
+          userFriendlyError = 'Syntax parsing error - please check if Mermaid syntax is correct';
         }
       } else if (errorMessage.includes('Lexical error')) {
-        userFriendlyError = '词法错误 - 可能是注释格式错误';
+        userFriendlyError = 'Lexical error - possible comment format error';
       } else {
-        userFriendlyError = `渲染失败: ${errorMessage}`;
+        userFriendlyError = `Rendering failed: ${errorMessage}`;
       }
       
       setError(userFriendlyError);
@@ -118,7 +118,7 @@ export function MermaidDiagram({
 
   const downloadDiagram = useCallback(async () => {
     if (!svg) {
-      toast.error('没有可下载的图表');
+      toast.error('No chart available for download');
       return;
     }
     
@@ -133,10 +133,10 @@ export function MermaidDiagram({
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      toast.success('图表已下载为SVG格式');
+      toast.success('Chart downloaded as SVG format');
     } catch (error) {
       console.error('Download error:', error);
-      toast.error('下载失败，请重试');
+      toast.error('Download failed, please try again');
     }
   }, [svg, title]);
 
@@ -148,7 +148,7 @@ export function MermaidDiagram({
     return (
       <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-        <p className="text-sm text-gray-600">正在渲染图表...</p>
+        <p className="text-sm text-gray-600">Rendering chart...</p>
       </div>
     );
   }
@@ -156,11 +156,11 @@ export function MermaidDiagram({
   if (error) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-        <h4 className="text-sm font-medium text-red-800 mb-1">图表渲染失败</h4>
+        <h4 className="text-sm font-medium text-red-800 mb-1">Chart rendering failed</h4>
         <p className="text-sm text-red-700 mb-3">{error}</p>
         <details className="text-xs">
           <summary className="cursor-pointer text-red-600 hover:text-red-800 mb-2">
-            查看原始代码
+            View Raw Code
           </summary>
           <pre className="bg-red-100 p-3 rounded text-red-800 overflow-x-auto border border-red-200">
             {code}
@@ -175,14 +175,14 @@ export function MermaidDiagram({
       {/* Header */}
       <div className="flex justify-between items-center p-3 border-b border-gray-200 bg-gray-50">
         <h3 className="text-sm font-medium text-gray-700">
-          {title || 'Mermaid图表'}
+          {title || 'Mermaid Chart'}
         </h3>
         <div className="flex items-center space-x-2">
           <button
             onClick={zoomOut}
             disabled={scale <= 0.3}
             className="p-1.5 text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed rounded hover:bg-gray-100"
-            title="缩小"
+            title="Zoom out"
           >
             <ZoomOut className="h-4 w-4" />
           </button>
@@ -193,14 +193,14 @@ export function MermaidDiagram({
             onClick={zoomIn}
             disabled={scale >= 3}
             className="p-1.5 text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed rounded hover:bg-gray-100"
-            title="放大"
+            title="Zoom in"
           >
             <ZoomIn className="h-4 w-4" />
           </button>
           <button
             onClick={resetZoom}
             className="p-1.5 text-gray-500 hover:text-gray-700 rounded hover:bg-gray-100"
-            title="重置缩放"
+            title="Reset zoom"
           >
             <RotateCcw className="h-4 w-4" />
           </button>
@@ -210,7 +210,7 @@ export function MermaidDiagram({
               <button
                 onClick={downloadDiagram}
                 className="p-1.5 text-gray-500 hover:text-gray-700 rounded hover:bg-gray-100"
-                title="下载SVG格式"
+                title="Download SVG format"
               >
                 <Download className="h-4 w-4" />
               </button>
@@ -250,7 +250,7 @@ export function MermaidDiagram({
           </div>
         ) : (
           <div className="flex items-center justify-center h-32 text-gray-500">
-            <p>没有图表内容</p>
+            <p>No chart content</p>
           </div>
         )}
       </div>

@@ -63,7 +63,7 @@ function generateHTMLExport(conversation: any): string {
 
   return `
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -303,7 +303,7 @@ export function useChat() {
       config: defaultConversationConfig,
     };
 
-    // 使用新的保存方法
+    // Use the new save method
     saveConversation(newConversation);
     setCurrentConversationId(newConversation.id);
     return newConversation;
@@ -770,7 +770,7 @@ export function useChat() {
       return;
     }
 
-    // Create safe filename that preserves Chinese characters
+    // Create safe filename that preserves Unicode characters
     const safeFilename = conversation.title
       .replace(/[<>:"/\\|?*]/g, '_') // Only replace problematic filesystem characters
       .normalize('NFC') // Normalize Unicode

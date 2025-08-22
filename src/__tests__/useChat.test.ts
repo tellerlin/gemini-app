@@ -23,7 +23,7 @@ vi.mock('react-hot-toast', () => ({
 }));
 
 vi.mock('../src/hooks/useLocalStorage', () => ({
-  useLocalStorage: vi.fn((key: string, defaultValue: any) => [defaultValue, vi.fn()]),
+  useLocalStorage: vi.fn((key: string, defaultValue: unknown) => [defaultValue, vi.fn()]),
   useConversations: vi.fn(() => ({
     conversations: [],
     isLoading: false,

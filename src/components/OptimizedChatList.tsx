@@ -12,8 +12,8 @@ interface OptimizedChatListProps {
 }
 
 /**
- * 高性能聊天消息列表组件
- * 使用虚拟化、并发特性和Web Worker优化
+ * High-performance chat message list component
+ * Uses virtualization, concurrent features and Web Worker optimization
  */
 export const OptimizedChatList = memo<OptimizedChatListProps>(function OptimizedChatList({
   messages,

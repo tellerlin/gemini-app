@@ -25,7 +25,7 @@ export function PerformanceMonitor({ isOpen, onClose, getMetrics, onResetMetrics
   }, [getMetrics]);
 
   const handleResetMetrics = useCallback(() => {
-    if (window.confirm('确定要重置所有性能统计数据吗？这将清零所有计数器并重新开始统计。')) {
+    if (window.confirm('Are you sure you want to reset all performance statistics? This will clear all counters and start fresh statistics collection.')) {
       onResetMetrics?.();
       refreshMetrics(); // Refresh to show the reset values
     }

@@ -115,9 +115,8 @@ export function fixMermaidSyntax(mermaidCode: string): string {
           if (text.startsWith('"') && text.endsWith('"')) {
             return match;
           }
-          // Escape any internal quotes
-          const escapedText = text.replace(/"/g, '#quot;');
-          return `${nodeId}["${escapedText}"]`;
+          // Don't escape quotes - it causes encoding issues
+          return `${nodeId}["${text}"]`;
         }
       );
       
@@ -128,20 +127,32 @@ export function fixMermaidSyntax(mermaidCode: string): string {
           if (text.startsWith('"') && text.endsWith('"')) {
             return match;
           }
-          const escapedText = text.replace(/"/g, '#quot;');
-          return `${nodeId}{"${escapedText}"}`;
+          // Don't escape quotes - it causes encoding issues
+          return `${nodeId}{"${text}"}`;
         }
       );
       
-      // Fix round/circular nodes: A(中文) -> A("中文")
+      // Fix double round/circular nodes FIRST: A((中文)) -> A(("中文"))
       processedLine = processedLine.replace(
-        /([A-Za-z0-9_]+)\(([^)]*[\u4e00-\u9fff][^)]*)\)/g, 
+        /([A-Za-z0-9_]+)\(\(([^)]*[\u4e00-\u9fff][^)]*)\)\)/g, 
         (match, nodeId, text) => {
           if (text.startsWith('"') && text.endsWith('"')) {
             return match;
           }
-          const escapedText = text.replace(/"/g, '#quot;');
-          return `${nodeId}("${escapedText}")`;
+          // Don't escape quotes in double parentheses - it causes encoding issues
+          return `${nodeId}(("${text}"))`;
+        }
+      );
+      
+      // Fix single round/circular nodes AFTER: A(中文) -> A("中文")
+      // But skip if it's already part of double parentheses
+      processedLine = processedLine.replace(
+        /([A-Za-z0-9_]+)\(([^()]*[\u4e00-\u9fff][^()]*)\)(?!\))/g, 
+        (match, nodeId, text) => {
+          if (text.startsWith('"') && text.endsWith('"')) {
+            return match;
+          }
+          return `${nodeId}("${text}")`;
         }
       );
       
@@ -152,8 +163,8 @@ export function fixMermaidSyntax(mermaidCode: string): string {
           if (text.startsWith('"') && text.endsWith('"')) {
             return match;
           }
-          const escapedText = text.replace(/"/g, '#quot;');
-          return `${arrow}|"${escapedText}"|`;
+          // Don't escape quotes in edge labels - it causes encoding issues
+          return `${arrow}|"${text}"|`;
         }
       );
       

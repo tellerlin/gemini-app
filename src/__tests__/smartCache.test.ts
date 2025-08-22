@@ -1,6 +1,5 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
-import { SmartCache, useSmartCache } from '../utils/smartCache';
+import { describe, it, expect } from 'vitest';
+import { SmartCache } from '../utils/smartCache';
 
 describe('SmartCache', () => {
   it('should store and retrieve data', () => {

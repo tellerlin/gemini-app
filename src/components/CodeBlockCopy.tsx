@@ -16,11 +16,11 @@ export function CodeBlockCopy({ code, language, isMobile = false }: CodeBlockCop
     try {
       await navigator.clipboard.writeText(code);
       setCopied(true);
-      toast.success(`已复制 ${language} 代码到剪贴板`);
+      toast.success(`Copied ${language} code to clipboard`);
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
       console.error('Failed to copy:', error);
-      toast.error('复制失败，请重试');
+      toast.error('Copy failed, please try again');
     }
   };
 
@@ -33,17 +33,17 @@ export function CodeBlockCopy({ code, language, isMobile = false }: CodeBlockCop
         "flex items-center space-x-1",
         isMobile ? "opacity-100" : "opacity-0 group-hover:opacity-100"
       )}
-      title={`复制 ${language} 代码`}
+      title={`Copy ${language} code`}
     >
       {copied ? (
         <>
           <Check className="h-3 w-3 sm:h-4 sm:w-4 text-green-400" />
-          {!isMobile && <span className="text-xs">已复制</span>}
+          {!isMobile && <span className="text-xs">Copied</span>}
         </>
       ) : (
         <>
           <Copy className="h-3 w-3 sm:h-4 sm:w-4" />
-          {!isMobile && <span className="text-xs">复制</span>}
+          {!isMobile && <span className="text-xs">Copy</span>}
         </>
       )}
     </button>

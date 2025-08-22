@@ -3,7 +3,7 @@ import { conversationDB } from '../utils/conversationDB';
 import { userManager } from '../utils/userManager';
 import type { Conversation } from '../types/chat';
 
-// 为非对话数据保留localStorage，为对话数据使用IndexedDB
+// Use localStorage for non-conversation data, use IndexedDB for conversation data
 export function useLocalStorage<T>(key: string, initialValue: T) {
   const [storedValue, setStoredValue] = useState<T>(() => {
     try {
@@ -20,11 +20,11 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
       const valueToStore = value instanceof Function ? value(storedValue) : value;
       setStoredValue(valueToStore);
       
-      // 计算存储大小
+      // Calculate storage size
       const jsonString = JSON.stringify(valueToStore);
       const sizeInBytes = new Blob([jsonString]).size;
       
-      // 如果数据太大（>1MB），给出警告
+      // Give warning if data is too large (>1MB)
       if (sizeInBytes > 1024 * 1024) {
         console.warn(`Large data being stored in localStorage (${(sizeInBytes / 1024 / 1024).toFixed(2)}MB) for key "${key}"`);
       }
@@ -33,11 +33,11 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
     } catch (error) {
       console.error(`Error setting localStorage key "${key}":`, error);
       
-      // 如果是存储空间超出错误，尝试清理
+      // If storage quota exceeded error, try cleanup
       if (error instanceof DOMException && error.name === 'QuotaExceededError') {
         console.warn('localStorage quota exceeded, attempting to clean up...');
         try {
-          // 清理一些可能的临时数据
+          // Clean up some possible temporary data
           const keysToCheck = ['temp_', 'cache_', 'old_'];
           for (const prefix of keysToCheck) {
             for (let i = localStorage.length - 1; i >= 0; i--) {
@@ -47,7 +47,7 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
               }
             }
           }
-          // 再次尝试存储
+          // Try storing again
           window.localStorage.setItem(key, JSON.stringify(valueToStore));
         } catch (retryError) {
           console.error('Failed to save after cleanup:', retryError);
@@ -59,14 +59,14 @@ export function useLocalStorage<T>(key: string, initialValue: T) {
   return [storedValue, setValue] as const;
 }
 
-// 专用于对话管理的hook - 集成用户管理
+// Hook dedicated to conversation management - integrated with user management
 export function useConversations() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState(userManager.getOrCreateDefaultUser());
 
-  // 切换用户
+  // Switch user
   const switchUser = useCallback(async (userId: string) => {
     try {
       userManager.setCurrentUser(userId);
@@ -74,7 +74,7 @@ export function useConversations() {
       if (user) {
         setCurrentUser(user);
         conversationDB.setUserId(user.id);
-        // 重新加载该用户的对话
+        // Reload conversations for this user
         await loadConversations();
       }
     } catch (err) {
@@ -83,13 +83,13 @@ export function useConversations() {
     }
   }, []);
 
-  // 创建新用户
+  // Create new user
   const createUser = useCallback(async (name: string) => {
     try {
       const newUser = userManager.createUser(name);
       setCurrentUser(newUser);
       conversationDB.setUserId(newUser.id);
-      setConversations([]); // 新用户没有对话历史
+      setConversations([]); // New user has no conversation history
       return newUser;
     } catch (err) {
       console.error('Failed to create user:', err);

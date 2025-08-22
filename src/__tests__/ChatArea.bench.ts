@@ -1,17 +1,17 @@
-import { bench, describe } from 'vitest';
+import { bench, describe, vi } from 'vitest';
+import React from 'react';
 import { render } from '@testing-library/react';
 import { ChatArea } from '../src/components/ChatArea';
 import type { Message, ConversationConfig } from '../src/types/chat';
 
 // Mock heavy components
 vi.mock('../src/components/EnhancedMessageBubble', () => ({
-  EnhancedMessageBubble: ({ message }: { message: Message }) => (
-    <div>{message.content}</div>
-  ),
+  EnhancedMessageBubble: ({ message }: { message: Message }) => 
+    React.createElement('div', null, message.content),
 }));
 
 vi.mock('../src/components/ChatInput', () => ({
-  ChatInput: () => <div>Chat Input</div>,
+  ChatInput: () => React.createElement('div', null, 'Chat Input'),
 }));
 
 // Generate test messages
@@ -39,30 +39,30 @@ const defaultProps = {
 describe('ChatArea Performance Benchmarks', () => {
   bench('render ChatArea with 10 messages', () => {
     const messages = generateMessages(10);
-    render(<ChatArea {...defaultProps} messages={messages} />);
+    render(React.createElement(ChatArea, { ...defaultProps, messages }));
   }, { iterations: 100 });
 
   bench('render ChatArea with 50 messages', () => {
     const messages = generateMessages(50);
-    render(<ChatArea {...defaultProps} messages={messages} />);
+    render(React.createElement(ChatArea, { ...defaultProps, messages }));
   }, { iterations: 50 });
 
   bench('render ChatArea with 100 messages', () => {
     const messages = generateMessages(100);
-    render(<ChatArea {...defaultProps} messages={messages} />);
+    render(React.createElement(ChatArea, { ...defaultProps, messages }));
   }, { iterations: 20 });
 
   bench('render ChatArea with 500 messages', () => {
     const messages = generateMessages(500);
-    render(<ChatArea {...defaultProps} messages={messages} />);
+    render(React.createElement(ChatArea, { ...defaultProps, messages }));
   }, { iterations: 5 });
 
   bench('re-render ChatArea with same messages (memoization test)', () => {
     const messages = generateMessages(100);
-    const { rerender } = render(<ChatArea {...defaultProps} messages={messages} />);
+    const { rerender } = render(React.createElement(ChatArea, { ...defaultProps, messages }));
     
     // This should be fast due to React.memo and useMemo optimizations
-    rerender(<ChatArea {...defaultProps} messages={messages} isLoading={true} />);
+    rerender(React.createElement(ChatArea, { ...defaultProps, messages, isLoading: true }));
   }, { iterations: 100 });
 });
 

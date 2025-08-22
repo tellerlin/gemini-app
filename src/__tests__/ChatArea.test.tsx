@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { ChatArea } from '../src/components/ChatArea';
 import type { Message, ConversationConfig } from '../src/types/chat';
 

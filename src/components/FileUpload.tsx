@@ -98,28 +98,28 @@ export function FileUpload({
     }
     
     // Fallback for unsupported types
-    if (type.startsWith('image/')) return { icon: Image, color: 'text-blue-500', category: '图片' };
-    if (type.startsWith('video/')) return { icon: Video, color: 'text-purple-500', category: '视频' };
-    if (type.startsWith('audio/')) return { icon: Music, color: 'text-green-500', category: '音频' };
-    if (type.startsWith('text/')) return { icon: FileText, color: 'text-gray-500', category: '文本' };
+    if (type.startsWith('image/')) return { icon: Image, color: 'text-blue-500', category: 'Image' };
+    if (type.startsWith('video/')) return { icon: Video, color: 'text-purple-500', category: 'Video' };
+    if (type.startsWith('audio/')) return { icon: Music, color: 'text-green-500', category: 'Audio' };
+    if (type.startsWith('text/')) return { icon: FileText, color: 'text-gray-500', category: 'Text' };
     
-    return { icon: File, color: 'text-gray-500', category: '文件' };
+    return { icon: File, color: 'text-gray-500', category: 'File' };
   };
 
   const validateFile = (file: File): string | null => {
     // Check file size
     if (file.size > maxFileSize * 1024 * 1024) {
-      return `文件 ${file.name} 太大，最大支持 ${maxFileSize}MB`;
+      return `File ${file.name} is too large, maximum size is ${maxFileSize}MB`;
     }
     
     // Check file type
     if (!isFileTypeSupported(file.type)) {
-      return `不支持的文件类型: ${file.name}`;
+      return `Unsupported file type: ${file.name}`;
     }
     
     // Check total file count
     if (files.length >= maxFiles) {
-      return `最多只能上传 ${maxFiles} 个文件`;
+      return `Maximum ${maxFiles} files allowed`;
     }
     
     return null;
@@ -139,7 +139,7 @@ export function FileUpload({
         };
         resolve(attachment);
       };
-      reader.onerror = () => reject(new Error(`读取文件失败: ${file.name}`));
+      reader.onerror = () => reject(new Error(`Failed to read file: ${file.name}`));
       reader.readAsDataURL(file);
     });
   };
@@ -161,7 +161,7 @@ export function FileUpload({
         const attachment = await handleFileRead(file);
         newFiles.push(attachment);
       } catch (error) {
-        newErrors.push(`处理文件失败: ${file.name}`);
+        newErrors.push(`Failed to process file: ${file.name}`);
       }
     }
     
@@ -206,7 +206,7 @@ export function FileUpload({
     if (allowedTypes) {
       return allowedTypes.join(', ');
     }
-    return '图片、视频、音频、PDF、Office文档等';
+    return 'Images, videos, audio, PDF, Office documents, etc.';
   };
 
   return (
@@ -240,13 +240,13 @@ export function FileUpload({
         <label className="flex flex-col items-center justify-center cursor-pointer">
           <Upload className={cn("text-gray-400 mb-2", isMobile ? "h-6 w-6" : "h-8 w-8")} />
           <span className={cn("text-gray-600 text-center", isMobile ? "text-xs" : "text-sm")}>
-            拖拽文件到此处或点击上传
+            Drag files here or click to upload
           </span>
           <span className={cn("text-gray-400 mt-1 text-center", isMobile ? "text-xs" : "text-xs")}>
-            支持: {getSupportedTypesText()} (最大 {maxFileSize}MB)
+            Supported: {getSupportedTypesText()} (max {maxFileSize}MB)
           </span>
           <span className={cn("text-gray-400 text-center", isMobile ? "text-xs" : "text-xs")}>
-            {files.length}/{maxFiles} 个文件
+            {files.length}/{maxFiles} files
           </span>
           <input
             type="file"
@@ -292,7 +292,7 @@ export function FileUpload({
                     "text-gray-400 hover:text-red-500 transition-colors active:scale-95 touch-manipulation",
                     isMobile ? "p-1" : "p-1"
                   )}
-                  title="移除文件"
+                  title="Remove file"
                 >
                   <X className={cn(isMobile ? "h-3 w-3" : "h-4 w-4")} />
                 </button>
