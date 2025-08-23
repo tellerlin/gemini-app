@@ -45,19 +45,20 @@ export function Sidebar({
 }: SidebarProps) {
   const [exportDropdownOpen, setExportDropdownOpen] = useState<string | null>(null);
 
-  // Close dropdown when clicking outside
+  // Close dropdown when clicking outside (simplified - only on click events)
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (exportDropdownOpen) {
         const target = event.target as Element;
+        // Close only on click, not on mouse movement
         if (!target.closest('.export-dropdown')) {
           setExportDropdownOpen(null);
         }
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
   }, [exportDropdownOpen]);
 
   const formatDate = (date: Date) => {
@@ -170,7 +171,8 @@ export function Sidebar({
                       'transform hover:-translate-y-0.5 active:scale-[0.98]',
                       currentConversationId === conversation.id
                         ? 'bg-gradient-to-r from-blue-50 via-indigo-50 to-purple-50 border-2 border-blue-300/60 shadow-md'
-                        : 'border border-slate-200/60 hover:border-slate-300/80'
+                        : 'border border-slate-200/60 hover:border-slate-300/80',
+                      exportDropdownOpen === conversation.id ? 'relative z-[10000]' : 'relative'
                     )}
                     onClick={() => onSelectConversation(conversation.id)}
                   >
@@ -234,16 +236,19 @@ export function Sidebar({
                         
                         {exportDropdownOpen === conversation.id && (
                           <div className={cn(
-                            "absolute right-0 mt-1 bg-white/95 backdrop-blur-sm border border-slate-200/80 rounded-xl shadow-lg z-50",
-                            isMobile ? "w-16" : "w-20"
-                          )}>
+                            "absolute right-0 top-full bg-white border border-slate-300 rounded-lg shadow-2xl backdrop-blur-sm py-1",
+                            isMobile ? "w-20" : "w-24"
+                          )}
+                          style={{
+                            zIndex: 10001
+                          }}>
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 onExportConversation(conversation.id, 'txt');
                                 setExportDropdownOpen(null);
                               }}
-                              className="w-full px-3 py-2 text-left text-xs font-medium text-slate-700 hover:bg-slate-50 first:rounded-t-xl transition-colors duration-150"
+                              className="w-full px-3 py-2 text-left text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors duration-150"
                             >
                               TXT
                             </button>
@@ -263,7 +268,7 @@ export function Sidebar({
                                 onExportConversation(conversation.id, 'pdf');
                                 setExportDropdownOpen(null);
                               }}
-                              className="w-full px-3 py-2 text-left text-xs font-medium text-slate-700 hover:bg-slate-50 last:rounded-b-xl transition-colors duration-150"
+                              className="w-full px-3 py-2 text-left text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors duration-150"
                             >
                               PDF
                             </button>

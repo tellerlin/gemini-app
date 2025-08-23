@@ -7,52 +7,52 @@ import { fixMermaidSyntax } from './contentParser';
 function ExportMarkdownRenderer({ content }: { content: string }) {
   // Simple but effective content processing that mirrors ModernMarkdownRenderer logic
   const processContent = (text: string) => {
-    // 增强的内容处理逻辑，采用主程序的保护机制
+    // Enhanced content processing logic with protection mechanisms from main program
     
-    // 1. 首先保护所有代码块，避免处理其中的特殊字符
+    // 1. First protect all code blocks to avoid processing special characters within them
     const codeBlocks: string[] = [];
     let processed = text.replace(/```[\s\S]*?```/g, (match) => {
       codeBlocks.push(match);
       return `__CODE_BLOCK_${codeBlocks.length - 1}__`;
     });
     
-    // 2. 保护内联代码
+    // 2. Protect inline code
     const inlineCodes: string[] = [];
     processed = processed.replace(/`[^`]*?`/g, (match) => {
       inlineCodes.push(match);
       return `__INLINE_CODE_${inlineCodes.length - 1}__`;
     });
 
-    // 3. 智能数学公式处理 - 使用占位符机制避免冲突
+    // 3. Smart math formula processing - use placeholder mechanism to avoid conflicts
     const mathBlockPlaceholders: string[] = [];
     
-    // 先处理块级数学公式
+    // Process block-level math formulas first
     processed = processed.replace(/\$\$\n?([\s\S]*?)\n?\$\$/g, (match, content) => {
       const placeholder = `__MATH_BLOCK_${mathBlockPlaceholders.length}__`;
       mathBlockPlaceholders.push(`<div class="math-block">$$${content.trim()}$$</div>`);
       return placeholder;
     });
     
-    // 处理内联数学公式
+    // Process inline math formulas
     processed = processed.replace(/\$([^$\n]+)\$/g, (match, content) => {
       return `<span class="math-inline">$${content}$</span>`;
     });
     
-    // 修复中文和数学公式混合的问题（从主程序学习）
+    // Fix issues with Chinese text and math formulas mixed (learned from main program)
     processed = processed.replace(
       /([\u4e00-\u9fff\s]+)->\s*\$\s*([^$]+)\s*\$/g,
       '$1-> `$2`'
     );
     
-    // 处理 ```math 块
+    // Handle ```math blocks
     processed = processed.replace(/```math\n([\s\S]*?)\n```/g, (match, content) => {
       const placeholder = `__MATH_BLOCK_${mathBlockPlaceholders.length}__`;
       mathBlockPlaceholders.push(`<div class="math-block">$$${content.trim()}$$</div>`);
       return placeholder;
     });
 
-    // 4. 处理Mermaid图表（已经恢复代码块，所以Mermaid会被正确处理）
-    // 恢复代码块进行Mermaid处理
+    // 4. Handle Mermaid diagrams (code blocks have been restored, so Mermaid will be processed correctly)
+    // Restore code blocks for Mermaid processing
     codeBlocks.forEach((code, index) => {
       processed = processed.replace(`__CODE_BLOCK_${index}__`, code);
     });
@@ -73,7 +73,7 @@ function ExportMarkdownRenderer({ content }: { content: string }) {
       
       // Check if the fixed code indicates an unsupported format
       if (!fixedCode || fixedCode === 'UNSUPPORTED_TABLE_SYNTAX') {
-        return `<div class="invalid-diagram">不支持的图表格式: <pre>${escapeHtml(trimmedCode)}</pre></div>`;
+        return `<div class="invalid-diagram">Unsupported diagram format: <pre>${escapeHtml(trimmedCode)}</pre></div>`;
       }
       
       return `<div class="mermaid-diagram" data-diagram="${encodeURIComponent(fixedCode)}">${escapeHtml(fixedCode)}</div>`;
@@ -88,20 +88,20 @@ function ExportMarkdownRenderer({ content }: { content: string }) {
       return `<pre class="code-block" data-language="${language}" data-line-numbers="${shouldShowLineNumbers}"><code>${escapeHtml(code.trim())}</code></pre>`;
     });
 
-    // 5. 恢复数学公式占位符
+    // 5. Restore math formula placeholders
     mathBlockPlaceholders.forEach((html, index) => {
       processed = processed.replace(`__MATH_BLOCK_${index}__`, html);
     });
     
-    // 6. 恢复内联代码
+    // 6. Restore inline code
     inlineCodes.forEach((code, index) => {
       processed = processed.replace(`__INLINE_CODE_${index}__`, '<code class="inline-code">' + escapeHtml(code.slice(1, -1)) + '</code>');
     });
 
-    // 7. 处理markdown表格（在其他格式化之前）
+    // 7. Process markdown tables (before other formatting)
     processed = parseMarkdownTables(processed);
 
-    // 8. 处理基本markdown格式
+    // 8. Process basic markdown formatting
     processed = processed
       .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
       .replace(/\*([^*]+)\*/g, '<em>$1</em>')
@@ -147,7 +147,7 @@ function ExportMessage({ message }: { message: Message }) {
 // Main export document component
 function ExportDocument({ conversation }: { conversation: Conversation }) {
   return React.createElement('html', {
-    lang: 'zh-CN',
+    lang: 'en',
     children: [
       React.createElement('head', {
         key: 'head',
@@ -575,7 +575,7 @@ function getInitScript(): string {
               element.style.textAlign = 'center';
               element.style.padding = '20px';
             } else {
-              throw new Error('渲染失败：未返回SVG内容');
+              throw new Error('Rendering failed: No SVG content returned');
             }
           } catch (error) {
             console.error('Mermaid rendering error:', error);
@@ -583,18 +583,18 @@ function getInitScript(): string {
             let userFriendlyError = '';
             
             if (errorMessage.includes('Parse error') || errorMessage.includes('Syntax validation failed')) {
-              userFriendlyError = '语法解析错误 - 可能是中文字符导致，请检查边缘标签是否用引号包围';
+              userFriendlyError = 'Syntax parsing error - possibly caused by Chinese characters, please check if edge labels are surrounded by quotes';
             } else if (errorMessage.includes('Lexical error')) {
-              userFriendlyError = '词法错误 - 可能是注释格式错误';
+              userFriendlyError = 'Lexical error - possibly incorrect comment format';
             } else if (errorMessage.includes('Unsupported table syntax')) {
-              userFriendlyError = '不支持的表格语法 - 请使用正确的Mermaid表格格式';
+              userFriendlyError = 'Unsupported table syntax - please use correct Mermaid table format';
             } else {
-              userFriendlyError = '图表渲染失败: ' + errorMessage;
+              userFriendlyError = 'Diagram rendering failed: ' + errorMessage;
             }
             
             element.innerHTML = '<div style="color: #dc2626; padding: 20px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px;">' + 
-                               '<strong>图表渲染失败</strong><br>' + userFriendlyError + 
-                               '<details style="margin-top: 10px;"><summary style="cursor: pointer;">查看原始代码</summary>' +
+                               '<strong>Diagram rendering failed</strong><br>' + userFriendlyError + 
+                               '<details style="margin-top: 10px;"><summary style="cursor: pointer;">View original code</summary>' +
                                '<pre style="background: #fee2e2; padding: 10px; border-radius: 4px; margin-top: 10px; overflow-x: auto;">' + 
                                element.textContent + '</pre></details></div>';
           }
@@ -625,7 +625,7 @@ function getInitScript(): string {
           } catch (error) {
             console.error('KaTeX block rendering error:', error);
             block.innerHTML = '<div style="color: #dc2626; background: #fef2f2; padding: 8px; border-radius: 4px; border: 1px solid #fecaca;">' +
-                             '<strong>数学公式渲染失败</strong><br>' + 
+                             '<strong>Math formula rendering failed</strong><br>' + 
                              '<small>' + (error.message || 'Unknown error') + '</small></div>';
           }
         });
@@ -650,7 +650,7 @@ function getInitScript(): string {
             }
           } catch (error) {
             console.error('KaTeX inline rendering error:', error);
-            inline.innerHTML = '<span style="color: #dc2626; background: #fef2f2; padding: 2px 4px; border-radius: 2px; font-size: 0.875rem;">公式错误</span>';
+            inline.innerHTML = '<span style="color: #dc2626; background: #fef2f2; padding: 2px 4px; border-radius: 2px; font-size: 0.875rem;">Formula error</span>';
           }
         });
       }
@@ -713,7 +713,7 @@ function generateSimpleHTMLExport(conversation: Conversation): string {
 
   return `
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">

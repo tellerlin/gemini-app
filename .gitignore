@@ -41,3 +41,6 @@ keys/
 *api-key*
 *secret*
 *password*
+
+# Playwright
+.playwright-mcp/
