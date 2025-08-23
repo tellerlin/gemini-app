@@ -56,12 +56,11 @@ Choose one of the following deployment methods:
 
 **Step 4: Configure Worker Routes for API**
 1. In Cloudflare Dashboard, select your main domain (`yourdomain.com`)
-2. Go to **Workers & Pages** → **Resources** tab
-3. Select **"Workers Routes"** 
-4. Click **"Add route"**
-5. Set route pattern: `*.yourdomain.com/api/gemini/*`
-6. Select your deployed Gemini Proxy Worker
-7. Save the configuration
+2. Select **"Workers Routes"** 
+3. Click **"Add route"**
+4. Set route pattern: `*.yourdomain.com/api/gemini/*`
+5. Select your deployed Gemini Proxy Worker
+6. Save the configuration
 
 ![Cloudflare Workers Routes Setting](cloudflare-workers-routes-setting.png)
 
