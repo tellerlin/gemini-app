@@ -29,7 +29,66 @@ This is a modern AI chat application that provides a clean, fast interface for G
 
 Choose one of the following deployment methods:
 
-### 1. 📦 Local Installation
+### 1. ☁️ Cloudflare Pages (Recommended)
+
+**🎯 Why Cloudflare is the Best Choice:**
+- ✅ **Free tier available** with generous limits
+- ✅ **Global CDN** for optimal performance worldwide  
+- ✅ **Automatic HTTPS** and SSL certificate management
+- ✅ **Easy custom domain** setup with professional appearance
+- ✅ **Serverless scaling** - handles traffic spikes automatically
+- ✅ **One-click deployment** from GitHub
+
+#### 🚀 Quick Start (One-Click Deployment)
+
+**Step 1: Deploy Gemini App (Frontend)**
+[![Deploy to Cloudflare Pages](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/tellerlin/gemini-app)
+
+**Step 2: Deploy Gemini Proxy Worker (API Backend)**  
+[![Deploy Worker](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/tellerlin/gemini-proxy-worker)
+
+**Step 3: Configure Your App**
+1. Open your deployed Gemini App (e.g., `https://gemini-app.pages.dev`)
+2. Click the Settings icon and add your Google AI API keys
+3. Your app is ready to use!
+
+#### 🌐 Professional Setup with Custom Domain
+
+For production use with your own domain (e.g., `gemini.yourdomain.com`):
+
+**Step 1: Setup Custom Domain for Gemini App**
+1. In Cloudflare Dashboard, go to your deployed Pages project
+2. Navigate to **Custom domains** tab
+3. Click **"Set up a custom domain"**
+4. Add `gemini.yourdomain.com` (or your preferred subdomain)
+5. Cloudflare will automatically configure DNS and SSL
+
+**Step 2: Configure Worker Routes for API**
+1. In Cloudflare Dashboard, select your main domain (`yourdomain.com`)
+2. Go to **Workers & Pages** → **Resources** tab
+3. Select **"Workers Routes"** 
+4. Click **"Add route"**
+5. Set route pattern: `*.yourdomain.com/api/gemini/*`
+6. Select your deployed Gemini Proxy Worker
+7. Save the configuration
+
+**Step 3: Update App Configuration**
+1. Go to your Pages project settings
+2. Add environment variable: `VITE_GEMINI_API_MODE=proxy`
+3. Redeploy your Pages project to apply changes
+
+**Result:** Your app will be available at `https://gemini.yourdomain.com` with API calls routed through `https://gemini.yourdomain.com/api/gemini/*`
+
+![Cloudflare Workers Routes Setting](cloudflare-workers-routes-setting.png)
+
+**Benefits of Custom Domain Setup:**
+- ✅ Professional appearance with your own branding
+- ✅ Same domain for both app and API (no CORS issues)
+- ✅ Clean URLs without `.pages.dev` subdomain
+- ✅ Better SEO and user trust
+- ✅ Unified SSL certificate management
+
+### 2. 📦 Local Development
 
 **System Requirements:**
 - Node.js 18+
@@ -77,11 +136,11 @@ echo "VITE_GEMINI_API_MODE=proxy" > .env
 npm run dev
 ```
 
-### 2. 🐳 Docker Deployment
+### 3. 🐳 Docker Deployment
 
-**Quick Start (Direct Connection - Recommended):**
+**Quick Start (Direct Connection):**
 ```bash
-docker run -p 8080:8080 tellerlin/gemini-app
+docker run -p 80:80 tellerlin/gemini-app
 ```
 
 **With Docker Compose:**
@@ -100,43 +159,6 @@ VITE_GEMINI_API_MODE=direct
 # VITE_GEMINI_API_MODE=proxy
 # VITE_GEMINI_PROXY_URL=https://your-proxy.com/api/gemini
 ```
-
-### 3. ☁️ Cloudflare Pages (Recommended)
-
-**Step 1: Deploy API Proxy**
-[![Deploy Worker](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/tellerlin/gemini-proxy-worker)
-
-**Step 2: Deploy Frontend App**
-[![Deploy to Cloudflare Pages](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/tellerlin/gemini-app)
-
-**Step 3: Configure Environment Variables**
-```env
-# Force proxy mode for Cloudflare deployment
-VITE_GEMINI_API_MODE=proxy
-
-# Or specify custom proxy URL
-# VITE_GEMINI_PROXY_URL=https://your-worker.workers.dev
-```
-
-#### 🌐 Custom Domain Setup (Optional)
-
-For a professional setup using your own domain:
-
-**Method 1: Worker Routes (Recommended)**
-1. After deploying both worker and app, go to your domain in Cloudflare Dashboard
-2. Navigate to **"Workers Routes"** section  
-3. Click **"Add Route"**
-4. Set route pattern: `yourdomain.com/api/gemini/*`
-5. Select your deployed worker
-6. Update environment variable: `VITE_GEMINI_PROXY_URL=https://yourdomain.com`
-
-![Cloudflare Workers Routes Setting](cloudflare-workers-routes-setting.png)
-
-**Benefits:**
-- ✅ Same domain for both app and API (`yourdomain.com`)
-- ✅ Clean URLs without `workers.dev` subdomain  
-- ✅ Better SEO and professional appearance
-- ✅ Unified SSL certificate management
 
 ## 🔧 Configuration
 
