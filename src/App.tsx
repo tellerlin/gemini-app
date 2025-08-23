@@ -141,8 +141,12 @@ function App() {
                 <Menu className="h-6 w-6 text-slate-700" />
               </Button>
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 rounded-xl flex items-center justify-center shadow-lg">
-                  <span className="text-white font-bold text-sm">G</span>
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center shadow-lg">
+                  <img 
+                    src="/favicon/favicon-32x32.png" 
+                    alt="Gemini Chat" 
+                    className="w-8 h-8 rounded-xl"
+                  />
                 </div>
                 <h1 className="text-base font-bold bg-gradient-to-r from-slate-800 via-slate-700 to-slate-900 bg-clip-text text-transparent truncate">
                   {currentConversation?.title || 'New Conversation'}
