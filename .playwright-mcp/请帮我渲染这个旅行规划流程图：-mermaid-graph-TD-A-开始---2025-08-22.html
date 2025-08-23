@@ -1,0 +1,365 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charSet="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>请帮我渲染这个旅行规划流程图：
+
+```mermaid
+graph TD
+    A((开始)) -</title><script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script><script src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css"/><script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-core.min.js"></script><script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/autoloader/prism-autoloader.min.js"></script><script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/line-numbers/prism-line-numbers.min.js"></script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css"/><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/plugins/line-numbers/prism-line-numbers.css"/><style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 30px;
+      border-radius: 12px;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+    .header h1 {
+      margin: 0 0 10px 0;
+      font-size: 2em;
+    }
+    .header .meta {
+      opacity: 0.9;
+      font-size: 0.9em;
+    }
+    .conversation {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .message {
+      margin-bottom: 25px;
+      padding: 20px;
+      border-radius: 12px;
+      border-left: 4px solid #e0e0e0;
+    }
+    .user-message {
+      background-color: #f0f9ff;
+      border-left-color: #3b82f6;
+    }
+    .assistant-message {
+      background-color: #f9fafb;
+      border-left-color: #10b981;
+    }
+    .message-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      font-size: 0.9em;
+    }
+    .role {
+      font-weight: 600;
+      color: #374151;
+    }
+    .timestamp {
+      color: #6b7280;
+    }
+    .message-content {
+      font-size: 1em;
+      line-height: 1.7;
+    }
+    .message-content p {
+      margin: 0 0 12px 0;
+    }
+    .message-content p:last-child {
+      margin-bottom: 0;
+    }
+    .inline-code {
+      background-color: #f3f4f6;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 0.9em;
+    }
+    .code-block {
+      background-color: #1f2937;
+      color: #f9fafb;
+      padding: 16px;
+      border-radius: 8px;
+      overflow-x: auto;
+      margin: 12px 0;
+    }
+    .code-block code {
+      background: none;
+      padding: 0;
+      color: inherit;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    }
+    .mermaid-diagram {
+      margin: 20px 0;
+      padding: 20px;
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .invalid-diagram {
+      margin: 20px 0;
+      padding: 20px;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 8px;
+      color: #dc2626;
+    }
+    .invalid-diagram pre {
+      background: #fee2e2;
+      padding: 10px;
+      border-radius: 4px;
+      margin: 10px 0;
+      overflow-x: auto;
+    }
+    .math-block {
+      margin: 16px 0;
+      text-align: center;
+      font-size: 1.1em;
+      overflow-x: auto;
+      max-width: 100%;
+    }
+    .math-block .katex-display {
+      margin: 0;
+      overflow-x: auto;
+      max-width: 100%;
+    }
+    .math-inline {
+      font-size: 1em;
+      max-width: 100%;
+      display: inline-block;
+      overflow-x: auto;
+    }
+    .math-inline .katex {
+      max-width: 100%;
+      overflow-x: auto;
+    }
+    strong {
+      font-weight: 600;
+      color: #111827;
+    }
+    em {
+      font-style: italic;
+      color: #374151;
+    }
+    .table-wrapper {
+      overflow-x: auto;
+      margin: 16px 0;
+      border-radius: 8px;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    table, .markdown-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0;
+      font-size: 0.9em;
+      min-width: 500px;
+    }
+    td, th {
+      border: 1px solid #e5e7eb;
+      padding: 12px 16px;
+      text-align: left;
+      vertical-align: top;
+      line-height: 1.5;
+    }
+    th {
+      background-color: #f8fafc;
+      font-weight: 600;
+      color: #374151;
+      border-bottom: 2px solid #d1d5db;
+      position: sticky;
+      top: 0;
+    }
+    .markdown-table tbody tr:nth-child(even) {
+      background-color: #fafafa;
+    }
+    .markdown-table tbody tr:hover {
+      background-color: #f0f9ff;
+    }
+    .markdown-table tbody tr {
+      transition: background-color 0.15s ease;
+    }
+    .markdown-table td:first-child,
+    .markdown-table th:first-child {
+      border-left: none;
+    }
+    .markdown-table td:last-child,
+    .markdown-table th:last-child {
+      border-right: none;
+    }
+    .markdown-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+    @media print {
+      body {
+        background-color: white;
+      }
+      .header {
+        background: #667eea !important;
+        -webkit-print-color-adjust: exact;
+      }
+    }
+  </style></head><body><div class="header"><h1>请帮我渲染这个旅行规划流程图：
+
+```mermaid
+graph TD
+    A((开始)) -</h1><div class="meta"><div>Created: 2025/8/23 07:26:33</div><div>Updated: 2025/8/23 07:45:09</div><div>Model: gemini-2.0-flash</div></div></div><div class="conversation"><div class="message user-message"><div class="message-header"><span class="role">User</span><span class="timestamp">2025/8/23 07:26:33</span></div><div class="message-content"><p>请帮我渲染这个旅行规划流程图：</p><p><div class="mermaid-diagram" data-diagram="graph%20TD%0AA((%22%E5%BC%80%E5%A7%8B%22))%20--%3E%20B%5B%22%E5%86%B3%E5%AE%9A%E6%97%85%E8%A1%8C%E7%9B%AE%E6%A0%87%2F%E7%9B%AE%E7%9A%84%E5%9C%B0%22%5D%0AB%20--%3E%20C%7B%22%E6%98%AF%E5%90%A6%E7%A1%AE%E5%AE%9A%E6%97%85%E8%A1%8C%E7%B1%BB%E5%9E%8B%E5%92%8C%E4%B8%BB%E9%A2%98%3F%22%7D%0AC%20--%20%E6%98%AF%20--%3E%20D%5B%22%E7%A0%94%E7%A9%B6%E7%9B%AE%E7%9A%84%E5%9C%B0%E4%BF%A1%E6%81%AF%20(%E6%99%AF%E7%82%B9%E3%80%81%E7%BE%8E%E9%A3%9F%E3%80%81%E4%BA%A4%E9%80%9A%E3%80%81%E6%96%87%E5%8C%96)%22%5D%0AC%20--%20%E5%90%A6%20--%3E%20B%0AD%20--%3E%20E%5B%22%E8%AE%BE%E5%AE%9A%E6%97%85%E8%A1%8C%E9%A2%84%E7%AE%97%22%5D%0AE%20--%3E%20F%5B%22%E5%88%B6%E5%AE%9A%E5%88%9D%E6%AD%A5%E8%A1%8C%E7%A8%8B%E8%AE%A1%E5%88%92%20(%E6%97%A5%E6%9C%9F%E3%80%81%E5%9C%B0%E7%82%B9%E3%80%81%E6%B4%BB%E5%8A%A8)%22%5D%0AF%20--%3E%20G%7B%22%E9%A2%84%E7%AE%97%E4%B8%8E%E8%A1%8C%E7%A8%8B%E6%98%AF%E5%90%A6%E5%8C%B9%E9%85%8D%3F%22%7D%0AG%20--%20%E5%90%A6%20--%3E%20E%5B%22%E8%B0%83%E6%95%B4%E9%A2%84%E7%AE%97%E6%88%96%E8%A1%8C%E7%A8%8B%22%5D%0AG%20--%20%E6%98%AF%20--%3E%20H%5B%22%E9%A2%84%E8%AE%A2%E6%9C%BA%E7%A5%A8%2F%E7%81%AB%E8%BD%A6%E7%A5%A8%2F%E5%85%B6%E4%BB%96%E4%BA%A4%E9%80%9A%22%5D%0AH%20--%3E%20I%5B%22%E9%A2%84%E8%AE%A2%E4%BD%8F%E5%AE%BF%20(%E9%85%92%E5%BA%97%E3%80%81%E6%B0%91%E5%AE%BF%E7%AD%89)%22%5D%0AI%20--%3E%20J%5B%22%E9%A2%84%E8%AE%A2%E6%B4%BB%E5%8A%A8%2F%E9%97%A8%E7%A5%A8%2F%E5%BD%93%E5%9C%B0%E8%A1%8C%E7%A8%8B%20(%E5%A6%82%E6%9E%9C%E9%9C%80%E8%A6%81)%22%5D%0AJ%20--%3E%20K%5B%22%E5%8A%9E%E7%90%86%E7%AD%BE%E8%AF%81%2F%E8%B4%AD%E4%B9%B0%E6%97%85%E8%A1%8C%E4%BF%9D%E9%99%A9%20(%E5%A6%82%E6%9E%9C%E9%9C%80%E8%A6%81)%22%5D%0AK%20--%3E%20L%5B%22%E6%95%B4%E7%90%86%E8%A1%8C%E6%9D%8E%E6%B8%85%E5%8D%95%22%5D%0AL%20--%3E%20M%5B%22%E6%89%93%E5%8C%85%E8%A1%8C%E6%9D%8E%22%5D%0AM%20--%3E%20N%5B%22%E7%A1%AE%E8%AE%A4%E6%89%80%E6%9C%89%E9%A2%84%E8%AE%A2%E5%8F%8A%E8%A1%8C%E7%A8%8B%E7%BB%86%E8%8A%82%22%5D%0AN%20--%3E%20O%5B%22%E6%A3%80%E6%9F%A5%E4%B8%AA%E4%BA%BA%E8%AF%81%E4%BB%B6%E3%80%81%E5%81%A5%E5%BA%B7%E8%AF%81%E6%98%8E%E3%80%81%E9%93%B6%E8%A1%8C%E5%8D%A1%E7%AD%89%22%5D%0AO%20--%3E%20P((%22%E5%87%BA%E5%8F%91%E5%89%8D%E5%BE%80%E7%9B%AE%E7%9A%84%E5%9C%B0%22))%0AP%20--%3E%20Q%5B%22%E4%BA%AB%E5%8F%97%E6%97%85%E7%A8%8B%22%5D%0AQ%20--%3E%20R%7B%22%E6%97%85%E7%A8%8B%E4%B8%AD%E6%9C%89%E7%AA%81%E5%8F%91%E6%83%85%E5%86%B5%E5%90%97%3F%22%7D%0AR%20--%20%E6%98%AF%20--%3E%20S%5B%22%E5%A4%84%E7%90%86%E7%AA%81%E5%8F%91%E6%83%85%E5%86%B5%20(%E8%81%94%E7%B3%BB%E4%BF%9D%E9%99%A9%E3%80%81%E6%B1%82%E5%8A%A9%E7%AD%89)%22%5D%0AS%20--%3E%20Q%0AR%20--%20%E5%90%A6%20--%3E%20T%5B%22%E8%BF%94%E5%9B%9E%E5%87%BA%E5%8F%91%E5%9C%B0%22%5D%0AT%20--%3E%20U%5B%22%E6%95%B4%E7%90%86%E7%85%A7%E7%89%87%2F%E8%A7%86%E9%A2%91%2F%E7%BA%AA%E5%BF%B5%E5%93%81%22%5D%0AU%20--%3E%20V%5B%22%E5%88%86%E4%BA%AB%E6%97%85%E8%A1%8C%E7%BB%8F%E9%AA%8C%2F%E6%92%B0%E5%86%99%E6%B8%B8%E8%AE%B0%20(%E5%8F%AF%E9%80%89)%22%5D%0AV%20--%3E%20W((%22%E6%97%85%E8%A1%8C%E7%BB%93%E6%9D%9F%22))">graph TD<br>A((&quot;开始&quot;)) --&gt; B[&quot;决定旅行目标/目的地&quot;]<br>B --&gt; C{&quot;是否确定旅行类型和主题?&quot;}<br>C -- 是 --&gt; D[&quot;研究目的地信息 (景点、美食、交通、文化)&quot;]<br>C -- 否 --&gt; B<br>D --&gt; E[&quot;设定旅行预算&quot;]<br>E --&gt; F[&quot;制定初步行程计划 (日期、地点、活动)&quot;]<br>F --&gt; G{&quot;预算与行程是否匹配?&quot;}<br>G -- 否 --&gt; E[&quot;调整预算或行程&quot;]<br>G -- 是 --&gt; H[&quot;预订机票/火车票/其他交通&quot;]<br>H --&gt; I[&quot;预订住宿 (酒店、民宿等)&quot;]<br>I --&gt; J[&quot;预订活动/门票/当地行程 (如果需要)&quot;]<br>J --&gt; K[&quot;办理签证/购买旅行保险 (如果需要)&quot;]<br>K --&gt; L[&quot;整理行李清单&quot;]<br>L --&gt; M[&quot;打包行李&quot;]<br>M --&gt; N[&quot;确认所有预订及行程细节&quot;]<br>N --&gt; O[&quot;检查个人证件、健康证明、银行卡等&quot;]<br>O --&gt; P((&quot;出发前往目的地&quot;))<br>P --&gt; Q[&quot;享受旅程&quot;]<br>Q --&gt; R{&quot;旅程中有突发情况吗?&quot;}<br>R -- 是 --&gt; S[&quot;处理突发情况 (联系保险、求助等)&quot;]<br>S --&gt; Q<br>R -- 否 --&gt; T[&quot;返回出发地&quot;]<br>T --&gt; U[&quot;整理照片/视频/纪念品&quot;]<br>U --&gt; V[&quot;分享旅行经验/撰写游记 (可选)&quot;]<br>V --&gt; W((&quot;旅行结束&quot;))</div></p></div></div><div class="message assistant-message"><div class="message-header"><span class="role">Assistant</span><span class="timestamp">2025/8/23 07:26:37</span></div><div class="message-content"><p><div class="mermaid-diagram" data-diagram="graph%20TD%0AA((%22%E5%BC%80%E5%A7%8B%22))%20--%3E%20B%5B%22%E5%86%B3%E5%AE%9A%E6%97%85%E8%A1%8C%E7%9B%AE%E6%A0%87%2F%E7%9B%AE%E7%9A%84%E5%9C%B0%22%5D%0AB%20--%3E%20C%7B%22%E6%98%AF%E5%90%A6%E7%A1%AE%E5%AE%9A%E6%97%85%E8%A1%8C%E7%B1%BB%E5%9E%8B%E5%92%8C%E4%B8%BB%E9%A2%98%3F%22%7D%0AC%20--%20%E6%98%AF%20--%3E%20D%5B%22%E7%A0%94%E7%A9%B6%E7%9B%AE%E7%9A%84%E5%9C%B0%E4%BF%A1%E6%81%AF%20(%E6%99%AF%E7%82%B9%E3%80%81%E7%BE%8E%E9%A3%9F%E3%80%81%E4%BA%A4%E9%80%9A%E3%80%81%E6%96%87%E5%8C%96)%22%5D%0AC%20--%20%E5%90%A6%20--%3E%20B%0AD%20--%3E%20E%5B%22%E8%AE%BE%E5%AE%9A%E6%97%85%E8%A1%8C%E9%A2%84%E7%AE%97%22%5D%0AE%20--%3E%20F%5B%22%E5%88%B6%E5%AE%9A%E5%88%9D%E6%AD%A5%E8%A1%8C%E7%A8%8B%E8%AE%A1%E5%88%92%20(%E6%97%A5%E6%9C%9F%E3%80%81%E5%9C%B0%E7%82%B9%E3%80%81%E6%B4%BB%E5%8A%A8)%22%5D%0AF%20--%3E%20G%7B%22%E9%A2%84%E7%AE%97%E4%B8%8E%E8%A1%8C%E7%A8%8B%E6%98%AF%E5%90%A6%E5%8C%B9%E9%85%8D%3F%22%7D%0AG%20--%20%E5%90%A6%20--%3E%20E%5B%22%E8%B0%83%E6%95%B4%E9%A2%84%E7%AE%97%E6%88%96%E8%A1%8C%E7%A8%8B%22%5D%0AG%20--%20%E6%98%AF%20--%3E%20H%5B%22%E9%A2%84%E8%AE%A2%E6%9C%BA%E7%A5%A8%2F%E7%81%AB%E8%BD%A6%E7%A5%A8%2F%E5%85%B6%E4%BB%96%E4%BA%A4%E9%80%9A%22%5D%0AH%20--%3E%20I%5B%22%E9%A2%84%E8%AE%A2%E4%BD%8F%E5%AE%BF%20(%E9%85%92%E5%BA%97%E3%80%81%E6%B0%91%E5%AE%BF%E7%AD%89)%22%5D%0AI%20--%3E%20J%5B%22%E9%A2%84%E8%AE%A2%E6%B4%BB%E5%8A%A8%2F%E9%97%A8%E7%A5%A8%2F%E5%BD%93%E5%9C%B0%E8%A1%8C%E7%A8%8B%20(%E5%A6%82%E6%9E%9C%E9%9C%80%E8%A6%81)%22%5D%0AJ%20--%3E%20K%5B%22%E5%8A%9E%E7%90%86%E7%AD%BE%E8%AF%81%2F%E8%B4%AD%E4%B9%B0%E6%97%85%E8%A1%8C%E4%BF%9D%E9%99%A9%20(%E5%A6%82%E6%9E%9C%E9%9C%80%E8%A6%81)%22%5D%0AK%20--%3E%20L%5B%22%E6%95%B4%E7%90%86%E8%A1%8C%E6%9D%8E%E6%B8%85%E5%8D%95%22%5D%0AL%20--%3E%20M%5B%22%E6%89%93%E5%8C%85%E8%A1%8C%E6%9D%8E%22%5D%0AM%20--%3E%20N%5B%22%E7%A1%AE%E8%AE%A4%E6%89%80%E6%9C%89%E9%A2%84%E8%AE%A2%E5%8F%8A%E8%A1%8C%E7%A8%8B%E7%BB%86%E8%8A%82%22%5D%0AN%20--%3E%20O%5B%22%E6%A3%80%E6%9F%A5%E4%B8%AA%E4%BA%BA%E8%AF%81%E4%BB%B6%E3%80%81%E5%81%A5%E5%BA%B7%E8%AF%81%E6%98%8E%E3%80%81%E9%93%B6%E8%A1%8C%E5%8D%A1%E7%AD%89%22%5D%0AO%20--%3E%20P((%22%E5%87%BA%E5%8F%91%E5%89%8D%E5%BE%80%E7%9B%AE%E7%9A%84%E5%9C%B0%22))%0AP%20--%3E%20Q%5B%22%E4%BA%AB%E5%8F%97%E6%97%85%E7%A8%8B%22%5D%0AQ%20--%3E%20R%7B%22%E6%97%85%E7%A8%8B%E4%B8%AD%E6%9C%89%E7%AA%81%E5%8F%91%E6%83%85%E5%86%B5%E5%90%97%3F%22%7D%0AR%20--%20%E6%98%AF%20--%3E%20S%5B%22%E5%A4%84%E7%90%86%E7%AA%81%E5%8F%91%E6%83%85%E5%86%B5%20(%E8%81%94%E7%B3%BB%E4%BF%9D%E9%99%A9%E3%80%81%E6%B1%82%E5%8A%A9%E7%AD%89)%22%5D%0AS%20--%3E%20Q%0AR%20--%20%E5%90%A6%20--%3E%20T%5B%22%E8%BF%94%E5%9B%9E%E5%87%BA%E5%8F%91%E5%9C%B0%22%5D%0AT%20--%3E%20U%5B%22%E6%95%B4%E7%90%86%E7%85%A7%E7%89%87%2F%E8%A7%86%E9%A2%91%2F%E7%BA%AA%E5%BF%B5%E5%93%81%22%5D%0AU%20--%3E%20V%5B%22%E5%88%86%E4%BA%AB%E6%97%85%E8%A1%8C%E7%BB%8F%E9%AA%8C%2F%E6%92%B0%E5%86%99%E6%B8%B8%E8%AE%B0%20(%E5%8F%AF%E9%80%89)%22%5D%0AV%20--%3E%20W((%22%E6%97%85%E8%A1%8C%E7%BB%93%E6%9D%9F%22))">graph TD<br>A((&quot;开始&quot;)) --&gt; B[&quot;决定旅行目标/目的地&quot;]<br>B --&gt; C{&quot;是否确定旅行类型和主题?&quot;}<br>C -- 是 --&gt; D[&quot;研究目的地信息 (景点、美食、交通、文化)&quot;]<br>C -- 否 --&gt; B<br>D --&gt; E[&quot;设定旅行预算&quot;]<br>E --&gt; F[&quot;制定初步行程计划 (日期、地点、活动)&quot;]<br>F --&gt; G{&quot;预算与行程是否匹配?&quot;}<br>G -- 否 --&gt; E[&quot;调整预算或行程&quot;]<br>G -- 是 --&gt; H[&quot;预订机票/火车票/其他交通&quot;]<br>H --&gt; I[&quot;预订住宿 (酒店、民宿等)&quot;]<br>I --&gt; J[&quot;预订活动/门票/当地行程 (如果需要)&quot;]<br>J --&gt; K[&quot;办理签证/购买旅行保险 (如果需要)&quot;]<br>K --&gt; L[&quot;整理行李清单&quot;]<br>L --&gt; M[&quot;打包行李&quot;]<br>M --&gt; N[&quot;确认所有预订及行程细节&quot;]<br>N --&gt; O[&quot;检查个人证件、健康证明、银行卡等&quot;]<br>O --&gt; P((&quot;出发前往目的地&quot;))<br>P --&gt; Q[&quot;享受旅程&quot;]<br>Q --&gt; R{&quot;旅程中有突发情况吗?&quot;}<br>R -- 是 --&gt; S[&quot;处理突发情况 (联系保险、求助等)&quot;]<br>S --&gt; Q<br>R -- 否 --&gt; T[&quot;返回出发地&quot;]<br>T --&gt; U[&quot;整理照片/视频/纪念品&quot;]<br>U --&gt; V[&quot;分享旅行经验/撰写游记 (可选)&quot;]<br>V --&gt; W((&quot;旅行结束&quot;))</div></p><p>这个代码可以直接粘贴到支持 Mermaid 语法的工具（如 Typora, Obsidian, VS Code with Mermaid extension, 或在线 Mermaid 编辑器）中，即可生成流程图。 它将清晰地展示旅行规划的各个步骤，包括决策点、准备工作和实际旅行过程。<br></p></div></div><div class="message user-message"><div class="message-header"><span class="role">User</span><span class="timestamp">2025/8/23 07:31:23</span></div><div class="message-content"><p>请帮我测试以下各种类型的Mermaid图表：</p><p>1. <strong>时序图 (Sequence Diagram)</strong>：<br><div class="mermaid-diagram" data-diagram="sequenceDiagram%0Aparticipant%20%E7%94%A8%E6%88%B7%20as%20%E7%94%A8%E6%88%B7%0Aparticipant%20%E7%B3%BB%E7%BB%9F%20as%20%E7%B3%BB%E7%BB%9F%0Aparticipant%20%E6%95%B0%E6%8D%AE%E5%BA%93%20as%20%E6%95%B0%E6%8D%AE%E5%BA%93%0A%E7%94%A8%E6%88%B7-%3E%3E%E7%B3%BB%E7%BB%9F%3A%20%E7%99%BB%E5%BD%95%E8%AF%B7%E6%B1%82%0A%E7%B3%BB%E7%BB%9F-%3E%3E%E6%95%B0%E6%8D%AE%E5%BA%93%3A%20%E9%AA%8C%E8%AF%81%E7%94%A8%E6%88%B7%E4%BF%A1%E6%81%AF%0A%E6%95%B0%E6%8D%AE%E5%BA%93--%3E%3E%E7%B3%BB%E7%BB%9F%3A%20%E8%BF%94%E5%9B%9E%E9%AA%8C%E8%AF%81%E7%BB%93%E6%9E%9C%0A%E7%B3%BB%E7%BB%9F--%3E%3E%E7%94%A8%E6%88%B7%3A%20%E7%99%BB%E5%BD%95%E6%88%90%E5%8A%9F%2F%E5%A4%B1%E8%B4%A5">sequenceDiagram<br>participant 用户 as 用户<br>participant 系统 as 系统<br>participant 数据库 as 数据库<br>用户-&gt;&gt;系统: 登录请求<br>系统-&gt;&gt;数据库: 验证用户信息<br>数据库--&gt;&gt;系统: 返回验证结果<br>系统--&gt;&gt;用户: 登录成功/失败</div></p><p>2. <strong>甘特图 (Gantt Chart)</strong>：<br><div class="mermaid-diagram" data-diagram="gantt%0Atitle%20%E9%A1%B9%E7%9B%AE%E5%BC%80%E5%8F%91%E8%AE%A1%E5%88%92%0AdateFormat%20YYYY-MM-DD%0Asection%20%E9%9C%80%E6%B1%82%E5%88%86%E6%9E%90%0A%E9%9C%80%E6%B1%82%E6%94%B6%E9%9B%86%20%3Adone%2C%20des1%2C%202024-01-01%2C2024-01-15%0A%E9%9C%80%E6%B1%82%E5%88%86%E6%9E%90%20%3Aactive%2C%20des2%2C%202024-01-10%2C%203d%0Asection%20%E8%AE%BE%E8%AE%A1%E5%BC%80%E5%8F%91%0A%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1%20%3A%20des3%2C%20after%20des2%2C%205d%0A%E5%89%8D%E7%AB%AF%E5%BC%80%E5%8F%91%20%3A%20des4%2C%20after%20des3%2C%2010d%0A%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91%20%3A%20des5%2C%20after%20des3%2C%2012d">gantt<br>title 项目开发计划<br>dateFormat YYYY-MM-DD<br>section 需求分析<br>需求收集 :done, des1, 2024-01-01,2024-01-15<br>需求分析 :active, des2, 2024-01-10, 3d<br>section 设计开发<br>系统设计 : des3, after des2, 5d<br>前端开发 : des4, after des3, 10d<br>后端开发 : des5, after des3, 12d</div></p><p>3. <strong>类图 (Class Diagram)</strong>：<br><div class="mermaid-diagram" data-diagram="classDiagram%0Aclass%20%E7%94%A8%E6%88%B7%20%7B%0A%2B%E7%94%A8%E6%88%B7ID%3A%20%E6%95%B4%E6%95%B0%0A%2B%E7%94%A8%E6%88%B7%E5%90%8D%3A%20%E5%AD%97%E7%AC%A6%E4%B8%B2%0A%2B%E9%82%AE%E7%AE%B1%3A%20%E5%AD%97%E7%AC%A6%E4%B8%B2%0A%2B%E7%99%BB%E5%BD%95()%0A%2B%E6%B3%A8%E9%94%80()%0A%7D%0Aclass%20%E8%AE%A2%E5%8D%95%20%7B%0A%2B%E8%AE%A2%E5%8D%95ID%3A%20%E6%95%B4%E6%95%B0%0A%2B%E8%AE%A2%E5%8D%95%E9%87%91%E9%A2%9D%3A%20%E6%B5%AE%E7%82%B9%E6%95%B0%0A%2B%E5%88%9B%E5%BB%BA%E6%97%B6%E9%97%B4%3A%20%E6%97%A5%E6%9C%9F%0A%2B%E5%88%9B%E5%BB%BA%E8%AE%A2%E5%8D%95()%0A%2B%E5%8F%96%E6%B6%88%E8%AE%A2%E5%8D%95()%0A%7D%0A%E7%94%A8%E6%88%B7%20%7C%7C--o%7B%20%E8%AE%A2%E5%8D%95%20%3A%20%E6%8B%A5%E6%9C%89">classDiagram<br>class 用户 {<br>+用户ID: 整数<br>+用户名: 字符串<br>+邮箱: 字符串<br>+登录()<br>+注销()<br>}<br>class 订单 {<br>+订单ID: 整数<br>+订单金额: 浮点数<br>+创建时间: 日期<br>+创建订单()<br>+取消订单()<br>}<br>用户 ||--o{ 订单 : 拥有</div></p></div></div><div class="message assistant-message"><div class="message-header"><span class="role">Assistant</span><span class="timestamp">2025/8/23 07:31:28</span></div><div class="message-content"><p>这些 Mermaid 代码片段看起来都编写正确。以下是它们可能的渲染结果（由于 Mermaid 语法由渲染引擎解析，实际显示效果可能因工具而略有不同，但基本结构应该一致）：</p><p><strong>1. 时序图 (Sequence Diagram)</strong></p><p><div class="mermaid-diagram" data-diagram="sequenceDiagram%0Aparticipant%20%E7%94%A8%E6%88%B7%20as%20%E7%94%A8%E6%88%B7%0Aparticipant%20%E7%B3%BB%E7%BB%9F%20as%20%E7%B3%BB%E7%BB%9F%0Aparticipant%20%E6%95%B0%E6%8D%AE%E5%BA%93%20as%20%E6%95%B0%E6%8D%AE%E5%BA%93%0A%E7%94%A8%E6%88%B7-%3E%3E%E7%B3%BB%E7%BB%9F%3A%20%E7%99%BB%E5%BD%95%E8%AF%B7%E6%B1%82%0A%E7%B3%BB%E7%BB%9F-%3E%3E%E6%95%B0%E6%8D%AE%E5%BA%93%3A%20%E9%AA%8C%E8%AF%81%E7%94%A8%E6%88%B7%E4%BF%A1%E6%81%AF%0A%E6%95%B0%E6%8D%AE%E5%BA%93--%3E%3E%E7%B3%BB%E7%BB%9F%3A%20%E8%BF%94%E5%9B%9E%E9%AA%8C%E8%AF%81%E7%BB%93%E6%9E%9C%0A%E7%B3%BB%E7%BB%9F--%3E%3E%E7%94%A8%E6%88%B7%3A%20%E7%99%BB%E5%BD%95%E6%88%90%E5%8A%9F%2F%E5%A4%B1%E8%B4%A5">sequenceDiagram<br>participant 用户 as 用户<br>participant 系统 as 系统<br>participant 数据库 as 数据库<br>用户-&gt;&gt;系统: 登录请求<br>系统-&gt;&gt;数据库: 验证用户信息<br>数据库--&gt;&gt;系统: 返回验证结果<br>系统--&gt;&gt;用户: 登录成功/失败</div></p><p><em> <strong>预期渲染结果：</strong>  一张时序图，显示用户、系统和数据库三个参与者。 用户发送登录请求到系统，系统验证用户信息通过数据库，数据库返回结果给系统，系统最终告知用户登录状态。  箭头清晰地表明消息的发送者和接收者。</p><p><strong>2. 甘特图 (Gantt Chart)</strong></p><p><div class="mermaid-diagram" data-diagram="gantt%0Atitle%20%E9%A1%B9%E7%9B%AE%E5%BC%80%E5%8F%91%E8%AE%A1%E5%88%92%0AdateFormat%20YYYY-MM-DD%0Asection%20%E9%9C%80%E6%B1%82%E5%88%86%E6%9E%90%0A%E9%9C%80%E6%B1%82%E6%94%B6%E9%9B%86%20%3Adone%2C%20des1%2C%202024-01-01%2C2024-01-15%0A%E9%9C%80%E6%B1%82%E5%88%86%E6%9E%90%20%3Aactive%2C%20des2%2C%202024-01-10%2C%203d%0Asection%20%E8%AE%BE%E8%AE%A1%E5%BC%80%E5%8F%91%0A%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1%20%3A%20des3%2C%20after%20des2%2C%205d%0A%E5%89%8D%E7%AB%AF%E5%BC%80%E5%8F%91%20%3A%20des4%2C%20after%20des3%2C%2010d%0A%E5%90%8E%E7%AB%AF%E5%BC%80%E5%8F%91%20%3A%20des5%2C%20after%20des3%2C%2012d">gantt<br>title 项目开发计划<br>dateFormat YYYY-MM-DD<br>section 需求分析<br>需求收集 :done, des1, 2024-01-01,2024-01-15<br>需求分析 :active, des2, 2024-01-10, 3d<br>section 设计开发<br>系统设计 : des3, after des2, 5d<br>前端开发 : des4, after des3, 10d<br>后端开发 : des5, after des3, 12d</div></p><p></em> <strong>预期渲染结果：</strong>  一个甘特图，标题为“项目开发计划”。  图表显示了需求分析和设计开发两个阶段。 “需求收集”已完成，从2024-01-01到2024-01-15。“需求分析”当前活动，从2024-01-10开始，持续3天。“系统设计”紧随“需求分析”之后，持续5天。“前端开发”和“后端开发”紧随“系统设计”之后，分别持续10天和12天。  图表会可视化每个任务的开始日期、持续时间和完成状态。</p><p><strong>3. 类图 (Class Diagram)</strong></p><p><div class="mermaid-diagram" data-diagram="classDiagram%0Aclass%20%E7%94%A8%E6%88%B7%20%7B%0A%2B%E7%94%A8%E6%88%B7ID%3A%20%E6%95%B4%E6%95%B0%0A%2B%E7%94%A8%E6%88%B7%E5%90%8D%3A%20%E5%AD%97%E7%AC%A6%E4%B8%B2%0A%2B%E9%82%AE%E7%AE%B1%3A%20%E5%AD%97%E7%AC%A6%E4%B8%B2%0A%2B%E7%99%BB%E5%BD%95()%0A%2B%E6%B3%A8%E9%94%80()%0A%7D%0Aclass%20%E8%AE%A2%E5%8D%95%20%7B%0A%2B%E8%AE%A2%E5%8D%95ID%3A%20%E6%95%B4%E6%95%B0%0A%2B%E8%AE%A2%E5%8D%95%E9%87%91%E9%A2%9D%3A%20%E6%B5%AE%E7%82%B9%E6%95%B0%0A%2B%E5%88%9B%E5%BB%BA%E6%97%B6%E9%97%B4%3A%20%E6%97%A5%E6%9C%9F%0A%2B%E5%88%9B%E5%BB%BA%E8%AE%A2%E5%8D%95()%0A%2B%E5%8F%96%E6%B6%88%E8%AE%A2%E5%8D%95()%0A%7D%0A%E7%94%A8%E6%88%B7%20%7C%7C--o%7B%20%E8%AE%A2%E5%8D%95%20%3A%20%E6%8B%A5%E6%9C%89">classDiagram<br>class 用户 {<br>+用户ID: 整数<br>+用户名: 字符串<br>+邮箱: 字符串<br>+登录()<br>+注销()<br>}<br>class 订单 {<br>+订单ID: 整数<br>+订单金额: 浮点数<br>+创建时间: 日期<br>+创建订单()<br>+取消订单()<br>}<br>用户 ||--o{ 订单 : 拥有</div></p><p>* <strong>预期渲染结果：</strong>  一个类图，包含“用户”和“订单”两个类。“用户”类具有属性：用户ID(整数), 用户名(字符串), 邮箱(字符串), 以及方法：登录(), 注销()。“订单”类具有属性：订单ID(整数), 订单金额(浮点数), 创建时间(日期), 以及方法：创建订单(), 取消订单()。 类图显示了“用户”类拥有多个“订单”，用组合关系表示 (||--o{)。</p><p><strong>总结:</strong></p><p>你提供的 Mermaid 代码示例都是有效的，并且可以用于生成相应的图表。 建议你将这些代码片段粘贴到 Mermaid 编辑器或集成 Mermaid 支持的工具中，以验证实际的渲染效果。 如果遇到任何渲染问题，请检查 Mermaid 语法的拼写和格式是否正确，并参考 Mermaid 的官方文档。<br></p></div></div><div class="message user-message"><div class="message-header"><span class="role">User</span><span class="timestamp">2025/8/23 07:32:46</span></div><div class="message-content"><p>再次测试类图渲染：</p><p><div class="mermaid-diagram" data-diagram="classDiagram%0Aclass%20%E7%94%A8%E6%88%B7%20%7B%0A%2B%E7%94%A8%E6%88%B7ID%3A%20%E6%95%B4%E6%95%B0%0A%2B%E7%94%A8%E6%88%B7%E5%90%8D%3A%20%E5%AD%97%E7%AC%A6%E4%B8%B2%0A%2B%E9%82%AE%E7%AE%B1%3A%20%E5%AD%97%E7%AC%A6%E4%B8%B2%0A%2B%E7%99%BB%E5%BD%95()%0A%2B%E6%B3%A8%E9%94%80()%0A%7D%0Aclass%20%E8%AE%A2%E5%8D%95%20%7B%0A%2B%E8%AE%A2%E5%8D%95ID%3A%20%E6%95%B4%E6%95%B0%0A%2B%E8%AE%A2%E5%8D%95%E9%87%91%E9%A2%9D%3A%20%E6%B5%AE%E7%82%B9%E6%95%B0%0A%2B%E5%88%9B%E5%BB%BA%E6%97%B6%E9%97%B4%3A%20%E6%97%A5%E6%9C%9F%0A%2B%E5%88%9B%E5%BB%BA%E8%AE%A2%E5%8D%95()%0A%2B%E5%8F%96%E6%B6%88%E8%AE%A2%E5%8D%95()%0A%7D%0A%E7%94%A8%E6%88%B7%20%7C%7C--o%7B%20%E8%AE%A2%E5%8D%95%20%3A%20%E6%8B%A5%E6%9C%89">classDiagram<br>class 用户 {<br>+用户ID: 整数<br>+用户名: 字符串<br>+邮箱: 字符串<br>+登录()<br>+注销()<br>}<br>class 订单 {<br>+订单ID: 整数<br>+订单金额: 浮点数<br>+创建时间: 日期<br>+创建订单()<br>+取消订单()<br>}<br>用户 ||--o{ 订单 : 拥有</div></p></div></div><div class="message assistant-message"><div class="message-header"><span class="role">Assistant</span><span class="timestamp">2025/8/23 07:32:49</span></div><div class="message-content"><p>好的，重复测试类图的渲染。 这是我再次确认后的预期渲染结果描述：</p><p><strong>类图 (Class Diagram) - 重复测试</strong></p><p><div class="mermaid-diagram" data-diagram="classDiagram%0Aclass%20%E7%94%A8%E6%88%B7%20%7B%0A%2B%E7%94%A8%E6%88%B7ID%3A%20%E6%95%B4%E6%95%B0%0A%2B%E7%94%A8%E6%88%B7%E5%90%8D%3A%20%E5%AD%97%E7%AC%A6%E4%B8%B2%0A%2B%E9%82%AE%E7%AE%B1%3A%20%E5%AD%97%E7%AC%A6%E4%B8%B2%0A%2B%E7%99%BB%E5%BD%95()%0A%2B%E6%B3%A8%E9%94%80()%0A%7D%0Aclass%20%E8%AE%A2%E5%8D%95%20%7B%0A%2B%E8%AE%A2%E5%8D%95ID%3A%20%E6%95%B4%E6%95%B0%0A%2B%E8%AE%A2%E5%8D%95%E9%87%91%E9%A2%9D%3A%20%E6%B5%AE%E7%82%B9%E6%95%B0%0A%2B%E5%88%9B%E5%BB%BA%E6%97%B6%E9%97%B4%3A%20%E6%97%A5%E6%9C%9F%0A%2B%E5%88%9B%E5%BB%BA%E8%AE%A2%E5%8D%95()%0A%2B%E5%8F%96%E6%B6%88%E8%AE%A2%E5%8D%95()%0A%7D%0A%E7%94%A8%E6%88%B7%20%7C%7C--o%7B%20%E8%AE%A2%E5%8D%95%20%3A%20%E6%8B%A5%E6%9C%89">classDiagram<br>class 用户 {<br>+用户ID: 整数<br>+用户名: 字符串<br>+邮箱: 字符串<br>+登录()<br>+注销()<br>}<br>class 订单 {<br>+订单ID: 整数<br>+订单金额: 浮点数<br>+创建时间: 日期<br>+创建订单()<br>+取消订单()<br>}<br>用户 ||--o{ 订单 : 拥有</div></p><p><em> <strong>预期渲染结果：</strong> 一个类图，显示了两个类："用户" 和 "订单"。<br>    </em> <strong>用户类：</strong> 包含以下属性和方法：<br>        <em> +用户ID: 整数 (public属性)<br>        </em> +用户名: 字符串 (public属性)<br>        <em> +邮箱: 字符串 (public属性)<br>        </em> +登录() (public方法)<br>        <em> +注销() (public方法)<br>    </em> <strong>订单类：</strong> 包含以下属性和方法：<br>        <em> +订单ID: 整数 (public属性)<br>        </em> +订单金额: 浮点数 (public属性)<br>        <em> +创建时间: 日期 (public属性)<br>        </em> +创建订单() (public方法)<br>        <em> +取消订单() (public方法)<br>    </em> <strong>关系：</strong> "用户" 类和 "订单" 类之间存在聚合关系 (||--o{)，表示一个用户可以拥有多个订单。 "拥有" 文字标注在关系线上。</p><p><strong>再次强调：</strong></p><p>实际渲染结果可能会略有不同，具体取决于你使用的 Mermaid 渲染引擎。 但是，基本的类结构、属性、方法和关系应该与上述描述一致。 确保你使用的 Mermaid 版本支持类图的语法。</p><p>通过重复测试，可以确保代码的正确性和渲染结果的可靠性。 如果你看到的渲染结果与预期不符，请提供更多信息，例如你使用的工具或渲染引擎，以及具体的差异，以便我可以更好地帮助你。<br></p></div></div><div class="message user-message"><div class="message-header"><span class="role">User</span><span class="timestamp">2025/8/23 07:35:49</span></div><div class="message-content"><p>先测试英文类图是否可以正常渲染：</p><p><div class="mermaid-diagram" data-diagram="classDiagram%0Aclass%20User%20%7B%0A%2BuserId%3A%20int%0A%2Busername%3A%20string%0A%2Bemail%3A%20string%0A%2Blogin()%0A%2Blogout()%0A%7D%0Aclass%20Order%20%7B%0A%2BorderId%3A%20int%0A%2Bamount%3A%20float%0A%2BcreateTime%3A%20date%0A%2BcreateOrder()%0A%2BcancelOrder()%0A%7D%0AUser%20%7C%7C--o%7B%20Order%20%3A%20owns">classDiagram<br>class User {<br>+userId: int<br>+username: string<br>+email: string<br>+login()<br>+logout()<br>}<br>class Order {<br>+orderId: int<br>+amount: float<br>+createTime: date<br>+createOrder()<br>+cancelOrder()<br>}<br>User ||--o{ Order : owns</div></p></div></div><div class="message assistant-message"><div class="message-header"><span class="role">Assistant</span><span class="timestamp">2025/8/23 07:35:52</span></div><div class="message-content"><p>好的，这是英文类图的预期渲染结果：</p><p><strong>英文类图 (Class Diagram)</strong></p><p><div class="mermaid-diagram" data-diagram="classDiagram%0Aclass%20User%20%7B%0A%2BuserId%3A%20int%0A%2Busername%3A%20string%0A%2Bemail%3A%20string%0A%2Blogin()%0A%2Blogout()%0A%7D%0Aclass%20Order%20%7B%0A%2BorderId%3A%20int%0A%2Bamount%3A%20float%0A%2BcreateTime%3A%20date%0A%2BcreateOrder()%0A%2BcancelOrder()%0A%7D%0AUser%20%7C%7C--o%7B%20Order%20%3A%20owns">classDiagram<br>class User {<br>+userId: int<br>+username: string<br>+email: string<br>+login()<br>+logout()<br>}<br>class Order {<br>+orderId: int<br>+amount: float<br>+createTime: date<br>+createOrder()<br>+cancelOrder()<br>}<br>User ||--o{ Order : owns</div></p><p><em> <strong>预期渲染结果：</strong> 一个类图，显示了两个类："User" 和 "Order"。<br>    </em> <strong>User类：</strong> 包含以下属性和方法：<br>        <em> +userId: int (public属性)<br>        </em> +username: string (public属性)<br>        <em> +email: string (public属性)<br>        </em> +login() (public方法)<br>        <em> +logout() (public方法)<br>    </em> <strong>Order类：</strong> 包含以下属性和方法：<br>        <em> +orderId: int (public属性)<br>        </em> +amount: float (public属性)<br>        <em> +createTime: date (public属性)<br>        </em> +createOrder() (public方法)<br>        <em> +cancelOrder() (public方法)<br>    </em> <strong>关系：</strong> "User" 类和 "Order" 类之间存在聚合关系 (||--o{)，表示一个用户可以拥有多个订单。 "owns" 文字标注在关系线上。</p><p><strong>关键点：</strong></p><p><em> 语法与之前的中文版本类似，只是类名、属性名、方法名和关系标签都使用英文。<br></em> 应该能够正常渲染，只要 Mermaid 引擎支持类图语法。<br><em> 确保大小写和拼写正确。</p><p>如果无法正常渲染，请检查以下几点：</p><p></em> <strong>Mermaid 版本：</strong> 确保你使用的 Mermaid 版本支持类图。<br><em> <strong>语法错误：</strong> 仔细检查代码，确保没有拼写错误或语法错误。<br></em> <strong>渲染引擎：</strong> 不同的渲染引擎可能会略有不同，查看引擎的文档了解特定于引擎的语法或限制。</p><p>这个英文类图的目的是验证基本的类图语法是否工作，与语言无关。 渲染成功后，我们可以确信 Mermaid 可以解析类图结构。<br></p></div></div><div class="message user-message"><div class="message-header"><span class="role">User</span><span class="timestamp">2025/8/23 07:37:45</span></div><div class="message-content"><p>请帮我测试Markdown渲染和代码高亮功能：</p><p>## 1. 基本Markdown语法测试</p><p>### 文本格式<br>- <strong>粗体文本</strong><br>- <em>斜体文本</em><br>- ~~删除线~~<br>- <code class="inline-code">内联代码</code></p><p>### 列表<br>1. 有序列表项1<br>2. 有序列表项2<br>   - 嵌套无序列表<br>   - 另一个嵌套项</p><p>- 无序列表项<br>- 另一个无序列表项</p><p>### 链接和引用<br>[GitHub链接](https://github.com)</p><p>> 这是一个引用块<br>> 可以包含多行内容</p><p>## 2. 代码高亮测试</p><p>### Python代码<br><pre class="code-block" data-language="python" data-line-numbers="true"><code>def fibonacci(n):<br>    &quot;&quot;&quot;计算斐波那契数列&quot;&quot;&quot;<br>    if n &lt;= 1:<br>        return n<br>    return fibonacci(n-1) + fibonacci(n-2)</p><p># 测试函数<br>for i in range(10):<br>    print(f&quot;fib({i}) = {fibonacci(i)}&quot;)</code></pre></p><p>### JavaScript代码<br><pre class="code-block" data-language="javascript" data-line-numbers="true"><code>// React组件示例<br>const TodoList = ({ todos, onToggle }) =&gt; {<br>  return (<br>    &lt;div className=&quot;todo-list&quot;&gt;<br>      {todos.map(todo =&gt; (<br>        &lt;div <br>          key={todo.id} <br>          className={`todo-item ${todo.completed ? &#039;completed&#039; : &#039;&#039;}`}<br>          onClick={() =&gt; onToggle(todo.id)}<br>        &gt;<br>          {todo.text}<br>        &lt;/div&gt;<br>      ))}<br>    &lt;/div&gt;<br>  );<br>};</code></pre></p><p>### SQL代码<br><pre class="code-block" data-language="sql" data-line-numbers="true"><code>-- 查询用户订单信息<br>SELECT <br>    u.用户名,<br>    u.邮箱,<br>    COUNT(o.订单ID) AS 订单数量,<br>    SUM(o.订单金额) AS 总金额<br>FROM 用户表 u<br>LEFT JOIN 订单表 o ON u.用户ID = o.用户ID<br>WHERE u.创建时间 &gt;= &#039;2024-01-01&#039;<br>GROUP BY u.用户ID, u.用户名, u.邮箱<br>HAVING COUNT(o.订单ID) &gt; 0<br>ORDER BY 总金额 DESC;</code></pre></p></div></div><div class="message assistant-message"><div class="message-header"><span class="role">Assistant</span><span class="timestamp">2025/8/23 07:37:51</span></div><div class="message-content"><p>好的，这是一个 Markdown 渲染和代码高亮功能的测试结果描述。实际显示效果会取决于你使用的 Markdown 渲染器，但以下描述了预期的结果：</p><p><strong>## 1. 基本Markdown语法测试</strong></p><p>### 文本格式</p><p>- <strong>粗体文本</strong><br>- <em>斜体文本</em><br>- ~~删除线~~<br>- <code class="inline-code">内联代码</code></p><p>### 列表</p><p>1. 有序列表项1<br>2. 有序列表项2<br>   - 嵌套无序列表<br>   - 另一个嵌套项</p><p>- 无序列表项<br>- 另一个无序列表项</p><p>### 链接和引用</p><p>[GitHub链接](https://github.com)  (GitHub链接)</p><p>> 这是一个引用块<br>> 可以包含多行内容</p><p><strong>预期渲染结果：</strong></p><p><em>   标题和子标题以相应的字号显示。<br></em>   粗体文本应加粗。<br><em>   斜体文本应倾斜。<br></em>   删除线文本应有横线划过。<br><em>   内联代码应以等宽字体显示，并且可能有背景色。<br></em>   有序列表项应以数字编号。<br><em>   无序列表项应以符号（如圆点或短划线）标记。<br></em>   嵌套列表应有适当的缩进。<br><em>   链接应可点击，并跳转到指定的 URL。<br></em>   引用块应以特殊的样式（如背景色或边框）突出显示，并正确换行。</p><p><strong>## 2. 代码高亮测试</strong></p><p>### Python代码</p><p><pre class="code-block" data-language="python" data-line-numbers="true"><code>def fibonacci(n):<br>    &quot;&quot;&quot;计算斐波那契数列&quot;&quot;&quot;<br>    if n &lt;= 1:<br>        return n<br>    return fibonacci(n-1) + fibonacci(n-2)</p><p># 测试函数<br>for i in range(10):<br>    print(f&quot;fib({i}) = {fibonacci(i)}&quot;)</code></pre></p><p>### JavaScript代码</p><p><pre class="code-block" data-language="javascript" data-line-numbers="true"><code>// React组件示例<br>const TodoList = ({ todos, onToggle }) =&gt; {<br>  return (<br>    &lt;div className=&quot;todo-list&quot;&gt;<br>      {todos.map(todo =&gt; (<br>        &lt;div <br>          key={todo.id} <br>          className={`todo-item ${todo.completed ? &#039;completed&#039; : &#039;&#039;}`}<br>          onClick={() =&gt; onToggle(todo.id)}<br>        &gt;<br>          {todo.text}<br>        &lt;/div&gt;<br>      ))}<br>    &lt;/div&gt;<br>  );<br>};</code></pre></p><p>### SQL代码</p><p><pre class="code-block" data-language="sql" data-line-numbers="true"><code>-- 查询用户订单信息<br>SELECT <br>    u.用户名,<br>    u.邮箱,<br>    COUNT(o.订单ID) AS 订单数量,<br>    SUM(o.订单金额) AS 总金额<br>FROM 用户表 u<br>LEFT JOIN 订单表 o ON u.用户ID = o.用户ID<br>WHERE u.创建时间 &gt;= &#039;2024-01-01&#039;<br>GROUP BY u.用户ID, u.用户名, u.邮箱<br>HAVING COUNT(o.订单ID) &gt; 0<br>ORDER BY 总金额 DESC;</code></pre></p><p><strong>预期渲染结果：</strong></p><p><em>   代码块应以等宽字体显示，并可能带有背景色。<br></em>   Python代码应根据 Python 语法进行高亮显示（例如，关键字、函数名、字符串、注释等应有不同的颜色）。<br><em>   JavaScript代码应根据 JavaScript 语法进行高亮显示。<br></em>   SQL代码应根据 SQL 语法进行高亮显示。<br><em>   代码块中的缩进和换行应保持不变。</p><p><strong>关键点：</strong></p><p></em>   <strong>代码高亮：</strong> 代码高亮的效果取决于 Markdown 渲染器所使用的库（例如，Highlight.js、Prism.js）。 不同的库支持不同的语言，并且可能使用不同的颜色方案。<br>*   <strong>Markdown 标准：</strong> Markdown 有一些不同的变体（例如，CommonMark、GitHub Flavored Markdown）。 不同的变体可能对某些语法有不同的处理方式。</p><p><strong>测试方法：</strong></p><p>1.  将上述 Markdown 文本复制到一个 Markdown 编辑器或渲染器中（例如，Typora、VS Code with Markdown extension、GitHub、GitLab）。<br>2.  查看渲染结果，并与上述预期结果进行比较。<br>3.  检查文本格式是否正确，列表是否正确显示，链接是否可点击，引用块是否突出显示，以及代码是否正确高亮。</p><p>如果遇到任何问题，请提供更多信息，例如你使用的 Markdown 编辑器或渲染器，以及具体的差异，以便我可以更好地帮助你。<br></p></div></div><div class="message user-message"><div class="message-header"><span class="role">User</span><span class="timestamp">2025/8/23 07:40:37</span></div><div class="message-content"><p>测试数学公式LaTeX渲染：</p><p>内联数学公式：当 <span class="math-inline">$a \neq 0$</span> 时，二次方程 <span class="math-inline">$ax^2 + bx + c = 0$</span> 的解为 <span class="math-inline">$x = \frac{-b \pm \sqrt{b^2-4ac}}{2a}$</span></p><p>块级数学公式：<br><div class="math-block">$\sum_{i=1}^{n} x_i = x_1 + x_2 + \cdots + x_n$</div></p><p>欧拉公式：<br><div class="math-block">$e^{i\pi} + 1 = 0$</div></p><p>矩阵表示：<br><div class="math-block">$\begin{pmatrix}<br>a & b \\<br>c & d<br>\end{pmatrix}<br>\begin{pmatrix}<br>x \\<br>y<br>\end{pmatrix}<br>=<br>\begin{pmatrix}<br>ax + by \\<br>cx + dy<br>\end{pmatrix}$</div></p><p>积分：<br><div class="math-block">$\int_{-\infty}^{\infty} e^{-x^2} dx = \sqrt{\pi}$</div></p><p>求和与极限：<br><div class="math-block">$\lim_{n \to \infty} \sum_{k=1}^{n} \frac{1}{k^2} = \frac{\pi^2}{6}$</div></p></div></div><div class="message assistant-message"><div class="message-header"><span class="role">Assistant</span><span class="timestamp">2025/8/23 07:40:44</span></div><div class="message-content"><p>好的，这是 LaTeX 数学公式渲染的测试结果描述。 预期渲染结果将高度依赖于你使用的 Markdown 渲染器是否支持 LaTeX 数学公式，以及它所使用的 LaTeX 引擎（例如 MathJax 或 KaTeX）。</p><p><strong>内联数学公式：</strong></p><p>内联数学公式：当  <span class="math-inline">$a \neq 0$</span>  时，二次方程  <span class="math-inline">$ax^2 + bx + c = 0$</span>  的解为  <span class="math-inline">$x = \frac{-b \pm \sqrt{b^2-4ac}}{2a}$</span></p><p><em>   <strong>预期渲染结果：</strong> 公式应与文本内联显示。  不等号、分数、平方根等数学符号应正确显示。  变量和数字应清晰可辨。</p><p><strong>块级数学公式：</strong></p><p><div class="math-block">$\sum_{i=1}^{n} x_i = x_1 + x_2 + \cdots + x_n$</div></p><p></em>   <strong>预期渲染结果：</strong> 公式应单独成行，居中显示。 求和符号（∑）应正确显示，并带有上下标。 省略号（⋯）应正确显示。</p><p><strong>欧拉公式：</strong></p><p><div class="math-block">$e^{i\pi} + 1 = 0$</div></p><p><em>   <strong>预期渲染结果：</strong> 公式应单独成行，居中显示。 指数、复数单位、π 和数字应正确显示。</p><p><strong>矩阵表示：</strong></p><p><div class="math-block">$\begin{pmatrix}<br>a & b \\<br>c & d<br>\end{pmatrix}<br>\begin{pmatrix}<br>x \\<br>y<br>\end{pmatrix}<br>=<br>\begin{pmatrix}<br>ax + by \\<br>cx + dy<br>\end{pmatrix}$</div></p><p></em>   <strong>预期渲染结果：</strong> 公式应单独成行，居中显示。 矩阵应以括号正确地包围，并包含相应的元素。 矩阵乘法应正确显示。</p><p><strong>积分：</strong></p><p><div class="math-block">$\int_{-\infty}^{\infty} e^{-x^2} dx = \sqrt{\pi}$</div></p><p><em>   <strong>预期渲染结果：</strong> 公式应单独成行，居中显示。 积分符号（∫）应正确显示，并带有上下限。 无穷大符号（∞）应正确显示。 平方根符号应正确显示。</p><p><strong>求和与极限：</strong></p><p><div class="math-block">$\lim_{n \to \infty} \sum_{k=1}^{n} \frac{1}{k^2} = \frac{\pi^2}{6}$</div></p><p></em>   <strong>预期渲染结果：</strong> 公式应单独成行，居中显示。 极限符号（lim）应正确显示，并带有下标。 求和符号（∑）应正确显示，并带有上下标。 分数、π 和数字应正确显示。</p><p><strong>关键点：</strong></p><p><em>   <strong>LaTeX 支持：</strong> 并非所有 Markdown 渲染器都支持 LaTeX 数学公式。 确保你使用的渲染器已启用 LaTeX 支持。 常见的支持 LaTeX 的渲染器包括 MathJax 和 KaTeX。<br></em>   <strong>语法错误：</strong> 仔细检查 LaTeX 代码，确保没有语法错误。 常见的错误包括缺少美元符号、括号不匹配、命令拼写错误等。<br>*   <strong>字体：</strong> 数学公式通常使用特殊的字体。 确保渲染器已配置为使用适当的字体。</p><p><strong>测试方法：</strong></p><p>1.  将上述 Markdown 文本复制到一个支持 LaTeX 的 Markdown 编辑器或渲染器中（例如，Typora、VS Code with Markdown extension + MathJax/KaTeX、在线 Markdown 编辑器）。<br>2.  查看渲染结果，并与上述预期结果进行比较。<br>3.  检查所有公式是否正确显示，数学符号是否正确渲染，以及字体是否清晰可读。</p><p>如果遇到任何问题，请提供更多信息，例如你使用的 Markdown 编辑器或渲染器，以及具体的错误信息，以便我可以更好地帮助你。<br></p></div></div><div class="message user-message"><div class="message-header"><span class="role">User</span><span class="timestamp">2025/8/23 07:41:45</span></div><div class="message-content"><p>测试表格渲染功能：</p><p>## 基础表格测试<br><div class="table-wrapper"><table class="markdown-table"><thead><tr><th style="text-align: left">学生姓名</th><th style="text-align: left">年龄</th><th style="text-align: left">成绩</th><th style="text-align: left">备注</th></tr></thead><tbody><tr><td style="text-align: left">张三</td><td style="text-align: left">20</td><td style="text-align: left">85</td><td style="text-align: left">优秀</td></tr><tr><td style="text-align: left">李四</td><td style="text-align: left">19</td><td style="text-align: left">92</td><td style="text-align: left">非常优秀</td></tr><tr><td style="text-align: left">王五</td><td style="text-align: left">21</td><td style="text-align: left">78</td><td style="text-align: left">良好</td></tr></tbody></table></div>## 复杂表格测试<br><div class="table-wrapper"><table class="markdown-table"><thead><tr><th style="text-align: left">项目名称</th><th style="text-align: left">开始日期</th><th style="text-align: left">结束日期</th><th style="text-align: left">负责人</th><th style="text-align: left">状态</th><th style="text-align: left">进度</th><th style="text-align: left">预算(万元)</th></tr></thead><tbody><tr><td style="text-align: left">前端开发</td><td style="text-align: left">2024-01-01</td><td style="text-align: left">2024-03-15</td><td style="text-align: left">张工程师</td><td style="text-align: left">进行中</td><td style="text-align: left">75%</td><td style="text-align: left">15.5</td></tr><tr><td style="text-align: left">后端开发</td><td style="text-align: left">2024-01-15</td><td style="text-align: left">2024-04-01</td><td style="text-align: left">李工程师</td><td style="text-align: left">进行中</td><td style="text-align: left">60%</td><td style="text-align: left">20.0</td></tr><tr><td style="text-align: left">测试阶段</td><td style="text-align: left">2024-03-01</td><td style="text-align: left">2024-04-15</td><td style="text-align: left">王测试员</td><td style="text-align: left">未开始</td><td style="text-align: left">0%</td><td style="text-align: left">8.5</td></tr><tr><td style="text-align: left">UI设计</td><td style="text-align: left">2023-12-01</td><td style="text-align: left">2024-01-30</td><td style="text-align: left">陈设计师</td><td style="text-align: left">已完成</td><td style="text-align: left">100%</td><td style="text-align: left">12.0</td></tr></tbody></table></div>## 包含特殊字符的表格<br><div class="table-wrapper"><table class="markdown-table"><thead><tr><th style="text-align: left">符号</th><th style="text-align: left">含义</th><th style="text-align: left">ASCII码</th><th style="text-align: left">Unicode</th></tr></thead><tbody><tr><td style="text-align: left">@</td><td style="text-align: left">邮箱符号</td><td style="text-align: left">64</td><td style="text-align: left">U+0040</td></tr><tr><td style="text-align: left">#</td><td style="text-align: left">井号标签</td><td style="text-align: left">35</td><td style="text-align: left">U+0023</td></tr><tr><td style="text-align: left">$</td><td style="text-align: left">美元符号</td><td style="text-align: left">36</td><td style="text-align: left">U+0024</td></tr><tr><td style="text-align: left">%</td><td style="text-align: left">百分号</td><td style="text-align: left">37</td><td style="text-align: left">U+0025</td></tr><tr><td style="text-align: left">&amp;</td><td style="text-align: left">和符号</td><td style="text-align: left">38</td><td style="text-align: left">U+0026</td></tr></tbody></table></div>## 长文本表格测试<br><div class="table-wrapper"><table class="markdown-table"><thead><tr><th style="text-align: left">功能模块</th><th style="text-align: left">详细描述</th><th style="text-align: left">技术栈</th></tr></thead><tbody><tr><td style="text-align: left">用户管理</td><td style="text-align: left">包含用户注册、登录、权限管理、个人信息修改等完整的用户生命周期管理功能，支持多种登录方式如邮箱、手机号、第三方登录等</td><td style="text-align: left">React + Redux + TypeScript + Ant Design</td></tr><tr><td style="text-align: left">数据分析</td><td style="text-align: left">提供实时数据分析功能，包括用户行为分析、销售数据统计、性能监控等，支持自定义报表生成和数据可视化展示</td><td style="text-align: left">Python + Pandas + Matplotlib + D3.js</td></tr></tbody></table></div></p></div></div><div class="message assistant-message"><div class="message-header"><span class="role">Assistant</span><span class="timestamp">2025/8/23 07:41:52</span></div><div class="message-content"><p>好的，这是 Markdown 表格渲染功能的测试结果描述。</p><p><strong>## 基础表格测试</strong></p><p><pre class="code-block" data-language="text" data-line-numbers="false"><code><div class="table-wrapper"><table class="markdown-table"><thead><tr><th style="text-align: left">学生姓名</th><th style="text-align: left">年龄</th><th style="text-align: left">成绩</th><th style="text-align: left">备注</th></tr></thead><tbody><tr><td style="text-align: left">张三</td><td style="text-align: left">20</td><td style="text-align: left">85</td><td style="text-align: left">优秀</td></tr><tr><td style="text-align: left">李四</td><td style="text-align: left">19</td><td style="text-align: left">92</td><td style="text-align: left">非常优秀</td></tr><tr><td style="text-align: left">王五</td><td style="text-align: left">21</td><td style="text-align: left">78</td><td style="text-align: left">良好</td></tr></tbody></table></div></code></pre></p><p><em>   <strong>预期渲染结果：</strong> 一个简单的表格，包含四列：学生姓名、年龄、成绩和备注。 表头应加粗显示。 表格应有清晰的边框或分隔线。 各列内容应正确对齐（通常是左对齐或居中对齐）。</p><p><strong>## 复杂表格测试</strong></p><p><pre class="code-block" data-language="text" data-line-numbers="true"><code><div class="table-wrapper"><table class="markdown-table"><thead><tr><th style="text-align: left">项目名称</th><th style="text-align: left">开始日期</th><th style="text-align: left">结束日期</th><th style="text-align: left">负责人</th><th style="text-align: left">状态</th><th style="text-align: left">进度</th><th style="text-align: left">预算(万元)</th></tr></thead><tbody><tr><td style="text-align: left">前端开发</td><td style="text-align: left">2024-01-01</td><td style="text-align: left">2024-03-15</td><td style="text-align: left">张工程师</td><td style="text-align: left">进行中</td><td style="text-align: left">75%</td><td style="text-align: left">15.5</td></tr><tr><td style="text-align: left">后端开发</td><td style="text-align: left">2024-01-15</td><td style="text-align: left">2024-04-01</td><td style="text-align: left">李工程师</td><td style="text-align: left">进行中</td><td style="text-align: left">60%</td><td style="text-align: left">20.0</td></tr><tr><td style="text-align: left">测试阶段</td><td style="text-align: left">2024-03-01</td><td style="text-align: left">2024-04-15</td><td style="text-align: left">王测试员</td><td style="text-align: left">未开始</td><td style="text-align: left">0%</td><td style="text-align: left">8.5</td></tr><tr><td style="text-align: left">UI设计</td><td style="text-align: left">2023-12-01</td><td style="text-align: left">2024-01-30</td><td style="text-align: left">陈设计师</td><td style="text-align: left">已完成</td><td style="text-align: left">100%</td><td style="text-align: left">12.0</td></tr></tbody></table></div></code></pre></p><p></em>   <strong>预期渲染结果：</strong> 一个较复杂的表格，包含七列：项目名称、开始日期、结束日期、负责人、状态、进度和预算。 表头应加粗显示。 日期、百分比和数字应正确显示。 表格应有清晰的边框或分隔线。 各列内容应正确对齐。</p><p><strong>## 包含特殊字符的表格</strong></p><p><pre class="code-block" data-language="text" data-line-numbers="true"><code><div class="table-wrapper"><table class="markdown-table"><thead><tr><th style="text-align: left">符号</th><th style="text-align: left">含义</th><th style="text-align: left">ASCII码</th><th style="text-align: left">Unicode</th></tr></thead><tbody><tr><td style="text-align: left">@</td><td style="text-align: left">邮箱符号</td><td style="text-align: left">64</td><td style="text-align: left">U+0040</td></tr><tr><td style="text-align: left">#</td><td style="text-align: left">井号标签</td><td style="text-align: left">35</td><td style="text-align: left">U+0023</td></tr><tr><td style="text-align: left">$</td><td style="text-align: left">美元符号</td><td style="text-align: left">36</td><td style="text-align: left">U+0024</td></tr><tr><td style="text-align: left">%</td><td style="text-align: left">百分号</td><td style="text-align: left">37</td><td style="text-align: left">U+0025</td></tr><tr><td style="text-align: left">&amp;amp;</td><td style="text-align: left">和符号</td><td style="text-align: left">38</td><td style="text-align: left">U+0026</td></tr></tbody></table></div></code></pre></p><p><em>   <strong>预期渲染结果：</strong> 一个包含特殊字符的表格。  表格应正确显示 @、#、$、% 和 & 等符号。 ASCII 码和 Unicode 值也应正确显示。</p><p><strong>## 长文本表格测试</strong></p><p><pre class="code-block" data-language="text" data-line-numbers="false"><code><div class="table-wrapper"><table class="markdown-table"><thead><tr><th style="text-align: left">功能模块</th><th style="text-align: left">详细描述</th><th style="text-align: left">技术栈</th></tr></thead><tbody><tr><td style="text-align: left">用户管理</td><td style="text-align: left">包含用户注册、登录、权限管理、个人信息修改等完整的用户生命周期管理功能，支持多种登录方式如邮箱、手机号、第三方登录等</td><td style="text-align: left">React + Redux + TypeScript + Ant Design</td></tr><tr><td style="text-align: left">数据分析</td><td style="text-align: left">提供实时数据分析功能，包括用户行为分析、销售数据统计、性能监控等，支持自定义报表生成和数据可视化展示</td><td style="text-align: left">Python + Pandas + Matplotlib + D3.js</td></tr></tbody></table></div></code></pre></p><p></em>   <strong>预期渲染结果：</strong> 一个包含长文本的表格。 表格应能够正确处理长文本，并自动换行或调整列宽以适应内容。 表格应有清晰的边框或分隔线。</p><p><strong>关键点：</strong></p><p><em>   <strong>表格语法：</strong> 确保表格语法正确。 每行的分隔符（<code class="inline-code">|</code>）应对齐，表头下方的分隔行（<code class="inline-code">|---|---|---|</code>）应正确使用短划线。<br></em>   <strong>对齐方式：</strong> 某些 Markdown 渲染器支持使用冒号（<code class="inline-code">:</code>）来指定列的对齐方式。 例如，<code class="inline-code">|:---|:---:|---:|</code> 可以分别指定左对齐、居中对齐和右对齐。<br>*   <strong>长文本处理：</strong> 不同的 Markdown 渲染器对长文本的处理方式可能不同。 某些渲染器会自动换行，而另一些渲染器可能会截断文本或使表格超出页面宽度。</p><p><strong>测试方法：</strong></p><p>1.  将上述 Markdown 文本复制到一个 Markdown 编辑器或渲染器中。<br>2.  查看渲染结果，并与上述预期结果进行比较。<br>3.  检查表格是否正确显示，表头是否加粗显示，特殊字符是否正确渲染，长文本是否正确处理，以及对齐方式是否正确。</p><p>如果遇到任何问题，请提供更多信息，例如你使用的 Markdown 编辑器或渲染器，以及具体的差异，以便我可以更好地帮助你。<br></p></div></div><div class="message user-message"><div class="message-header"><span class="role">User</span><span class="timestamp">2025/8/23 07:45:08</span></div><div class="message-content"><p>请帮我分析刚刚上传的文件内容，总结它们的功能和特点。</p></div></div><div class="message assistant-message"><div class="message-header"><span class="role">Assistant</span><span class="timestamp">2025/8/23 07:45:09</span></div><div class="message-content"><p>很抱歉，我无法直接访问或分析您上传的本地文件。请您提供文件的内容，我可以帮助您总结其功能和特点。</p></div></div></div><script>
+    // Initialize Mermaid diagrams, KaTeX math, and Prism syntax highlighting
+    document.addEventListener('DOMContentLoaded', function() {
+      // Configure Mermaid
+      if (typeof mermaid !== 'undefined') {
+        mermaid.initialize({
+          startOnLoad: false,
+          theme: 'default',
+          securityLevel: 'loose',
+          fontFamily: '"Inter", "Noto Sans CJK SC", "Microsoft YaHei", "SimHei", system-ui, sans-serif',
+          useMaxWidth: true,
+          flowchart: {
+            useMaxWidth: true,
+            htmlLabels: true,
+            curve: 'basis',
+            padding: 20
+          },
+          sequence: {
+            useMaxWidth: true,
+            diagramMarginX: 20,
+            diagramMarginY: 10
+          },
+          gantt: {
+            useMaxWidth: true
+          }
+        });
+
+        // Render Mermaid diagrams
+        const diagrams = document.querySelectorAll('.mermaid-diagram');
+        diagrams.forEach(async (element, index) => {
+          try {
+            const codeAttr = element.getAttribute('data-diagram');
+            if (!codeAttr) {
+              throw new Error('No diagram data found');
+            }
+            
+            const code = decodeURIComponent(codeAttr);
+            
+            // The code has already been processed by fixMermaidSyntax on the server side
+            const processedCode = code.trim();
+            
+            // Basic validation
+            if (!processedCode) {
+              throw new Error('No diagram content found');
+            }
+            
+            await mermaid.parse(processedCode);
+            const elementId = 'mermaid-export-' + index + '-' + Math.random().toString(36).substr(2, 9);
+            const renderResult = await mermaid.render(elementId, processedCode);
+            
+            if (renderResult && renderResult.svg) {
+              element.innerHTML = renderResult.svg;
+              element.style.textAlign = 'center';
+              element.style.padding = '20px';
+            } else {
+              throw new Error('渲染失败：未返回SVG内容');
+            }
+          } catch (error) {
+            console.error('Mermaid rendering error:', error);
+            const errorMessage = error.message || 'Unknown error';
+            let userFriendlyError = '';
+            
+            if (errorMessage.includes('Parse error') || errorMessage.includes('Syntax validation failed')) {
+              userFriendlyError = '语法解析错误 - 可能是中文字符导致，请检查边缘标签是否用引号包围';
+            } else if (errorMessage.includes('Lexical error')) {
+              userFriendlyError = '词法错误 - 可能是注释格式错误';
+            } else if (errorMessage.includes('Unsupported table syntax')) {
+              userFriendlyError = '不支持的表格语法 - 请使用正确的Mermaid表格格式';
+            } else {
+              userFriendlyError = '图表渲染失败: ' + errorMessage;
+            }
+            
+            element.innerHTML = '<div style="color: #dc2626; padding: 20px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px;">' + 
+                               '<strong>图表渲染失败</strong><br>' + userFriendlyError + 
+                               '<details style="margin-top: 10px;"><summary style="cursor: pointer;">查看原始代码</summary>' +
+                               '<pre style="background: #fee2e2; padding: 10px; border-radius: 4px; margin-top: 10px; overflow-x: auto;">' + 
+                               element.textContent + '</pre></details></div>';
+          }
+        });
+      }
+
+      // Initialize KaTeX math rendering with improved error handling (Context7 best practices)
+      if (typeof katex !== 'undefined') {
+        // Block math expressions
+        const mathBlocks = document.querySelectorAll('.math-block');
+        mathBlocks.forEach(block => {
+          try {
+            const math = block.textContent.replace(/^\$+|\$+$/g, '').trim();
+            if (math) {
+              katex.render(math, block, { 
+                displayMode: true,
+                throwOnError: false,
+                errorColor: '#dc2626',
+                strict: 'warn',
+                output: 'htmlAndMathml',
+                fleqn: false,
+                macros: {},
+                maxSize: Infinity,
+                maxExpand: 1000,
+                trust: false
+              });
+            }
+          } catch (error) {
+            console.error('KaTeX block rendering error:', error);
+            block.innerHTML = '<div style="color: #dc2626; background: #fef2f2; padding: 8px; border-radius: 4px; border: 1px solid #fecaca;">' +
+                             '<strong>数学公式渲染失败</strong><br>' + 
+                             '<small>' + (error.message || 'Unknown error') + '</small></div>';
+          }
+        });
+
+        // Inline math expressions
+        const mathInlines = document.querySelectorAll('.math-inline');
+        mathInlines.forEach(inline => {
+          try {
+            const math = inline.textContent.replace(/^\$+|\$+$/g, '').trim();
+            if (math) {
+              katex.render(math, inline, { 
+                displayMode: false,
+                throwOnError: false,
+                errorColor: '#dc2626',
+                strict: 'warn',
+                output: 'htmlAndMathml',
+                macros: {},
+                maxSize: Infinity,
+                maxExpand: 1000,
+                trust: false
+              });
+            }
+          } catch (error) {
+            console.error('KaTeX inline rendering error:', error);
+            inline.innerHTML = '<span style="color: #dc2626; background: #fef2f2; padding: 2px 4px; border-radius: 2px; font-size: 0.875rem;">公式错误</span>';
+          }
+        });
+      }
+
+      // Initialize Prism syntax highlighting with line numbers support
+      if (typeof Prism !== 'undefined') {
+        // Load additional language components if needed
+        if (typeof Prism.plugins !== 'undefined' && Prism.plugins.autoloader) {
+          Prism.plugins.autoloader.languages_path = 'https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/';
+        }
+        
+        // Add line numbers to eligible code blocks
+        const codeBlocks = document.querySelectorAll('.code-block[data-line-numbers="true"]');
+        codeBlocks.forEach(block => {
+          if (!block.classList.contains('line-numbers')) {
+            block.classList.add('line-numbers');
+          }
+        });
+        
+        Prism.highlightAll();
+      }
+      
+      console.log('Export rendering initialized successfully');
+    });
+  </script></body></html>

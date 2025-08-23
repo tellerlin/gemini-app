@@ -90,6 +90,18 @@ export function fixMermaidSyntax(mermaidCode: string): string {
         return processedLine;
       }
       
+      // Special handling for class diagram attributes and methods
+      if (processedLine.includes('+') && /[\u4e00-\u9fff]/.test(processedLine)) {
+        // Check if this is a method line
+        if (processedLine.includes('()')) {
+          // Skip processing of method lines in class diagrams - they need to be preserved exactly
+          return processedLine;
+        } else if (processedLine.includes(':')) {
+          // Skip processing of attribute lines in class diagrams - they need to be preserved exactly
+          return processedLine;
+        }
+      }
+      
       // Step 3: Remove problematic trailing semicolons
       processedLine = processedLine.replace(/;+$/g, '');
       

@@ -1,0 +1,9 @@
+This is a test document for file upload functionality.
+
+Content includes:
+- English text
+- 中文文本测试
+- Numbers: 123456
+- Special characters: !@#$%^&*()
+
+This file will be used to test the Gemini chat application's file upload and analysis capabilities.
