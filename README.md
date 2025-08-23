@@ -39,7 +39,7 @@ Choose one of the following deployment methods:
 - ✅ **Serverless scaling** - handles traffic spikes automatically
 - ✅ **One-click deployment** from GitHub
 
-#### 🚀 Quick Start (One-Click Deployment)
+#### 🚀 Deployment Steps
 
 **Step 1: Deploy Gemini App (Frontend)**
 [![Deploy to Cloudflare Pages](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/tellerlin/gemini-app)
@@ -47,23 +47,14 @@ Choose one of the following deployment methods:
 **Step 2: Deploy Gemini Proxy Worker (API Backend)**  
 [![Deploy Worker](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/tellerlin/gemini-proxy-worker)
 
-**Step 3: Configure Your App**
-1. Open your deployed Gemini App (e.g., `https://gemini-app.pages.dev`)
-2. Click the Settings icon and add your Google AI API keys
-3. Your app is ready to use!
-
-#### 🌐 Professional Setup with Custom Domain
-
-For production use with your own domain (e.g., `gemini.yourdomain.com`):
-
-**Step 1: Setup Custom Domain for Gemini App**
+**Step 3: Setup Custom Domain for Gemini App**
 1. In Cloudflare Dashboard, go to your deployed Pages project
 2. Navigate to **Custom domains** tab
 3. Click **"Set up a custom domain"**
 4. Add `gemini.yourdomain.com` (or your preferred subdomain)
 5. Cloudflare will automatically configure DNS and SSL
 
-**Step 2: Configure Worker Routes for API**
+**Step 4: Configure Worker Routes for API**
 1. In Cloudflare Dashboard, select your main domain (`yourdomain.com`)
 2. Go to **Workers & Pages** → **Resources** tab
 3. Select **"Workers Routes"** 
@@ -74,7 +65,12 @@ For production use with your own domain (e.g., `gemini.yourdomain.com`):
 
 ![Cloudflare Workers Routes Setting](cloudflare-workers-routes-setting.png)
 
-**✅ That's it!** Your app will automatically work at `https://gemini.yourdomain.com` with API calls routed through `https://gemini.yourdomain.com/api/gemini/*`
+**Step 5: Configure Your App**
+1. Open your deployed Gemini App at `https://gemini.yourdomain.com`
+2. Click the Settings icon and add your Google AI API keys
+3. Your app is ready to use!
+
+**✅ Complete Setup!** Your app will work at `https://gemini.yourdomain.com` with API calls routed through `https://gemini.yourdomain.com/api/gemini/*`
 
 > 💡 **Auto-Configuration**: The app automatically detects it's running in production and switches to proxy mode - no manual environment variable setup needed!
 
