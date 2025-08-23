@@ -9,14 +9,17 @@ export interface EnvConfig {
 
 /**
  * Parse API keys from environment variable or comma-separated string
- * Automatically removes all whitespace (including spaces, tabs, newlines)
+ * Automatically removes all whitespace, single quotes, and double quotes for better compatibility
  */
 export function parseApiKeys(keysString: string): string[] {
   if (!keysString) return [];
   
   return keysString
     .split(',')
-    .map(key => key.replace(/\s+/g, '')) // Remove ALL whitespace characters
+    .map(key => key
+      .replace(/\s+/g, '') // Remove ALL whitespace characters
+      .replace(/['"`]/g, '') // Remove single quotes, double quotes, and backticks
+    )
     .filter(key => key !== '');
 }
 

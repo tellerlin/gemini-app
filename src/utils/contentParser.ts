@@ -90,16 +90,38 @@ export function fixMermaidSyntax(mermaidCode: string): string {
         return processedLine;
       }
       
-      // Special handling for class diagram attributes and methods
-      if (processedLine.includes('+') && /[\u4e00-\u9fff]/.test(processedLine)) {
-        // Check if this is a method line
+      // Special handling for class diagram methods and attributes
+      // Based on Context7 research: Mermaid is very strict with class diagram syntax
+      if (processedLine.includes('classDiagram') || 
+          (processedLine.match(/^[A-Za-z0-9_]+\s*:/) && !processedLine.includes('--'))) {
+        
+        // Handle class diagram methods: ClassName : +methodName() -> ClassName : +methodName()
         if (processedLine.includes('()')) {
-          // Skip processing of method lines in class diagrams - they need to be preserved exactly
-          return processedLine;
-        } else if (processedLine.includes(':')) {
-          // Skip processing of attribute lines in class diagrams - they need to be preserved exactly
-          return processedLine;
+          // Method definition - ensure proper format without Chinese characters in method names
+          processedLine = processedLine.replace(/:\s*([+\-#~]?)([^()]*[\u4e00-\u9fff][^()]*)\(\)/g, 
+            (match, visibility, methodName) => {
+              // Replace Chinese characters in method names with safe equivalents
+              const safeMethodName = methodName.replace(/[\u4e00-\u9fff]/g, (char) => {
+                const charCode = char.charCodeAt(0).toString(16);
+                return `method_${charCode}`;
+              }).trim();
+              return `: ${visibility || '+'}${safeMethodName}()`;
+            });
+        } 
+        // Handle class diagram attributes: ClassName : +attributeName type
+        else if (processedLine.includes(':') && !processedLine.includes('()')) {
+          // Attribute definition - keep Chinese in quotes for attributes
+          processedLine = processedLine.replace(/:\s*([+\-#~]?)([^:\n]*[\u4e00-\u9fff][^:\n]*)/g, 
+            (match, visibility, attributeName) => {
+              const cleanName = attributeName.trim();
+              if (cleanName.startsWith('"') && cleanName.endsWith('"')) {
+                return `: ${visibility || '+'}${cleanName}`;
+              }
+              return `: ${visibility || '+'}"${cleanName}"`;
+            });
         }
+        
+        return processedLine;
       }
       
       // Step 3: Remove problematic trailing semicolons
