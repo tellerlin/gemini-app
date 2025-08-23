@@ -147,13 +147,13 @@ export function AdvancedSettingsModal({
           </div>
 
           {/* Tab Content */}
-          <div className="flex-1 p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
+          <div className="flex-1 p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
             {activeTab === 'thinking' && (
               <div className="space-y-6">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Thinking Function Configuration</h3>
-                  <p className="text-sm text-gray-600 mb-6">
-                    Gemini 2.5 models support thinking function, which can improve response quality but will increase response time and token consumption.
+                  <p className="text-sm text-gray-600 mb-4">
+                    Enable thinking function to improve response quality at the cost of time and tokens.
                   </p>
                 </div>
 
@@ -245,8 +245,8 @@ export function AdvancedSettingsModal({
               <div className="space-y-6">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Generation Parameters</h3>
-                  <p className="text-sm text-gray-600 mb-6">
-                    Adjust these parameters to control AI response creativity and consistency.
+                  <p className="text-sm text-gray-600 mb-4">
+                    Control AI response creativity and consistency.
                   </p>
                 </div>
 
@@ -375,8 +375,8 @@ export function AdvancedSettingsModal({
               <div className="space-y-6">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Google Search Enhancement</h3>
-                  <p className="text-sm text-gray-600 mb-6">
-                    When enabled, AI can obtain the latest information through Google search to enhance response quality.
+                  <p className="text-sm text-gray-600 mb-4">
+                    Enable AI to get latest information through Google search.
                   </p>
                 </div>
 
@@ -434,14 +434,9 @@ export function AdvancedSettingsModal({
                   )}
                 </div>
 
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <h4 className="font-medium text-blue-900 mb-2">Search Enhancement Tips</h4>
-                  <ul className="text-sm text-blue-800 space-y-1">
-                    <li>• Automatically enabled when asking for latest news, events or data</li>
-                    <li>• Triggered by keywords like "latest", "current", "today"</li>
-                    <li>• Search results will show source links for reference</li>
-                    <li>• Enabling will increase response time and token consumption</li>
-                  </ul>
+                <div className="bg-blue-50 p-3 rounded-lg">
+                  <h4 className="font-medium text-blue-900 mb-1">Tips</h4>
+                  <p className="text-sm text-blue-800">Triggered by keywords like "latest", "current", "today". Increases response time and token usage.</p>
                 </div>
               </div>
             )}
@@ -450,8 +445,8 @@ export function AdvancedSettingsModal({
               <div className="space-y-6">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">URL Content Analysis</h3>
-                  <p className="text-sm text-gray-600 mb-6">
-                    Configure AI's ability to analyze web page content from URLs directly.
+                  <p className="text-sm text-gray-600 mb-4">
+                    Enable AI to analyze web page content from URLs.
                   </p>
                 </div>
 
@@ -540,27 +535,9 @@ export function AdvancedSettingsModal({
                   )}
                 </div>
 
-                <div className="bg-green-50 p-4 rounded-lg">
-                  <h4 className="font-medium text-green-900 mb-2">URL Analysis Features</h4>
-                  <ul className="text-sm text-green-800 space-y-1">
-                    <li>• Support analysis of web page text content, structure and data</li>
-                    <li>• Compare information differences between multiple web pages</li>
-                    <li>• Automatically extract key information and summaries</li>
-                    <li>• Support news, documents, blogs and various web pages</li>
-                    <li>• Display URL retrieval status and source information</li>
-                  </ul>
-                </div>
-
-                <div className="bg-yellow-50 p-4 rounded-lg">
-                  <h4 className="font-medium text-yellow-900 mb-2">Usage Instructions</h4>
-                  <div className="text-sm text-yellow-800 space-y-2">
-                    <p>To use URL analysis feature, in the conversation:</p>
-                    <ul className="list-disc list-inside space-y-1 ml-2">
-                      <li>Send messages containing URLs directly</li>
-                      <li>Or ask "Analyze this webpage: [URL]"</li>
-                      <li>Or use "Compare these websites: [URL1], [URL2]"</li>
-                    </ul>
-                  </div>
+                <div className="bg-green-50 p-3 rounded-lg">
+                  <h4 className="font-medium text-green-900 mb-1">Usage</h4>
+                  <p className="text-sm text-green-800">Send messages with URLs or ask "Analyze this webpage: [URL]" to use this feature.</p>
                 </div>
               </div>
             )}
@@ -569,8 +546,8 @@ export function AdvancedSettingsModal({
               <div className="space-y-6">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Interface Settings</h3>
-                  <p className="text-sm text-gray-600 mb-6">
-                    Configure application interface behavior and user experience settings.
+                  <p className="text-sm text-gray-600 mb-4">
+                    Configure interface behavior and user experience.
                   </p>
                 </div>
 
@@ -704,8 +681,8 @@ export function AdvancedSettingsModal({
               <div className="space-y-6">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">System Instructions</h3>
-                  <p className="text-sm text-gray-600 mb-6">
-                    System instructions can define AI's role and behavior style, applied at the beginning of each conversation.
+                  <p className="text-sm text-gray-600 mb-4">
+                    Define AI's role and behavior style for each conversation.
                   </p>
                 </div>
 
