@@ -7,6 +7,7 @@ import { ApiKeyModal } from './components/ApiKeyModal';
 import { AdvancedSettingsModal } from './components/AdvancedSettingsModal';
 import { PerformanceMonitor } from './components/PerformanceMonitor';
 import { ModelSwitchIndicator } from './components/ModelSwitchIndicator';
+import { PWAInstallPrompt } from './components/PWAInstallPrompt';
 import { useChat } from './hooks/useChat';
 import { useResponsive } from './hooks/useLocalStorage';
 import { Button } from './components/ui/Button';
@@ -191,6 +192,9 @@ function App() {
           
           {/* Model Switch Indicator */}
           <ModelSwitchIndicator />
+          
+          {/* PWA Install Prompt */}
+          <PWAInstallPrompt />
         </>
       </div>
     </GlobalErrorBoundary>

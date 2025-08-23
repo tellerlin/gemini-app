@@ -72,14 +72,11 @@ For production use with your own domain (e.g., `gemini.yourdomain.com`):
 6. Select your deployed Gemini Proxy Worker
 7. Save the configuration
 
-**Step 3: Update App Configuration**
-1. Go to your Pages project settings
-2. Add environment variable: `VITE_GEMINI_API_MODE=proxy`
-3. Redeploy your Pages project to apply changes
-
-**Result:** Your app will be available at `https://gemini.yourdomain.com` with API calls routed through `https://gemini.yourdomain.com/api/gemini/*`
-
 ![Cloudflare Workers Routes Setting](cloudflare-workers-routes-setting.png)
+
+**✅ That's it!** Your app will automatically work at `https://gemini.yourdomain.com` with API calls routed through `https://gemini.yourdomain.com/api/gemini/*`
+
+> 💡 **Auto-Configuration**: The app automatically detects it's running in production and switches to proxy mode - no manual environment variable setup needed!
 
 **Benefits of Custom Domain Setup:**
 - ✅ Professional appearance with your own branding
