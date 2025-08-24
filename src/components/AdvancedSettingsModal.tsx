@@ -110,45 +110,48 @@ export function AdvancedSettingsModal({
   ];
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2 sm:p-4">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-6xl max-h-[95vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 flex-shrink-0">
           <div className="flex items-center gap-3">
             <Settings className="h-6 w-6 text-blue-600" />
-            <h2 className="text-xl font-semibold text-gray-900">Advanced Settings</h2>
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Advanced Settings</h2>
           </div>
-          <Button variant="ghost" size="sm" onClick={onClose}>
+          <Button variant="ghost" size="sm" onClick={onClose} className="p-2">
             <X className="h-5 w-5" />
           </Button>
         </div>
 
-        <div className="flex">
+        <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
           {/* Tab Navigation */}
-          <div className="w-48 border-r border-gray-200 bg-gray-50">
-            <nav className="p-4 space-y-2">
-              {tabs.map((tab) => {
-                const Icon = tab.icon;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
-                      activeTab === tab.id
-                        ? 'bg-blue-100 text-blue-700 font-medium'
-                        : 'text-gray-600 hover:bg-gray-100'
-                    }`}
-                  >
-                    <Icon className="h-4 w-4" />
-                    {tab.label}
-                  </button>
-                );
-              })}
+          <div className="w-full lg:w-64 border-b lg:border-b-0 lg:border-r border-gray-200 bg-gray-50 flex-shrink-0">
+            <nav className="p-2 sm:p-4">
+              <div className="grid grid-cols-2 lg:grid-cols-1 gap-1 lg:gap-2">
+                {tabs.map((tab) => {
+                  const Icon = tab.icon;
+                  return (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      className={`flex items-center gap-2 lg:gap-3 px-2 lg:px-3 py-2 rounded-lg text-left transition-colors text-xs lg:text-sm ${ 
+                        activeTab === tab.id
+                          ? 'bg-blue-100 text-blue-700 font-medium'
+                          : 'text-gray-600 hover:bg-gray-100'
+                      }`}
+                    >
+                      <Icon className="h-3 w-3 lg:h-4 lg:w-4 flex-shrink-0" />
+                      <span className="hidden sm:block lg:block">{tab.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </nav>
           </div>
 
           {/* Tab Content */}
-          <div className="flex-1 p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
+          <div className="flex-1 p-4 sm:p-6 overflow-y-auto">
+            <div className="max-w-2xl">{/* Content container with max width for readability */}
             {activeTab === 'connection' && (
               <div className="space-y-6">
                 <div>
@@ -160,16 +163,34 @@ export function AdvancedSettingsModal({
 
                 <div className="space-y-6">
                   {/* Current Environment Info */}
-                  <div className="bg-blue-50 p-4 rounded-lg">
-                    <h4 className="font-medium text-blue-900 mb-2">Current Environment</h4>
-                    <div className="text-sm text-blue-800 space-y-1">
-                      <div>🌐 Hostname: <code className="bg-blue-100 px-1 rounded">{window.location.hostname}</code></div>
-                      <div>🔗 Environment Mode: <code className="bg-blue-100 px-1 rounded">
-                        {import.meta.env.VITE_GEMINI_API_MODE || 'auto-detect'}
-                      </code></div>
-                      <div>🛡️ Proxy URL: <code className="bg-blue-100 px-1 rounded">
-                        {import.meta.env.VITE_GEMINI_PROXY_URL || 'not set'}
-                      </code></div>
+                  <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <div className="w-2 h-2 rounded-full bg-white animate-pulse"></div>
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-medium text-blue-900 mb-2 flex items-center gap-2">
+                          🌐 Current Environment Status
+                        </h4>
+                        <div className="text-sm text-blue-800 space-y-2">
+                          <div className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                            <span>Hostname: <code className="bg-blue-100 px-2 py-1 rounded text-xs font-mono">{window.location.hostname}</code></span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                            <span>API Mode: <code className="bg-blue-100 px-2 py-1 rounded text-xs font-mono">
+                              {import.meta.env.VITE_GEMINI_API_MODE || 'auto-detect'}
+                            </code></span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+                            <span>Proxy URL: <code className="bg-blue-100 px-2 py-1 rounded text-xs font-mono">
+                              {import.meta.env.VITE_GEMINI_PROXY_URL || 'not configured'}
+                            </code></span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
@@ -278,36 +299,65 @@ export function AdvancedSettingsModal({
                     </div>
                   </div>
 
-                  {/* Connection Test */}
+                  {/* Enhanced Connection Test */}
                   <div className="bg-gray-50 p-4 rounded-lg">
-                    <h4 className="font-medium text-gray-900 mb-3">Connection Test</h4>
-                    <div className="flex items-center gap-3">
+                    <h4 className="font-medium text-gray-900 mb-3">🔍 Connection Test</h4>
+                    <p className="text-sm text-gray-600 mb-3">
+                      Test your current configuration to ensure proper connectivity to Gemini API
+                    </p>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                       <Button
                         variant="outline"
                         size="sm"
+                        className="w-full sm:w-auto"
                         onClick={() => {
                           // This will trigger the test in the existing ProxyTester component
                           const event = new CustomEvent('testConnection');
                           window.dispatchEvent(event);
                         }}
                       >
-                        🔍 Test Connection
+                        🧪 Test Connection
                       </Button>
-                      <p className="text-xs text-gray-500">
-                        Test connectivity to different endpoints and verify configuration
-                      </p>
+                      <div className="text-xs text-gray-500">
+                        <div className="mb-1">Tests performed:</div>
+                        <ul className="space-y-1">
+                          <li>• Direct Google API connectivity</li>
+                          <li>• Proxy worker functionality</li>
+                          <li>• API key validation</li>
+                          <li>• Network latency measurement</li>
+                        </ul>
+                      </div>
                     </div>
                   </div>
 
                   {/* Configuration Tips */}
-                  <div className="bg-yellow-50 p-4 rounded-lg">
-                    <h4 className="font-medium text-yellow-900 mb-2">💡 Configuration Tips</h4>
-                    <ul className="text-sm text-yellow-800 space-y-1">
-                      <li>• For production deployments, proxy mode provides better security</li>
-                      <li>• Direct mode is faster for development and testing</li>
-                      <li>• Environment variables take precedence over these settings</li>
-                      <li>• Use the connection test to verify your configuration works</li>
-                    </ul>
+                  <div className="bg-amber-50 border border-amber-200 p-4 rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 rounded-full bg-amber-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <span className="text-white text-xs font-bold">!</span>
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-medium text-amber-900 mb-2">💡 Quick Setup Tips</h4>
+                        <ul className="text-sm text-amber-800 space-y-1.5">
+                          <li className="flex items-start gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-600 mt-2 flex-shrink-0"></span>
+                            <span><strong>Production:</strong> Use proxy mode for better security</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-600 mt-2 flex-shrink-0"></span>
+                            <span><strong>Development:</strong> Direct mode is faster for testing</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-600 mt-2 flex-shrink-0"></span>
+                            <span><strong>Environment variables:</strong> Override these settings automatically</span>
+                          </li>
+                          <li className="flex items-start gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-600 mt-2 flex-shrink-0"></span>
+                            <span><strong>Test first:</strong> Use connection test to verify setup</span>
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -323,11 +373,15 @@ export function AdvancedSettingsModal({
                 </div>
 
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <label className="text-sm font-medium text-gray-700">Enable Thinking Function</label>
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700">Enable Thinking Function</label>
+                      <p className="text-xs text-gray-500 mt-1">Allow AI to think through complex problems before responding</p>
+                    </div>
                     <Button
                       variant={localConfig.thinkingConfig?.enabled ? 'primary' : 'outline'}
                       size="sm"
+                      className="min-w-[80px] font-medium"
                       onClick={() => updateThinkingConfig({ enabled: !localConfig.thinkingConfig?.enabled })}
                     >
                       {localConfig.thinkingConfig?.enabled ? 'Enabled' : 'Disabled'}
@@ -354,11 +408,15 @@ export function AdvancedSettingsModal({
                         </p>
                       </div>
 
-                      <div className="flex items-center justify-between">
-                        <label className="text-sm font-medium text-gray-700">Show Thinking Process</label>
+                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div>
+                          <label className="text-sm font-medium text-gray-700">Show Thinking Process</label>
+                          <p className="text-xs text-gray-500 mt-1">Display the AI's reasoning steps in the response</p>
+                        </div>
                         <Button
                           variant={localConfig.thinkingConfig?.showThinkingProcess ? 'primary' : 'outline'}
                           size="sm"
+                          className="min-w-[60px] font-medium"
                           onClick={() => updateThinkingConfig({ 
                             showThinkingProcess: !localConfig.thinkingConfig?.showThinkingProcess 
                           })}
@@ -546,8 +604,8 @@ export function AdvancedSettingsModal({
                 </div>
 
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
+                  <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                    <div className="flex-1 mr-4">
                       <label className="text-sm font-medium text-gray-700">Enable Search Enhancement</label>
                       <p className="text-xs text-gray-500 mt-1">
                         Automatically detect questions that need latest information and use Google search
@@ -556,6 +614,7 @@ export function AdvancedSettingsModal({
                     <Button
                       variant={localConfig.groundingConfig?.enabled ? 'primary' : 'outline'}
                       size="sm"
+                      className="min-w-[80px] font-medium"
                       onClick={() => updateGroundingConfig({ enabled: !localConfig.groundingConfig?.enabled })}
                     >
                       {localConfig.groundingConfig?.enabled ? 'Enabled' : 'Disabled'}
@@ -564,8 +623,8 @@ export function AdvancedSettingsModal({
 
                   {localConfig.groundingConfig?.enabled && (
                     <>
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
+                      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div className="flex-1 mr-4">
                           <label className="text-sm font-medium text-gray-700">Use Google Search</label>
                           <p className="text-xs text-gray-500 mt-1">
                             Obtain web content through Google search
@@ -574,6 +633,7 @@ export function AdvancedSettingsModal({
                         <Button
                           variant={localConfig.groundingConfig?.useGoogleSearch ? 'primary' : 'outline'}
                           size="sm"
+                          className="min-w-[80px] font-medium"
                           onClick={() => updateGroundingConfig({ useGoogleSearch: !localConfig.groundingConfig?.useGoogleSearch })}
                         >
                           {localConfig.groundingConfig?.useGoogleSearch ? 'Enabled' : 'Disabled'}
@@ -616,8 +676,8 @@ export function AdvancedSettingsModal({
                 </div>
 
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
+                  <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                    <div className="flex-1 mr-4">
                       <label className="text-sm font-medium text-gray-700">Enable URL Analysis</label>
                       <p className="text-xs text-gray-500 mt-1">
                         Allow AI to directly read and analyze web page content
@@ -626,6 +686,7 @@ export function AdvancedSettingsModal({
                     <Button
                       variant={localConfig.urlContextConfig?.enabled ? 'primary' : 'outline'}
                       size="sm"
+                      className="min-w-[80px] font-medium"
                       onClick={() => updateUrlContextConfig({ enabled: !localConfig.urlContextConfig?.enabled })}
                     >
                       {localConfig.urlContextConfig?.enabled ? 'Enabled' : 'Disabled'}
@@ -717,40 +778,42 @@ export function AdvancedSettingsModal({
                 </div>
 
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
+                  <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                    <div className="flex-1 mr-4">
                       <label className="text-sm font-medium text-gray-700">Streaming Response</label>
                       <p className="text-xs text-gray-500 mt-1">
-                        When enabled, responses will display word by word, providing better feedback experience but may increase latency
+                        Display responses word by word for better feedback experience
                       </p>
                     </div>
                     <Button
                       variant={localConfig.streamingEnabled !== false ? 'primary' : 'outline'}
                       size="sm"
+                      className="min-w-[80px] font-medium"
                       onClick={() => setLocalConfig(prev => ({ ...prev, streamingEnabled: !prev.streamingEnabled }))}
                     >
                       {localConfig.streamingEnabled !== false ? 'Enabled' : 'Disabled'}
                     </Button>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div className="flex-1 mr-4">
                       <label className="text-sm font-medium text-gray-700">Typewriter Effect</label>
                       <p className="text-xs text-gray-500 mt-1">
-                        Add typewriter effect to streaming responses for more natural display
+                        Add typewriter effect to streaming responses
                       </p>
                     </div>
                     <Button
                       variant={localConfig.typewriterEffect !== false ? 'primary' : 'outline'}
                       size="sm"
+                      className="min-w-[80px] font-medium"
                       onClick={() => setLocalConfig(prev => ({ ...prev, typewriterEffect: !prev.typewriterEffect }))}
                     >
                       {localConfig.typewriterEffect !== false ? 'Enabled' : 'Disabled'}
                     </Button>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
+                  <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                    <div className="flex-1 mr-4">
                       <label className="text-sm font-medium text-gray-700">Smart Loading Indicators</label>
                       <p className="text-xs text-gray-500 mt-1">
                         Display different loading messages based on request type
@@ -759,22 +822,24 @@ export function AdvancedSettingsModal({
                     <Button
                       variant={localConfig.smartLoadingIndicators !== false ? 'primary' : 'outline'}
                       size="sm"
+                      className="min-w-[80px] font-medium"
                       onClick={() => setLocalConfig(prev => ({ ...prev, smartLoadingIndicators: !prev.smartLoadingIndicators }))}
                     >
                       {localConfig.smartLoadingIndicators !== false ? 'Enabled' : 'Disabled'}
                     </Button>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div className="flex-1 mr-4">
                       <label className="text-sm font-medium text-gray-700">Real-time Feedback</label>
                       <p className="text-xs text-gray-500 mt-1">
-                        Display detailed status information and progress hints during processing
+                        Display detailed status information and progress hints
                       </p>
                     </div>
                     <Button
                       variant={localConfig.realtimeFeedback !== false ? 'primary' : 'outline'}
                       size="sm"
+                      className="min-w-[80px] font-medium"
                       onClick={() => setLocalConfig(prev => ({ ...prev, realtimeFeedback: !prev.realtimeFeedback }))}
                     >
                       {localConfig.realtimeFeedback !== false ? 'Enabled' : 'Disabled'}
@@ -939,15 +1004,16 @@ export function AdvancedSettingsModal({
                 </div>
               </div>
             )}
+            </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50">
-          <Button variant="outline" onClick={onClose}>
+        <div className="flex items-center justify-end gap-3 p-4 sm:p-6 border-t border-gray-200 bg-gray-50 flex-shrink-0">
+          <Button variant="outline" onClick={onClose} className="min-w-[80px]">
             Cancel
           </Button>
-          <Button onClick={handleSave}>
+          <Button onClick={handleSave} className="min-w-[100px]">
             Save Settings
           </Button>
         </div>
