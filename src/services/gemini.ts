@@ -563,7 +563,7 @@ export class GeminiService {
     const shouldUseProxy = this.shouldUseProxyMode(apiMode, customProxyUrl);
     
     if (shouldUseProxy) {
-      const baseUrl = customProxyUrl || `${window.location.origin}/api/gemini`;
+      const baseUrl = customProxyUrl || (window as any).__FALLBACK_PROXY_URL || `${window.location.origin}/api/gemini`;
       config.baseUrl = baseUrl; // Use baseUrl directly instead of httpOptions
       console.log(`🌐 Using proxy connection: ${baseUrl}`);
     } else {
@@ -604,6 +604,16 @@ export class GeminiService {
         hostname.endsWith('.local')) {
       console.log(`🏠 Local development detected (${hostname}) - using direct connection`);
       return false;
+    }
+    
+    // Force proxy mode for gemini.xuexiao.eu.org (temporary fix)
+    if (hostname === 'gemini.xuexiao.eu.org') {
+      console.log(`🌍 Production environment detected (${hostname}) - using proxy mode with fallback URL`);
+      // Use fallback worker URL if environment variable is not available
+      if (!customProxyUrl) {
+        window.__FALLBACK_PROXY_URL = 'https://geminiproxyworker.xuexiao.eu.org';
+      }
+      return true;
     }
     
     // Use proxy mode for production deployments (custom domains, pages.dev, etc.)

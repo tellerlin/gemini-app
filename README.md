@@ -70,6 +70,22 @@ Choose one of the following deployment methods:
 - Test the route: `https://gemini.yourdomain.com/api/gemini/health` should return `{"status":"ok",...}`
 - If this fails, double-check the route pattern matches your app subdomain exactly
 
+**🚨 Worker Routes 故障排除**：
+如果上述路由测试失败，可以使用以下临时解决方案：
+
+1. **临时方案**: 直接使用Worker URL
+   - 在 Cloudflare Pages 项目设置中添加环境变量：
+   - `VITE_GEMINI_PROXY_URL` = `https://your-worker-name.xuexiao.eu.org`
+
+2. **调试 Worker Routes**：
+   - 确认Route Pattern格式：`gemini.yourdomain.com/api/gemini/*`
+   - 等待5-10分钟让配置生效
+   - 检查Worker是否正确绑定到路由
+
+3. **替代方案**: 使用Worker Custom Domain
+   - 在Worker设置中添加自定义域名
+   - 使用如：`api.yourdomain.com` 或 `gemini-api.yourdomain.com`
+
 **Step 5: Configure Your App**
 1. Open your deployed Gemini App at `https://gemini.yourdomain.com`
 2. Click the Settings icon and add your Google AI API keys
