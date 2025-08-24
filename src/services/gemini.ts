@@ -3,6 +3,20 @@ import type { Message, GroundingMetadata, UrlContextMetadata } from '../types/ch
 import { loadEnvConfig } from '../utils/env';
 import { getNextBestModel, getModelSwitchExplanation } from '../config/gemini';
 
+// Mobile detection utility
+const isMobile = () => {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+};
+
+// Network status utility
+const isSlowConnection = () => {
+  const connection = (navigator as any).connection || (navigator as any).mozConnection || (navigator as any).webkitConnection;
+  if (connection) {
+    return connection.effectiveType === 'slow-2g' || connection.effectiveType === '2g';
+  }
+  return false;
+};
+
 // Enhanced type definitions for Gemini service
 export interface GeminiGenerationConfig {
   generationConfig?: {
@@ -1180,18 +1194,63 @@ export class GeminiService {
     const ai = this.createGenAI();
     const lastMessage = messages[messages.length - 1];
 
+    // Enhanced timeout for mobile devices and slow connections
+    const isMobileDevice = isMobile();
+    const isSlowNetwork = isSlowConnection();
+    const timeout = this.getAdaptiveTimeout(isMobileDevice, isSlowNetwork);
+    
+    console.log(`📱 Mobile device: ${isMobileDevice}, Slow connection: ${isSlowNetwork}, Timeout: ${timeout}ms`);
+
     try {
       if (lastMessage.files && lastMessage.files.length > 0) {
         console.log(`📎 Processing ${lastMessage.files.length} file attachments for streaming`);
-        yield* this.handleStreamingMultimodalGeneration(ai, lastMessage, model, config);
+        yield* this.handleStreamingMultimodalGeneration(ai, lastMessage, model, config, timeout);
       } else {
         console.log('💬 Processing text-only streaming conversation');
-        yield* this.handleStreamingTextGeneration(ai, messages, model, config);
+        yield* this.handleStreamingTextGeneration(ai, messages, model, config, timeout);
       }
     } catch (error) {
       this.categorizeAndLogError(error as Error);
+      
+      // Enhanced mobile error handling
+      if (isMobileDevice && this.isMobileNetworkError(error as Error)) {
+        console.log('📱 Mobile network error detected, applying retry logic...');
+        await this.delay(2000); // Wait before potential retry
+      }
+      
       throw error;
     }
+  }
+
+  /**
+   * Get adaptive timeout based on device and connection
+   * @private
+   */
+  private getAdaptiveTimeout(isMobileDevice: boolean, isSlowNetwork: boolean): number {
+    let baseTimeout = this.DEFAULT_TIMEOUT;
+    
+    if (isMobileDevice) {
+      baseTimeout = baseTimeout * 1.5; // 50% longer for mobile
+    }
+    
+    if (isSlowNetwork) {
+      baseTimeout = baseTimeout * 2; // Double timeout for slow connections
+    }
+    
+    return Math.min(baseTimeout, 60000); // Cap at 1 minute
+  }
+
+  /**
+   * Check if error is related to mobile network issues
+   * @private
+   */
+  private isMobileNetworkError(error: Error): boolean {
+    const errorMessage = error.message.toLowerCase();
+    return errorMessage.includes('network') ||
+           errorMessage.includes('timeout') ||
+           errorMessage.includes('connection') ||
+           errorMessage.includes('failed to fetch') ||
+           errorMessage.includes('cors');
   }
 
   /**

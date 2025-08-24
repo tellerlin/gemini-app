@@ -12,6 +12,7 @@ import { getModelCapabilities, getOptimalThinkingConfig } from '../config/gemini
 import { useLocalStorage, useConversations } from './useLocalStorage';
 import { ContextManager, type ContextConfig } from '../utils/contextManager';
 import { generateAdvancedHTMLExport } from '../utils/exportRenderer';
+import { useNetworkStatus, NetworkRetry } from '../components/NetworkMonitor';
 
 // Helper function to extract URLs from message content
 function extractUrlsFromMessage(content: string, maxUrls: number = 3): string[] {
@@ -228,6 +229,9 @@ function generatePDFExport(conversation: any, filename: string, htmlContent?: st
 }
 
 export function useChat() {
+  // Network status monitoring
+  const { isOnline, connectionType, isSlowConnection } = useNetworkStatus();
+  
   // Use new IndexedDB storage system
   const {
     conversations,
@@ -310,6 +314,19 @@ export function useChat() {
   }, [selectedModel, defaultConversationConfig, saveConversation, setCurrentConversationId]);
 
   const sendMessage = useCallback(async (content: string, files?: FileAttachment[]) => {
+    // Check network status first
+    if (!isOnline) {
+      toast.error('设备离线，请检查网络连接');
+      return;
+    }
+
+    if (isSlowConnection) {
+      toast('检测到网络较慢，消息可能有延迟', {
+        icon: '🐌',
+        duration: 4000,
+      });
+    }
+
     if (!apiKeys || apiKeys.length === 0) {
       toast.error('Please set your Gemini API keys first');
       return;
@@ -518,12 +535,36 @@ export function useChat() {
             }
           }
         } else {
-          // Use intelligent streaming with model switching
-          console.log('⚡ Using intelligent streaming generation with model switching');
-          const stream = geminiService.generateStreamingResponseWithModelSwitch(
-            optimizedMessages, 
-            selectedModel,
-            enhancedConfig
+          // Use intelligent streaming with model switching and network retry
+          console.log('⚡ Using intelligent streaming generation with model switching and network retry');
+          
+          const streamingOperation = async () => {
+            return geminiService.generateStreamingResponseWithModelSwitch(
+              optimizedMessages, 
+              selectedModel,
+              enhancedConfig
+            );
+          };
+
+          // Apply network retry for streaming
+          const stream = await NetworkRetry.retryStream(
+            streamingOperation,
+            {
+              maxRetries: isSlowConnection ? 1 : 2, // Fewer retries on slow connections
+              onRetry: (attempt, error) => {
+                console.log(`🔄 Retrying streaming (attempt ${attempt}):`, error.message);
+                toast(`连接不稳定，正在重试... (${attempt}/2)`, {
+                  icon: '🔄',
+                  duration: 3000,
+                });
+              },
+              onReconnect: () => {
+                toast('正在重新连接...', {
+                  icon: '📡',
+                  duration: 2000,
+                });
+              }
+            }
           );
 
           let actualModelUsed = selectedModel;
@@ -903,5 +944,11 @@ export function useChat() {
     getStorageUsage,
     // Error state
     error: conversationsError,
+    // Network status
+    networkStatus: {
+      isOnline,
+      connectionType,
+      isSlowConnection,
+    },
   };
 }

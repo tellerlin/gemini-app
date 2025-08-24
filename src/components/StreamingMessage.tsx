@@ -2,6 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Square, Copy, Download } from 'lucide-react';
 import { Button } from './ui/Button';
 
+// Mobile detection utility
+const isMobile = () => {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+};
+
 interface StreamingMessageProps {
   content: string;
   isStreaming: boolean;
@@ -20,9 +25,41 @@ export function StreamingMessage({
   const [displayedContent, setDisplayedContent] = useState('');
   const [currentIndex, setCurrentIndex] = useState(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const [typingSpeed] = useState(20); // milliseconds per character
+  const animationRef = useRef<number | null>(null);
+  const lastUpdateRef = useRef<number>(0);
+  
+  // Adjust typing speed based on device type
+  const [typingSpeed] = useState(() => {
+    if (isMobile()) {
+      return 30; // Slower on mobile for better reliability
+    }
+    return 20; // milliseconds per character
+  });
 
-  // Typewriter effect
+  // Use requestAnimationFrame for better mobile performance
+  const updateContent = (targetIndex: number) => {
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+    }
+    
+    animationRef.current = requestAnimationFrame(() => {
+      const now = performance.now();
+      if (now - lastUpdateRef.current >= typingSpeed) {
+        setDisplayedContent(content.slice(0, targetIndex));
+        setCurrentIndex(targetIndex);
+        lastUpdateRef.current = now;
+        
+        if (targetIndex < content.length) {
+          updateContent(targetIndex + 1);
+        }
+      } else {
+        // If not enough time has passed, schedule next frame
+        updateContent(targetIndex);
+      }
+    });
+  };
+
+  // Typewriter effect with mobile optimization
   useEffect(() => {
     if (!enableTypewriter || !isStreaming) {
       // If typewriter is disabled or not streaming, show all content immediately
@@ -32,15 +69,24 @@ export function StreamingMessage({
     }
 
     if (isStreaming && content && currentIndex < content.length) {
-      intervalRef.current = setTimeout(() => {
-        setDisplayedContent(content.slice(0, currentIndex + 1));
-        setCurrentIndex(prev => prev + 1);
-      }, typingSpeed);
+      if (isMobile()) {
+        // Use requestAnimationFrame on mobile for better performance
+        updateContent(currentIndex + 1);
+      } else {
+        // Use setTimeout on desktop for precise timing
+        intervalRef.current = setTimeout(() => {
+          setDisplayedContent(content.slice(0, currentIndex + 1));
+          setCurrentIndex(prev => prev + 1);
+        }, typingSpeed);
+      }
     }
 
     return () => {
       if (intervalRef.current) {
         clearTimeout(intervalRef.current);
+      }
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
       }
     };
   }, [content, currentIndex, isStreaming, typingSpeed, enableTypewriter]);
@@ -50,11 +96,31 @@ export function StreamingMessage({
     if (isStreaming && content.length < displayedContent.length) {
       setDisplayedContent('');
       setCurrentIndex(0);
+      lastUpdateRef.current = 0;
     }
   }, [content, isStreaming, displayedContent.length]);
 
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(displayedContent);
+  // Enhanced clipboard API with fallback for mobile
+  const copyToClipboard = async () => {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(displayedContent);
+      } else {
+        // Fallback for mobile browsers that don't support clipboard API
+        const textArea = document.createElement('textarea');
+        textArea.value = displayedContent;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+    }
   };
 
   const downloadAsText = () => {

@@ -8,6 +8,7 @@ import { AdvancedSettingsModal } from './components/AdvancedSettingsModal';
 import { PerformanceMonitor } from './components/PerformanceMonitor';
 import { ModelSwitchIndicator } from './components/ModelSwitchIndicator';
 import { PWAInstallPrompt } from './components/PWAInstallPrompt';
+import { NetworkMonitor } from './components/NetworkMonitor';
 import { useChat } from './hooks/useChat';
 import { useResponsive } from './hooks/useLocalStorage';
 import { Button } from './components/ui/Button';
@@ -199,6 +200,9 @@ function App() {
           
           {/* PWA Install Prompt */}
           <PWAInstallPrompt />
+          
+          {/* Network Monitor for Mobile */}
+          <NetworkMonitor />
         </>
       </div>
     </GlobalErrorBoundary>
