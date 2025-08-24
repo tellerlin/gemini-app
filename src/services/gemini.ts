@@ -559,8 +559,10 @@ export class GeminiService {
     const apiMode = import.meta.env.VITE_GEMINI_API_MODE;
     const customProxyUrl = import.meta.env.VITE_GEMINI_PROXY_URL;
     
-    // Only configure baseUrl if explicitly needed
-    if (apiMode === 'proxy' || customProxyUrl) {
+    // Auto-detect mode: determine connection method based on environment
+    const shouldUseProxy = this.shouldUseProxyMode(apiMode, customProxyUrl);
+    
+    if (shouldUseProxy) {
       const baseUrl = customProxyUrl || `${window.location.origin}/api/gemini`;
       config.baseUrl = baseUrl; // Use baseUrl directly instead of httpOptions
       console.log(`🌐 Using proxy connection: ${baseUrl}`);
@@ -570,6 +572,43 @@ export class GeminiService {
     }
     
     return new GoogleGenAI(config);
+  }
+
+  /**
+   * Determine whether to use proxy mode based on environment and configuration
+   * @private
+   */
+  private shouldUseProxyMode(apiMode?: string, customProxyUrl?: string): boolean {
+    // If custom proxy URL is provided, always use proxy
+    if (customProxyUrl) {
+      return true;
+    }
+    
+    // If explicitly set to proxy mode
+    if (apiMode === 'proxy') {
+      return true;
+    }
+    
+    // If explicitly set to direct mode
+    if (apiMode === 'direct') {
+      return false;
+    }
+    
+    // Auto-detect mode (default): check current hostname
+    const hostname = window.location.hostname;
+    
+    // Use direct connection for local development
+    if (hostname === 'localhost' || 
+        hostname === '127.0.0.1' || 
+        hostname === '0.0.0.0' || 
+        hostname.endsWith('.local')) {
+      console.log(`🏠 Local development detected (${hostname}) - using direct connection`);
+      return false;
+    }
+    
+    // Use proxy mode for production deployments (custom domains, pages.dev, etc.)
+    console.log(`🌍 Production environment detected (${hostname}) - using proxy mode`);
+    return true;
   }
 
   /**

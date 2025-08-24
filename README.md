@@ -56,13 +56,19 @@ Choose one of the following deployment methods:
 
 **Step 4: Configure Worker Routes for API**
 1. In Cloudflare Dashboard, select your main domain (`yourdomain.com`)
-2. Select **"Workers Routes"** 
+2. Go to **"Workers Routes"** in the left sidebar
 3. Click **"Add route"**
-4. Set route pattern: `*.yourdomain.com/api/gemini/*`
-5. Select your deployed Gemini Proxy Worker
-6. Save the configuration
+4. **Important**: Set route pattern exactly as: `gemini.yourdomain.com/api/gemini/*`
+   - ⚠️ **Note**: Use your **specific subdomain** (`gemini.yourdomain.com`), not the wildcard pattern
+   - This ensures the frontend app can correctly route API calls to the worker
+5. Select your deployed **Gemini Proxy Worker** from the dropdown
+6. Click **"Save"**
 
 ![Cloudflare Workers Routes Setting](cloudflare-workers-routes-setting.png)
+
+**✅ Verification**: 
+- Test the route: `https://gemini.yourdomain.com/api/gemini/health` should return `{"status":"ok",...}`
+- If this fails, double-check the route pattern matches your app subdomain exactly
 
 **Step 5: Configure Your App**
 1. Open your deployed Gemini App at `https://gemini.yourdomain.com`
@@ -72,6 +78,35 @@ Choose one of the following deployment methods:
 **✅ Complete Setup!** Your app will work at `https://gemini.yourdomain.com` with API calls routed through `https://gemini.yourdomain.com/api/gemini/*`
 
 > 💡 **Auto-Configuration**: The app automatically detects it's running in production and switches to proxy mode - no manual environment variable setup needed!
+
+### 🔧 Troubleshooting API Routing
+
+If your frontend is not using the `/api/gemini` endpoint, check these steps:
+
+**1. Verify Worker Route Configuration:**
+```bash
+# Test if your worker route is working
+curl https://gemini.yourdomain.com/api/gemini/health
+# Expected response: {"status":"ok","timestamp":"...","version":"1.0.0"}
+```
+
+**2. Check Frontend Auto-Detection:**
+- The app automatically uses proxy mode when running on a production domain
+- Local development (localhost) uses direct connection to Google API
+- If needed, you can force proxy mode by adding to your Pages environment variables:
+  - Variable name: `VITE_GEMINI_API_MODE`
+  - Variable value: `proxy`
+
+**3. Debug Frontend API Calls:**
+- Open browser Developer Tools → Network tab
+- Send a message in the chat
+- Look for requests to `/api/gemini/` - they should go to your domain, not to `generativelanguage.googleapis.com`
+
+**4. Common Issues:**
+- ❌ **Route pattern wrong**: Must be `gemini.yourdomain.com/api/gemini/*` (not `*.yourdomain.com/api/gemini/*`)
+- ❌ **Worker not deployed**: Deploy the Gemini Proxy Worker first
+- ❌ **DNS not propagated**: Wait a few minutes after domain setup
+- ❌ **CORS issues**: Check that the worker includes proper CORS headers
 
 **Benefits of Custom Domain Setup:**
 - ✅ Professional appearance with your own branding
@@ -158,14 +193,20 @@ VITE_GEMINI_API_MODE=direct
 
 This application supports three connection modes to accommodate different deployment environments:
 
-#### 1. **Auto-detect Mode (Default)**
+#### 1. **Auto-detect Mode (Default) - Recommended**
 Automatically chooses the best connection method:
 - **Local Development** (`localhost`, `127.0.0.1`, `0.0.0.0`): Direct connection to Google API
-- **Production Deployment**: Uses `/api/gemini` proxy endpoint
+- **Production Deployment** (custom domain): Uses `/api/gemini` proxy endpoint
 
 ```env
-VITE_GEMINI_API_MODE=auto  # or omit (default behavior)
+# No configuration needed - this is the default behavior
+VITE_GEMINI_API_MODE=auto  # or omit entirely
 ```
+
+**How it works:**
+- When you access your app via `https://gemini.yourdomain.com`, it detects production mode
+- API calls automatically route to `https://gemini.yourdomain.com/api/gemini/*`
+- Your configured Worker Route handles the proxy to Google's API
 
 #### 2. **Direct Connection Mode**  
 Always connects directly to `generativelanguage.googleapis.com`  
