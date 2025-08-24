@@ -22,7 +22,7 @@ export function AdvancedSettingsModal({
   imageConfig,
   onImageConfigSave,
 }: AdvancedSettingsModalProps) {
-  const [activeTab, setActiveTab] = useState<'thinking' | 'generation' | 'image' | 'grounding' | 'urlcontext' | 'system' | 'interface'>('thinking');
+  const [activeTab, setActiveTab] = useState<'connection' | 'thinking' | 'generation' | 'image' | 'grounding' | 'urlcontext' | 'system' | 'interface'>('connection');
   const [localConfig, setLocalConfig] = useState<ConversationConfig>(conversationConfig);
   const [localImageConfig, setLocalImageConfig] = useState<ImageGenerationConfig>(imageConfig);
 
@@ -100,6 +100,7 @@ export function AdvancedSettingsModal({
   };
 
   const tabs = [
+    { id: 'connection' as const, label: 'API Connection', icon: Link },
     { id: 'thinking' as const, label: 'Thinking Config', icon: Brain },
     { id: 'generation' as const, label: 'Generation Parameters', icon: Sliders },
     { id: 'grounding' as const, label: 'Search Enhancement', icon: Search },
@@ -148,6 +149,170 @@ export function AdvancedSettingsModal({
 
           {/* Tab Content */}
           <div className="flex-1 p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
+            {activeTab === 'connection' && (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">API Connection Configuration</h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Configure how the application connects to Gemini API - direct or through proxy.
+                  </p>
+                </div>
+
+                <div className="space-y-6">
+                  {/* Current Environment Info */}
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <h4 className="font-medium text-blue-900 mb-2">Current Environment</h4>
+                    <div className="text-sm text-blue-800 space-y-1">
+                      <div>🌐 Hostname: <code className="bg-blue-100 px-1 rounded">{window.location.hostname}</code></div>
+                      <div>🔗 Environment Mode: <code className="bg-blue-100 px-1 rounded">
+                        {import.meta.env.VITE_GEMINI_API_MODE || 'auto-detect'}
+                      </code></div>
+                      <div>🛡️ Proxy URL: <code className="bg-blue-100 px-1 rounded">
+                        {import.meta.env.VITE_GEMINI_PROXY_URL || 'not set'}
+                      </code></div>
+                    </div>
+                  </div>
+
+                  {/* Connection Mode Selection */}
+                  <div className="space-y-4">
+                    <h4 className="font-medium text-gray-900">Connection Mode</h4>
+                    
+                    <div className="grid grid-cols-1 gap-3">
+                      <div className="border border-gray-200 rounded-lg p-4">
+                        <div className="flex items-start gap-3">
+                          <div className="w-5 h-5 rounded-full border-2 border-green-500 bg-green-100 flex items-center justify-center mt-0.5">
+                            <div className="w-2 h-2 rounded-full bg-green-500"></div>
+                          </div>
+                          <div className="flex-1">
+                            <h5 className="font-medium text-gray-900">🚀 Auto-Detect (Recommended)</h5>
+                            <p className="text-sm text-gray-600 mt-1">
+                              Automatically detects environment and chooses the best connection method:
+                            </p>
+                            <ul className="text-xs text-gray-500 mt-2 ml-4 space-y-1">
+                              <li>• Local development → Direct connection to Google API</li>
+                              <li>• Production environment → Proxy connection for better performance</li>
+                              <li>• Respects VITE_GEMINI_API_MODE environment variable</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="border border-gray-200 rounded-lg p-4">
+                        <div className="flex items-start gap-3">
+                          <div className="w-5 h-5 rounded-full border-2 border-blue-500 bg-blue-100 flex items-center justify-center mt-0.5">
+                            <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                          </div>
+                          <div className="flex-1">
+                            <h5 className="font-medium text-gray-900">🛡️ Proxy Mode</h5>
+                            <p className="text-sm text-gray-600 mt-1">
+                              Routes requests through Cloudflare Worker proxy for enhanced security and reliability.
+                            </p>
+                            <ul className="text-xs text-gray-500 mt-2 ml-4 space-y-1">
+                              <li>• Better security and privacy protection</li>
+                              <li>• Avoids direct API key exposure</li>
+                              <li>• Intelligent load balancing across multiple API keys</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="border border-gray-200 rounded-lg p-4">
+                        <div className="flex items-start gap-3">
+                          <div className="w-5 h-5 rounded-full border-2 border-orange-500 bg-orange-100 flex items-center justify-center mt-0.5">
+                            <div className="w-2 h-2 rounded-full bg-orange-500"></div>
+                          </div>
+                          <div className="flex-1">
+                            <h5 className="font-medium text-gray-900">🏠 Direct Mode</h5>
+                            <p className="text-sm text-gray-600 mt-1">
+                              Direct connection to Google Gemini API (requires user's API key).
+                            </p>
+                            <ul className="text-xs text-gray-500 mt-2 ml-4 space-y-1">
+                              <li>• Faster response times</li>
+                              <li>• No intermediate proxy</li>
+                              <li>• Requires valid Google AI Studio API key</li>
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Proxy Configuration */}
+                  <div className="space-y-4">
+                    <h4 className="font-medium text-gray-900">Proxy Configuration</h4>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Custom Proxy URL (Optional)
+                      </label>
+                      <Input
+                        type="url"
+                        placeholder="https://your-proxy-worker.domain.com"
+                        value={localConfig.customProxyUrl || ''}
+                        onChange={(e) => setLocalConfig(prev => ({ ...prev, customProxyUrl: e.target.value }))}
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Override the default proxy URL. Leave blank to use environment configuration.
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Connection Mode Override
+                      </label>
+                      <Select
+                        value={localConfig.connectionMode || 'auto'}
+                        onChange={(value) => setLocalConfig(prev => ({ 
+                          ...prev, 
+                          connectionMode: value as 'auto' | 'proxy' | 'direct' 
+                        }))}
+                        options={[
+                          { value: 'auto', label: '🚀 Auto-Detect (Recommended)' },
+                          { value: 'proxy', label: '🛡️ Force Proxy Mode' },
+                          { value: 'direct', label: '🏠 Force Direct Mode' },
+                        ]}
+                      />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Override automatic detection. Use "Auto-Detect" unless you have specific needs.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Connection Test */}
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h4 className="font-medium text-gray-900 mb-3">Connection Test</h4>
+                    <div className="flex items-center gap-3">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          // This will trigger the test in the existing ProxyTester component
+                          const event = new CustomEvent('testConnection');
+                          window.dispatchEvent(event);
+                        }}
+                      >
+                        🔍 Test Connection
+                      </Button>
+                      <p className="text-xs text-gray-500">
+                        Test connectivity to different endpoints and verify configuration
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Configuration Tips */}
+                  <div className="bg-yellow-50 p-4 rounded-lg">
+                    <h4 className="font-medium text-yellow-900 mb-2">💡 Configuration Tips</h4>
+                    <ul className="text-sm text-yellow-800 space-y-1">
+                      <li>• For production deployments, proxy mode provides better security</li>
+                      <li>• Direct mode is faster for development and testing</li>
+                      <li>• Environment variables take precedence over these settings</li>
+                      <li>• Use the connection test to verify your configuration works</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {activeTab === 'thinking' && (
               <div className="space-y-6">
                 <div>

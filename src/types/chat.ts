@@ -45,6 +45,9 @@ export interface ConversationConfig {
   generationConfig?: GenerationConfig;
   groundingConfig?: GroundingConfig;
   urlContextConfig?: UrlContextConfig;
+  // Connection settings
+  customProxyUrl?: string;
+  connectionMode?: 'auto' | 'proxy' | 'direct';
   // Interface settings
   streamingEnabled?: boolean;
   typewriterEffect?: boolean;

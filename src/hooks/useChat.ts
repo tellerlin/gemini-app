@@ -21,6 +21,30 @@ function extractUrlsFromMessage(content: string, maxUrls: number = 3): string[] 
   return matches.slice(0, maxUrls);
 }
 
+// Helper function to convert ConversationConfig to GeminiGenerationConfig
+function convertToGeminiConfig(conversationConfig: ConversationConfig): any {
+  return {
+    generationConfig: {
+      temperature: conversationConfig.generationConfig?.temperature || 0.7,
+      topK: conversationConfig.generationConfig?.topK || 40,
+      topP: conversationConfig.generationConfig?.topP || 0.95,
+      maxOutputTokens: conversationConfig.generationConfig?.maxOutputTokens || 1000000,
+      responseMimeType: conversationConfig.generationConfig?.responseMimeType,
+    },
+    groundingConfig: conversationConfig.groundingConfig,
+    urlContextConfig: conversationConfig.urlContextConfig,
+    systemInstruction: conversationConfig.systemInstruction,
+    thinkingConfig: conversationConfig.thinkingConfig,
+    // Connection configuration
+    customProxyUrl: conversationConfig.customProxyUrl,
+    connectionMode: conversationConfig.connectionMode,
+    // Caching configuration
+    cachingConfig: {
+      enabled: false, // Default disabled
+    },
+  };
+}
+
 // Helper function to escape HTML
 function escapeHtml(unsafe: string): string {
   return unsafe
@@ -469,7 +493,8 @@ export function useChat() {
             const urlAnalysisResult = await geminiService.analyzeUrls(
               enhancedConfig.urlContextConfig.urls.filter(url => url.trim() !== ''),
               content,
-              selectedModel
+              selectedModel,
+              convertToGeminiConfig(enhancedConfig)
             );
             
             fullResponse = urlAnalysisResult.text;
@@ -493,7 +518,7 @@ export function useChat() {
             const stream = geminiService.generateStreamingResponseWithModelSwitch(
               optimizedMessages, 
               selectedModel,
-              enhancedConfig
+              convertToGeminiConfig(enhancedConfig)
             );
 
             for await (const chunk of stream) {
@@ -515,7 +540,7 @@ export function useChat() {
           const stream = geminiService.generateStreamingResponseWithGrounding(
             optimizedMessages, 
             selectedModel,
-            enhancedConfig
+            convertToGeminiConfig(enhancedConfig)
           );
 
           for await (const chunk of stream) {
@@ -542,7 +567,7 @@ export function useChat() {
             return geminiService.generateStreamingResponseWithModelSwitch(
               optimizedMessages, 
               selectedModel,
-              enhancedConfig
+              convertToGeminiConfig(enhancedConfig)
             );
           };
 
@@ -612,7 +637,8 @@ export function useChat() {
             const urlAnalysisResult = await geminiService.analyzeUrls(
               enhancedConfig.urlContextConfig.urls.filter(url => url.trim() !== ''),
               content,
-              selectedModel
+              selectedModel,
+              convertToGeminiConfig(enhancedConfig)
             );
             fullResponse = urlAnalysisResult.text;
             urlContextMetadata = urlAnalysisResult.urlContextMetadata;
@@ -622,7 +648,7 @@ export function useChat() {
             const result = await geminiService.generateResponseWithModelSwitch(
               optimizedMessages,
               selectedModel,
-              enhancedConfig
+              convertToGeminiConfig(enhancedConfig)
             );
             const response = result.response;
             actualModelUsed = result.modelUsed;
@@ -644,7 +670,7 @@ export function useChat() {
           const response = await geminiService.generateResponseWithGrounding(
             optimizedMessages,
             selectedModel,
-            enhancedConfig
+            convertToGeminiConfig(enhancedConfig)
           );
           fullResponse = response.text;
           groundingMetadata = response.groundingMetadata;
@@ -654,7 +680,7 @@ export function useChat() {
           const result = await geminiService.generateResponseWithModelSwitch(
             optimizedMessages,
             selectedModel,
-            enhancedConfig
+            convertToGeminiConfig(enhancedConfig)
           );
           
           const response = result.response;

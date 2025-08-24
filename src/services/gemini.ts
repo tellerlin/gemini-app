@@ -37,6 +37,9 @@ export interface GeminiGenerationConfig {
     enabled?: boolean;
     budget?: number;
   };
+  // Connection configuration
+  customProxyUrl?: string;
+  connectionMode?: 'auto' | 'proxy' | 'direct';
   // Enhanced caching configuration
   cachingConfig?: {
     enabled: boolean;
@@ -549,15 +552,15 @@ export class GeminiService {
     
     return validatedModel;
   }
-  private createGenAI(): GoogleGenAI {
+  private createGenAI(conversationConfig?: { customProxyUrl?: string; connectionMode?: 'auto' | 'proxy' | 'direct' }): GoogleGenAI {
     const apiKey = this.getCurrentApiKey();
     
     // Simplified configuration following official SDK patterns
     const config: any = { apiKey };
     
-    // Check environment variable for API mode
-    const apiMode = import.meta.env.VITE_GEMINI_API_MODE;
-    const customProxyUrl = import.meta.env.VITE_GEMINI_PROXY_URL;
+    // Check environment variable for API mode (can be overridden by conversation config)
+    const apiMode = conversationConfig?.connectionMode || import.meta.env.VITE_GEMINI_API_MODE;
+    const customProxyUrl = conversationConfig?.customProxyUrl || import.meta.env.VITE_GEMINI_PROXY_URL;
     
     console.log(`🔧 CreateGenAI - Raw Environment Check:`, {
       'import.meta.env.VITE_GEMINI_API_MODE': apiMode,
@@ -976,7 +979,13 @@ export class GeminiService {
     model: string,
     config?: GeminiGenerationConfig
   ): AsyncGenerator<{ text?: string; groundingMetadata?: GroundingMetadata; urlContextMetadata?: UrlContextMetadata }, void, unknown> {
-    const ai = this.createGenAI();
+    // Extract connection configuration from config if provided
+    const connectionConfig = config ? {
+      customProxyUrl: config.customProxyUrl,
+      connectionMode: config.connectionMode
+    } : undefined;
+    
+    const ai = this.createGenAI(connectionConfig);
     const lastMessage = messages[messages.length - 1];
 
     try {
@@ -1267,7 +1276,13 @@ export class GeminiService {
     model: string,
     config?: GeminiGenerationConfig
   ): AsyncGenerator<string, void, unknown> {
-    const ai = this.createGenAI();
+    // Extract connection configuration from config if provided
+    const connectionConfig = config ? {
+      customProxyUrl: (config as any).customProxyUrl,
+      connectionMode: (config as any).connectionMode
+    } : undefined;
+    
+    const ai = this.createGenAI(connectionConfig);
     const lastMessage = messages[messages.length - 1];
 
     // Enhanced timeout for mobile devices and slow connections
@@ -1729,7 +1744,13 @@ export class GeminiService {
    * @private
    */
   private async executeGeneration(messages: Message[], model: string, config?: GeminiGenerationConfig): Promise<string | GeminiResponse> {
-    const ai = this.createGenAI();
+    // Extract connection configuration from config if provided
+    const connectionConfig = config ? {
+      customProxyUrl: (config as any).customProxyUrl,
+      connectionMode: (config as any).connectionMode
+    } : undefined;
+    
+    const ai = this.createGenAI(connectionConfig);
     const lastMessage = messages[messages.length - 1];
     
     // Create timeout promise
@@ -2833,7 +2854,8 @@ export class GeminiService {
   async analyzeUrls(
     urls: string[],
     query: string,
-    model: string = 'gemini-2.5-flash'
+    model: string = 'gemini-2.5-flash',
+    config?: GeminiGenerationConfig
   ): Promise<{ text: string; urlContextMetadata?: UrlContextMetadata }> {
     // Validate prerequisites
     if (this.apiKeys.length === 0) {
@@ -2867,7 +2889,7 @@ export class GeminiService {
         console.log(`🔄 Attempting URL analysis with API key ${this.currentKeyIndex + 1}/${this.apiKeys.length}`);
         this.totalRequests++;
         
-        const result = await this.executeUrlAnalysis(urls, query, model);
+        const result = await this.executeUrlAnalysis(urls, query, model, config);
         
         // Track success
         this.trackKeySuccess(this.currentKeyIndex);
@@ -2908,9 +2930,16 @@ export class GeminiService {
   private async executeUrlAnalysis(
     urls: string[],
     query: string,
-    model: string
+    model: string,
+    config?: GeminiGenerationConfig
   ): Promise<{ text: string; urlContextMetadata?: UrlContextMetadata }> {
-    const ai = this.createGenAI();
+    // Extract connection configuration from config if provided
+    const connectionConfig = config ? {
+      customProxyUrl: config.customProxyUrl,
+      connectionMode: config.connectionMode
+    } : undefined;
+    
+    const ai = this.createGenAI(connectionConfig);
     
     // Create timeout promise
     const timeoutPromise = new Promise<never>((_, reject) => {
@@ -2991,7 +3020,7 @@ Please provide a comprehensive analysis based on the content of these URLs.`;
 
     return result;
   }
-  async testConnection(): Promise<boolean> {
+  async testConnection(config?: { customProxyUrl?: string; connectionMode?: 'auto' | 'proxy' | 'direct' }): Promise<boolean> {
     try {
       console.log('🔍 Testing Gemini API connection...');
       
@@ -2999,7 +3028,7 @@ Please provide a comprehensive analysis based on the content of these URLs.`;
         throw new Error('No API keys available for connection test.');
       }
 
-      const ai = this.createGenAI();
+      const ai = this.createGenAI(config);
       const response = await ai.models.generateContent({
         model: 'gemini-2.0-flash',
         contents: [{ role: 'user', parts: [{ text: 'Hello, this is a connection test.' }] }]
