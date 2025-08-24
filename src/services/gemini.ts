@@ -559,6 +559,13 @@ export class GeminiService {
     const apiMode = import.meta.env.VITE_GEMINI_API_MODE;
     const customProxyUrl = import.meta.env.VITE_GEMINI_PROXY_URL;
     
+    console.log(`🔧 CreateGenAI - Raw Environment Check:`, {
+      'import.meta.env.VITE_GEMINI_API_MODE': apiMode,
+      'import.meta.env.VITE_GEMINI_PROXY_URL': customProxyUrl,
+      'import.meta.env keys': Object.keys(import.meta.env).filter(k => k.includes('GEMINI')),
+      'all VITE vars': Object.keys(import.meta.env).filter(k => k.startsWith('VITE_'))
+    });
+    
     // Auto-detect mode: determine connection method based on environment
     const shouldUseProxy = this.shouldUseProxyMode(apiMode, customProxyUrl);
     
@@ -566,9 +573,11 @@ export class GeminiService {
       const baseUrl = customProxyUrl || (window as any).__FALLBACK_PROXY_URL || `${window.location.origin}/api/gemini`;
       config.baseUrl = baseUrl; // Use baseUrl directly instead of httpOptions
       console.log(`🌐 Using proxy connection: ${baseUrl}`);
+      console.log(`🔧 Final config:`, { ...config, apiKey: '***MASKED***' });
     } else {
       // Use default Google API endpoint (recommended by official docs)
       console.log(`🌐 Using direct connection to Google Gemini API`);
+      console.log(`🔧 Final config:`, { ...config, apiKey: '***MASKED***' });
     }
     
     return new GoogleGenAI(config);
@@ -579,23 +588,37 @@ export class GeminiService {
    * @private
    */
   private shouldUseProxyMode(apiMode?: string, customProxyUrl?: string): boolean {
+    const hostname = window.location.hostname;
+    
+    // Debug logging for environment variables
+    console.log(`🔍 Debug - Environment Variables:`, {
+      apiMode: apiMode || 'undefined',
+      customProxyUrl: customProxyUrl || 'undefined',
+      hostname: hostname,
+      origin: window.location.origin,
+      userAgent: navigator.userAgent.substring(0, 100)
+    });
+    
     // If custom proxy URL is provided, always use proxy
     if (customProxyUrl) {
+      console.log(`🌐 Using custom proxy URL: ${customProxyUrl}`);
       return true;
     }
     
     // If explicitly set to proxy mode
     if (apiMode === 'proxy') {
+      console.log(`🌐 API mode explicitly set to proxy`);
       return true;
     }
     
     // If explicitly set to direct mode
     if (apiMode === 'direct') {
+      console.log(`🌐 API mode explicitly set to direct`);
       return false;
     }
     
     // Auto-detect mode (default): check current hostname
-    const hostname = window.location.hostname;
+    console.log(`🌐 Auto-detecting mode based on hostname: ${hostname}`);
     
     // Use direct connection for local development
     if (hostname === 'localhost' || 
@@ -611,7 +634,8 @@ export class GeminiService {
       console.log(`🌍 Production environment detected (${hostname}) - using proxy mode with fallback URL`);
       // Use fallback worker URL if environment variable is not available
       if (!customProxyUrl) {
-        window.__FALLBACK_PROXY_URL = 'https://geminiproxyworker.xuexiao.eu.org';
+        (window as any).__FALLBACK_PROXY_URL = 'https://geminiproxyworker.xuexiao.eu.org';
+        console.log(`🔧 Set fallback proxy URL: https://geminiproxyworker.xuexiao.eu.org`);
       }
       return true;
     }
