@@ -563,7 +563,10 @@ export class GeminiService {
       'import.meta.env.VITE_GEMINI_API_MODE': apiMode,
       'import.meta.env.VITE_GEMINI_PROXY_URL': customProxyUrl,
       'import.meta.env keys': Object.keys(import.meta.env).filter(k => k.includes('GEMINI')),
-      'all VITE vars': Object.keys(import.meta.env).filter(k => k.startsWith('VITE_'))
+      'all VITE vars': Object.keys(import.meta.env).filter(k => k.startsWith('VITE_')),
+      'NODE_ENV': import.meta.env.NODE_ENV,
+      'MODE': import.meta.env.MODE,
+      'env object keys count': Object.keys(import.meta.env).length
     });
     
     // Auto-detect mode: determine connection method based on environment
