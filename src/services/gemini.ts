@@ -160,10 +160,76 @@ export class GeminiService {
   
   private readonly DEFAULT_CACHE_TTL = 300000; // 5 minutes
   private readonly MAX_CACHE_SIZE = 100;
+  private readonly STATS_STORAGE_KEY = 'gemini-service-stats';
 
   constructor(apiKeys?: string[]) {
     if (apiKeys && apiKeys.length > 0) {
       this.setApiKeys(apiKeys);
+    }
+    // Load persisted stats on initialization
+    this.loadPersistedStats();
+  }
+
+  /**
+   * Load persisted statistics from localStorage
+   * @private
+   */
+  private loadPersistedStats(): void {
+    try {
+      const stored = localStorage.getItem(this.STATS_STORAGE_KEY);
+      if (stored) {
+        const stats = JSON.parse(stored);
+        this.totalRequests = stats.totalRequests || 0;
+        this.totalErrors = stats.totalErrors || 0;
+        this.startTime = stats.startTime || Date.now();
+        
+        // Load key health data if available
+        if (stats.keyHealth && Array.isArray(stats.keyHealth)) {
+          this.keyHealth.clear();
+          stats.keyHealth.forEach((healthData: any, index: number) => {
+            this.keyHealth.set(index, {
+              successCount: healthData.successCount || 0,
+              errorCount: healthData.errorCount || 0,
+              lastUsed: new Date(healthData.lastUsed || Date.now()),
+              lastError: healthData.lastError,
+              consecutiveErrors: healthData.consecutiveErrors || 0
+            });
+          });
+        }
+        
+        console.log('📊 Loaded persisted performance statistics');
+      }
+    } catch (error) {
+      console.warn('⚠️ Failed to load persisted stats:', error);
+      // Don't throw error, just continue with fresh stats
+    }
+  }
+
+  /**
+   * Save current statistics to localStorage
+   * @private
+   */
+  private saveStats(): void {
+    try {
+      const stats = {
+        totalRequests: this.totalRequests,
+        totalErrors: this.totalErrors,
+        startTime: this.startTime,
+        keyHealth: Array.from(this.keyHealth.entries()).map(([index, health]) => ({
+          index,
+          successCount: health.successCount,
+          errorCount: health.errorCount,
+          lastUsed: health.lastUsed.toISOString(),
+          lastError: health.lastError,
+          consecutiveErrors: health.consecutiveErrors
+        })),
+        lastSaved: Date.now()
+      };
+      
+      localStorage.setItem(this.STATS_STORAGE_KEY, JSON.stringify(stats));
+    } catch (error) {
+      console.warn('⚠️ Failed to save stats to localStorage:', error);
+      // Don't throw error, stats will be lost but app continues working
     }
   }
 
@@ -2094,6 +2160,9 @@ export class GeminiService {
       health.lastUsed = new Date();
       health.consecutiveErrors = 0; // Reset consecutive errors
       this.keyHealth.set(keyIndex, health);
+      
+      // Save stats after each successful request
+      this.saveStats();
     }
   }
 
@@ -2109,6 +2178,9 @@ export class GeminiService {
       health.lastError = errorMessage;
       health.consecutiveErrors++;
       this.keyHealth.set(keyIndex, health);
+      
+      // Save stats after each error
+      this.saveStats();
     }
   }
 
@@ -2149,6 +2221,7 @@ export class GeminiService {
   /**
    * Reset all performance metrics to zero
    * Useful for starting fresh statistics tracking
+   * Also clears persisted data in localStorage
    */
   resetStats() {
     this.startTime = Date.now();
@@ -2161,11 +2234,19 @@ export class GeminiService {
       this.keyHealth.set(index, {
         successCount: 0,
         errorCount: 0,
-        lastUsed: new Date().toISOString(),
-        lastError: null,
+        lastUsed: new Date(),
+        lastError: undefined,
         consecutiveErrors: 0
       });
     });
+    
+    // Clear persisted data and save fresh stats
+    try {
+      localStorage.removeItem(this.STATS_STORAGE_KEY);
+      this.saveStats(); // Save fresh stats
+    } catch (error) {
+      console.warn('⚠️ Failed to clear persisted stats:', error);
+    }
     
     console.log('📊 Performance metrics reset - starting fresh statistics');
   }

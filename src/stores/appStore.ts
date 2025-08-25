@@ -89,5 +89,204 @@ const defaultConfig: ConversationConfig = {
   typewriterEffect: true,
   smartLoadingIndicators: true,
   realtimeFeedback: true,
-};\n\nexport const useAppStore = create<AppState>()(
-  subscribeWithSelector(\n    immer(\n      persist(\n        (set, get) => ({\n          // Initial State\n          sidebarOpen: false,\n          apiKeyModalOpen: false,\n          advancedSettingsOpen: false,\n          performanceMonitorOpen: false,\n          \n          conversations: [],\n          currentConversationId: null,\n          isLoading: false,\n          isStreaming: false,\n          streamingMessage: '',\n          \n          apiKeys: [],\n          selectedModel: 'gemini-2.0-flash',\n          defaultConversationConfig: defaultConfig,\n          \n          lastActivity: Date.now(),\n          \n          actions: {\n            // UI Actions\n            setSidebarOpen: (open) => set((state) => {\n              state.sidebarOpen = open;\n            }),\n            \n            setApiKeyModalOpen: (open) => set((state) => {\n              state.apiKeyModalOpen = open;\n            }),\n            \n            setAdvancedSettingsOpen: (open) => set((state) => {\n              state.advancedSettingsOpen = open;\n            }),\n            \n            setPerformanceMonitorOpen: (open) => set((state) => {\n              state.performanceMonitorOpen = open;\n            }),\n            \n            // Chat Actions\n            setConversations: (conversations) => set((state) => {\n              state.conversations = conversations;\n            }),\n            \n            addConversation: (conversation) => set((state) => {\n              state.conversations.unshift(conversation);\n            }),\n            \n            updateConversation: (id, updates) => set((state) => {\n              const index = state.conversations.findIndex(c => c.id === id);\n              if (index !== -1) {\n                Object.assign(state.conversations[index], updates);\n              }\n            }),\n            \n            removeConversation: (id) => set((state) => {\n              state.conversations = state.conversations.filter(c => c.id !== id);\n              if (state.currentConversationId === id) {\n                state.currentConversationId = null;\n              }\n            }),\n            \n            setCurrentConversationId: (id) => set((state) => {\n              state.currentConversationId = id;\n            }),\n            \n            // Messages\n            addMessage: (conversationId, message) => set((state) => {\n              const conversation = state.conversations.find(c => c.id === conversationId);\n              if (conversation) {\n                conversation.messages.push(message);\n                conversation.updatedAt = new Date();\n              }\n            }),\n            \n            updateMessage: (conversationId, messageId, updates) => set((state) => {\n              const conversation = state.conversations.find(c => c.id === conversationId);\n              if (conversation) {\n                const message = conversation.messages.find(m => m.id === messageId);\n                if (message) {\n                  Object.assign(message, updates);\n                  conversation.updatedAt = new Date();\n                }\n              }\n            }),\n            \n            // Loading States\n            setIsLoading: (loading) => set((state) => {\n              state.isLoading = loading;\n              if (loading) state.lastActivity = Date.now();\n            }),\n            \n            setIsStreaming: (streaming) => set((state) => {\n              state.isStreaming = streaming;\n              if (streaming) state.lastActivity = Date.now();\n            }),\n            \n            setStreamingMessage: (message) => set((state) => {\n              state.streamingMessage = message;\n              state.lastActivity = Date.now();\n            }),\n            \n            // Configuration\n            setApiKeys: (keys) => set((state) => {\n              state.apiKeys = keys;\n            }),\n            \n            setSelectedModel: (model) => set((state) => {\n              state.selectedModel = model;\n            }),\n            \n            setDefaultConversationConfig: (config) => set((state) => {\n              state.defaultConversationConfig = config;\n            }),\n            \n            // Performance\n            updateActivity: () => set((state) => {\n              state.lastActivity = Date.now();\n            }),\n            \n            // Batch Updates\n            batchUpdate: (updates) => set((state) => {\n              updates(state);\n              state.lastActivity = Date.now();\n            })\n          }\n        }),\n        {\n          name: 'gemini-app-store',\n          // Only persist essential data\n          partialize: (state) => ({\n            apiKeys: state.apiKeys,\n            selectedModel: state.selectedModel,\n            defaultConversationConfig: state.defaultConversationConfig,\n            currentConversationId: state.currentConversationId,\n          }),\n          version: 1,\n        }\n      )\n    )\n  )\n);\n\n// Selectors for optimized component subscriptions\nexport const useUIState = () => useAppStore((state) => ({\n  sidebarOpen: state.sidebarOpen,\n  apiKeyModalOpen: state.apiKeyModalOpen,\n  advancedSettingsOpen: state.advancedSettingsOpen,\n  performanceMonitorOpen: state.performanceMonitorOpen\n}));\n\nexport const useChatState = () => useAppStore((state) => ({\n  conversations: state.conversations,\n  currentConversationId: state.currentConversationId,\n  isLoading: state.isLoading,\n  isStreaming: state.isStreaming,\n  streamingMessage: state.streamingMessage\n}));\n\nexport const useConfigState = () => useAppStore((state) => ({\n  apiKeys: state.apiKeys,\n  selectedModel: state.selectedModel,\n  defaultConversationConfig: state.defaultConversationConfig\n}));\n\nexport const useUIActions = () => useAppStore((state) => ({\n  setSidebarOpen: state.actions.setSidebarOpen,\n  setApiKeyModalOpen: state.actions.setApiKeyModalOpen,\n  setAdvancedSettingsOpen: state.actions.setAdvancedSettingsOpen,\n  setPerformanceMonitorOpen: state.actions.setPerformanceMonitorOpen\n}));\n\nexport const useChatActions = () => useAppStore((state) => ({\n  setConversations: state.actions.setConversations,\n  addConversation: state.actions.addConversation,\n  updateConversation: state.actions.updateConversation,\n  removeConversation: state.actions.removeConversation,\n  setCurrentConversationId: state.actions.setCurrentConversationId,\n  addMessage: state.actions.addMessage,\n  updateMessage: state.actions.updateMessage,\n  setIsLoading: state.actions.setIsLoading,\n  setIsStreaming: state.actions.setIsStreaming,\n  setStreamingMessage: state.actions.setStreamingMessage\n}));\n\nexport const useConfigActions = () => useAppStore((state) => ({\n  setApiKeys: state.actions.setApiKeys,\n  setSelectedModel: state.actions.setSelectedModel,\n  setDefaultConversationConfig: state.actions.setDefaultConversationConfig\n}));\n\n// Performance monitoring\nexport const usePerformanceMetrics = () => useAppStore((state) => ({\n  lastActivity: state.lastActivity,\n  conversationsCount: state.conversations.length,\n  messagesCount: state.conversations.reduce((sum, conv) => sum + conv.messages.length, 0)\n}));
+};
+
+export const useAppStore = create<AppState>()(
+  subscribeWithSelector(
+    immer(
+      persist(
+        (set, get) => ({
+          // Initial State
+          sidebarOpen: false,
+          apiKeyModalOpen: false,
+          advancedSettingsOpen: false,
+          performanceMonitorOpen: false,
+          
+          conversations: [],
+          currentConversationId: null,
+          isLoading: false,
+          isStreaming: false,
+          streamingMessage: '',
+          
+          apiKeys: [],
+          selectedModel: 'gemini-2.0-flash',
+          defaultConversationConfig: defaultConfig,
+          
+          lastActivity: Date.now(),
+          
+          actions: {
+            // UI Actions
+            setSidebarOpen: (open) => set((state) => {
+              state.sidebarOpen = open;
+            }),
+            
+            setApiKeyModalOpen: (open) => set((state) => {
+              state.apiKeyModalOpen = open;
+            }),
+            
+            setAdvancedSettingsOpen: (open) => set((state) => {
+              state.advancedSettingsOpen = open;
+            }),
+            
+            setPerformanceMonitorOpen: (open) => set((state) => {
+              state.performanceMonitorOpen = open;
+            }),
+            
+            // Chat Actions
+            setConversations: (conversations) => set((state) => {
+              state.conversations = conversations;
+            }),
+            
+            addConversation: (conversation) => set((state) => {
+              state.conversations.unshift(conversation);
+            }),
+            
+            updateConversation: (id, updates) => set((state) => {
+              const index = state.conversations.findIndex(c => c.id === id);
+              if (index !== -1) {
+                Object.assign(state.conversations[index], updates);
+              }
+            }),
+            
+            removeConversation: (id) => set((state) => {
+              state.conversations = state.conversations.filter(c => c.id !== id);
+              if (state.currentConversationId === id) {
+                state.currentConversationId = null;
+              }
+            }),
+            
+            setCurrentConversationId: (id) => set((state) => {
+              state.currentConversationId = id;
+            }),
+            
+            // Messages
+            addMessage: (conversationId, message) => set((state) => {
+              const conversation = state.conversations.find(c => c.id === conversationId);
+              if (conversation) {
+                conversation.messages.push(message);
+                conversation.updatedAt = new Date();
+              }
+            }),
+            
+            updateMessage: (conversationId, messageId, updates) => set((state) => {
+              const conversation = state.conversations.find(c => c.id === conversationId);
+              if (conversation) {
+                const message = conversation.messages.find(m => m.id === messageId);
+                if (message) {
+                  Object.assign(message, updates);
+                  conversation.updatedAt = new Date();
+                }
+              }
+            }),
+            
+            // Loading States
+            setIsLoading: (loading) => set((state) => {
+              state.isLoading = loading;
+              if (loading) state.lastActivity = Date.now();
+            }),
+            
+            setIsStreaming: (streaming) => set((state) => {
+              state.isStreaming = streaming;
+              if (streaming) state.lastActivity = Date.now();
+            }),
+            
+            setStreamingMessage: (message) => set((state) => {
+              state.streamingMessage = message;
+              state.lastActivity = Date.now();
+            }),
+            
+            // Configuration
+            setApiKeys: (keys) => set((state) => {
+              state.apiKeys = keys;
+            }),
+            
+            setSelectedModel: (model) => set((state) => {
+              state.selectedModel = model;
+            }),
+            
+            setDefaultConversationConfig: (config) => set((state) => {
+              state.defaultConversationConfig = config;
+            }),
+            
+            // Performance
+            updateActivity: () => set((state) => {
+              state.lastActivity = Date.now();
+            }),
+            
+            // Batch Updates
+            batchUpdate: (updates) => set((state) => {
+              updates(state);
+              state.lastActivity = Date.now();
+            })
+          }
+        }),
+        {
+          name: 'gemini-app-store',
+          // Only persist essential data
+          partialize: (state) => ({
+            apiKeys: state.apiKeys,
+            selectedModel: state.selectedModel,
+            defaultConversationConfig: state.defaultConversationConfig,
+            currentConversationId: state.currentConversationId,
+          }),
+          version: 1,
+        }
+      )
+    )
+  )
+);
+
+// Selectors for optimized component subscriptions
+export const useUIState = () => useAppStore((state) => ({
+  sidebarOpen: state.sidebarOpen,
+  apiKeyModalOpen: state.apiKeyModalOpen,
+  advancedSettingsOpen: state.advancedSettingsOpen,
+  performanceMonitorOpen: state.performanceMonitorOpen
+}));
+
+export const useChatState = () => useAppStore((state) => ({
+  conversations: state.conversations,
+  currentConversationId: state.currentConversationId,
+  isLoading: state.isLoading,
+  isStreaming: state.isStreaming,
+  streamingMessage: state.streamingMessage
+}));
+
+export const useConfigState = () => useAppStore((state) => ({
+  apiKeys: state.apiKeys,
+  selectedModel: state.selectedModel,
+  defaultConversationConfig: state.defaultConversationConfig
+}));
+
+export const useUIActions = () => useAppStore((state) => ({
+  setSidebarOpen: state.actions.setSidebarOpen,
+  setApiKeyModalOpen: state.actions.setApiKeyModalOpen,
+  setAdvancedSettingsOpen: state.actions.setAdvancedSettingsOpen,
+  setPerformanceMonitorOpen: state.actions.setPerformanceMonitorOpen
+}));
+
+export const useChatActions = () => useAppStore((state) => ({
+  setConversations: state.actions.setConversations,
+  addConversation: state.actions.addConversation,
+  updateConversation: state.actions.updateConversation,
+  removeConversation: state.actions.removeConversation,
+  setCurrentConversationId: state.actions.setCurrentConversationId,
+  addMessage: state.actions.addMessage,
+  updateMessage: state.actions.updateMessage,
+  setIsLoading: state.actions.setIsLoading,
+  setIsStreaming: state.actions.setIsStreaming,
+  setStreamingMessage: state.actions.setStreamingMessage
+}));
+
+export const useConfigActions = () => useAppStore((state) => ({
+  setApiKeys: state.actions.setApiKeys,
+  setSelectedModel: state.actions.setSelectedModel,
+  setDefaultConversationConfig: state.actions.setDefaultConversationConfig
+}));
+
+// Performance monitoring
+export const usePerformanceMetrics = () => useAppStore((state) => ({
+  lastActivity: state.lastActivity,
+  conversationsCount: state.conversations.length,
+  messagesCount: state.conversations.reduce((sum, conv) => sum + conv.messages.length, 0)
+}));

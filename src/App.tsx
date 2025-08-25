@@ -10,7 +10,6 @@ import { ModelSwitchIndicator } from './components/ModelSwitchIndicator';
 import { PWAInstallPrompt } from './components/PWAInstallPrompt';
 import { NetworkMonitor } from './components/NetworkMonitor';
 import { DebugInfo } from './components/DebugInfo';
-import { ProxyTester } from './components/ProxyTester';
 import { useChat } from './hooks/useChat';
 import { useResponsive } from './hooks/useLocalStorage';
 import { Button } from './components/ui/Button';
@@ -44,6 +43,8 @@ function App() {
     setDefaultConversationConfig,
     getPerformanceMetrics,
     resetPerformanceMetrics,
+    testApiKeys,
+    removeInvalidKeys,
   } = useChat();
 
   // Handle responsive behavior
@@ -195,6 +196,9 @@ function App() {
             onClose={() => setPerformanceMonitorOpen(false)}
             getMetrics={getPerformanceMetrics}
             onResetMetrics={resetPerformanceMetrics}
+            selectedModel={selectedModel}
+            testApiKeys={testApiKeys}
+            removeInvalidKeys={removeInvalidKeys}
           />
           
           {/* Model Switch Indicator */}
@@ -208,9 +212,6 @@ function App() {
           
           {/* Debug Info Component */}
           <DebugInfo />
-          
-          {/* Proxy Tester Component */}
-          <ProxyTester />
         </>
       </div>
     </GlobalErrorBoundary>

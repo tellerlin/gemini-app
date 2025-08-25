@@ -1,19 +1,49 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Activity, Clock, CheckCircle, AlertCircle, BarChart3, RefreshCw, RotateCcw } from 'lucide-react';
+import { Activity, Clock, CheckCircle, AlertCircle, BarChart3, RefreshCw, RotateCcw, Play, Trash2, AlertTriangle, Zap } from 'lucide-react';
 import { Button } from './ui/Button';
 import type { PerformanceMetrics, KeyHealthStats } from '../types/chat';
+
+interface KeyTestResult {
+  keyIndex: number;
+  masked: string;
+  status: 'valid' | 'temporarily_invalid' | 'permanently_invalid';
+  attempts: number;
+  errors: string[];
+  averageResponseTime?: number;
+  lastSuccessful?: boolean;
+}
 
 interface PerformanceMonitorProps {
   isOpen: boolean;
   onClose: () => void;
   getMetrics: () => PerformanceMetrics | null;
   onResetMetrics?: () => void;
+  selectedModel?: string;
+  testApiKeys?: () => Promise<{
+    totalKeys: number;
+    validKeys: number;
+    temporarilyInvalidKeys: number;
+    permanentlyInvalidKeys: number;
+    results: KeyTestResult[];
+  }>;
+  removeInvalidKeys?: (type: 'permanent_only' | 'temporary_only' | 'all_invalid') => Promise<{
+    removedKeys: Array<{masked: string; reason: string; status: string}>;
+    remainingKeys: number;
+    removedCount: {permanent: number; temporary: number; total: number};
+  }>;
 }
 
-export function PerformanceMonitor({ isOpen, onClose, getMetrics, onResetMetrics }: PerformanceMonitorProps) {
+export function PerformanceMonitor({ isOpen, onClose, getMetrics, onResetMetrics, selectedModel, testApiKeys, removeInvalidKeys }: PerformanceMonitorProps) {
   const [metrics, setMetrics] = useState<PerformanceMetrics | null>(null);
   const [refreshInterval, setRefreshInterval] = useState<NodeJS.Timeout | null>(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
+  const [isTestingKeys, setIsTestingKeys] = useState(false);
+  const [testResults, setTestResults] = useState<KeyTestResult[] | null>(null);
+  const [lastTestTime, setLastTestTime] = useState<Date | null>(null);
+  const [isRemoving, setIsRemoving] = useState(false);
+  const [resetOnStartup, setResetOnStartup] = useState(() => {
+    return localStorage.getItem('performance-monitor-reset-on-startup') === 'true';
+  });
 
   const refreshMetrics = useCallback(() => {
     try {
@@ -30,6 +60,71 @@ export function PerformanceMonitor({ isOpen, onClose, getMetrics, onResetMetrics
       refreshMetrics(); // Refresh to show the reset values
     }
   }, [onResetMetrics, refreshMetrics]);
+
+  const handleTestApiKeys = useCallback(async () => {
+    if (!testApiKeys) return;
+    
+    setIsTestingKeys(true);
+    try {
+      console.log(`🔍 Testing API keys with model: ${selectedModel || 'gemini-2.5-flash'}`);
+      const results = await testApiKeys();
+      setTestResults(results.results);
+      setLastTestTime(new Date());
+      console.log(`✅ Key testing completed: ${results.validKeys} valid, ${results.temporarilyInvalidKeys} temporary issues, ${results.permanentlyInvalidKeys} permanent issues`);
+    } catch (error) {
+      console.error('❌ Failed to test API keys:', error);
+      alert('Failed to test API keys: ' + (error instanceof Error ? error.message : 'Unknown error'));
+    } finally {
+      setIsTestingKeys(false);
+    }
+  }, [testApiKeys, selectedModel]);
+
+  const handleRemoveKeys = useCallback(async (removeType: 'permanent_only' | 'temporary_only' | 'all_invalid') => {
+    if (!removeInvalidKeys || !testResults) return;
+    
+    const typeDescription = {
+      'permanent_only': 'permanently invalid keys',
+      'temporary_only': 'temporarily invalid keys', 
+      'all_invalid': 'all invalid keys'
+    };
+    
+    const confirmed = window.confirm(`Are you sure you want to remove ${typeDescription[removeType]}? This action cannot be undone.`);
+    if (!confirmed) return;
+    
+    setIsRemoving(true);
+    try {
+      const result = await removeInvalidKeys(removeType);
+      console.log(`🗑️ Removed ${result.removedCount.total} keys`);
+      alert(`Successfully removed ${result.removedCount.total} keys (${result.removedCount.permanent} permanent, ${result.removedCount.temporary} temporary). ${result.remainingKeys} keys remaining.`);
+      
+      // Refresh test results and metrics
+      setTestResults(null);
+      refreshMetrics();
+    } catch (error) {
+      console.error('❌ Failed to remove keys:', error);
+      alert('Failed to remove keys: ' + (error instanceof Error ? error.message : 'Unknown error'));
+    } finally {
+      setIsRemoving(false);
+    }
+  }, [removeInvalidKeys, testResults, refreshMetrics]);
+
+  const handleResetOnStartupChange = useCallback((checked: boolean) => {
+    setResetOnStartup(checked);
+    localStorage.setItem('performance-monitor-reset-on-startup', checked.toString());
+  }, []);
+
+  // Effect to handle reset on startup
+  useEffect(() => {
+    if (resetOnStartup && onResetMetrics) {
+      // Check if this is app startup (we use a session storage flag)
+      const hasResetThisSession = sessionStorage.getItem('performance-reset-done');
+      if (!hasResetThisSession) {
+        onResetMetrics();
+        sessionStorage.setItem('performance-reset-done', 'true');
+        console.log('📊 Performance metrics reset on app startup');
+      }
+    }
+  }, [resetOnStartup, onResetMetrics]);
 
   useEffect(() => {
     if (isOpen) {
@@ -75,6 +170,33 @@ export function PerformanceMonitor({ isOpen, onClose, getMetrics, onResetMetrics
     return isHealthy ? CheckCircle : AlertCircle;
   };
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'valid': return 'text-green-600';
+      case 'temporarily_invalid': return 'text-yellow-600';
+      case 'permanently_invalid': return 'text-red-600';
+      default: return 'text-gray-600';
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'valid': return CheckCircle;
+      case 'temporarily_invalid': return AlertTriangle;
+      case 'permanently_invalid': return AlertCircle;
+      default: return AlertCircle;
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'valid': return 'Valid';
+      case 'temporarily_invalid': return 'Temporary Issue';
+      case 'permanently_invalid': return 'Permanently Invalid';
+      default: return 'Unknown';
+    }
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -100,6 +222,22 @@ export function PerformanceMonitor({ isOpen, onClose, getMetrics, onResetMetrics
               <RefreshCw className="h-4 w-4 mr-1" />
               Manual Refresh
             </Button>
+            {testApiKeys && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={handleTestApiKeys}
+                disabled={isTestingKeys}
+                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+              >
+                {isTestingKeys ? (
+                  <RefreshCw className="h-4 w-4 mr-1 animate-spin" />
+                ) : (
+                  <Play className="h-4 w-4 mr-1" />
+                )}
+                {isTestingKeys ? 'Testing...' : 'Test Keys'}
+              </Button>
+            )}
             {onResetMetrics && (
               <Button 
                 variant="ghost" 
@@ -162,6 +300,113 @@ export function PerformanceMonitor({ isOpen, onClose, getMetrics, onResetMetrics
                   </div>
                 </div>
               </div>
+
+              {/* API Key Testing Section */}
+              {testApiKeys && (
+                <div className="bg-white border rounded-lg p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900">API Key Testing</h3>
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      {selectedModel && (
+                        <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded">
+                          Model: {selectedModel}
+                        </span>
+                      )}
+                      {lastTestTime && (
+                        <span>Last tested: {lastTestTime.toLocaleTimeString()}</span>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {testResults && testResults.length > 0 ? (
+                    <>
+                      <div className="space-y-3 mb-4">
+                        {testResults.map((result, index) => {
+                          const StatusIcon = getStatusIcon(result.status);
+                          return (
+                            <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                              <div className="flex items-center gap-3">
+                                <StatusIcon className={`h-5 w-5 ${getStatusColor(result.status)}`} />
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <p className="font-medium text-gray-900">{result.masked}</p>
+                                    <span className={`px-2 py-1 text-xs rounded-full ${
+                                      result.status === 'valid' ? 'bg-green-100 text-green-800' :
+                                      result.status === 'temporarily_invalid' ? 'bg-yellow-100 text-yellow-800' :
+                                      'bg-red-100 text-red-800'
+                                    }`}>
+                                      {getStatusText(result.status)}
+                                    </span>
+                                  </div>
+                                  <p className="text-sm text-gray-500">
+                                    Attempts: {result.attempts}
+                                    {result.averageResponseTime && ` | Avg Response: ${result.averageResponseTime.toFixed(0)}ms`}
+                                  </p>
+                                  {result.errors.length > 0 && (
+                                    <p className="text-sm text-red-600 mt-1">
+                                      Error: {result.errors[result.errors.length - 1]}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Clean-up Actions */}
+                      <div className="flex flex-wrap gap-2 pt-4 border-t">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => handleRemoveKeys('permanent_only')}
+                          disabled={isRemoving || !testResults.some(r => r.status === 'permanently_invalid')}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          Remove Permanent Errors
+                          {testResults.filter(r => r.status === 'permanently_invalid').length > 0 && (
+                            <span className="ml-1 px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">
+                              {testResults.filter(r => r.status === 'permanently_invalid').length}
+                            </span>
+                          )}
+                        </Button>
+                        
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => handleRemoveKeys('all_invalid')}
+                          disabled={isRemoving || !testResults.some(r => r.status !== 'valid')}
+                          className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                        >
+                          <Zap className="h-4 w-4 mr-1" />
+                          Remove All Invalid
+                          {testResults.filter(r => r.status !== 'valid').length > 0 && (
+                            <span className="ml-1 px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded-full">
+                              {testResults.filter(r => r.status !== 'valid').length}
+                            </span>
+                          )}
+                        </Button>
+                        
+                        {isRemoving && (
+                          <span className="flex items-center text-sm text-gray-600">
+                            <RefreshCw className="h-4 w-4 mr-1 animate-spin" />
+                            Removing keys...
+                          </span>
+                        )}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <Play className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                      <p>Click "Test Keys" to check the availability of your API keys</p>
+                      <p className="text-sm mt-1">
+                        Test will use model: <strong>{selectedModel || 'gemini-2.5-flash'}</strong>
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* API Keys Health */}
               <div className="bg-white border rounded-lg p-6">
@@ -234,6 +479,30 @@ export function PerformanceMonitor({ isOpen, onClose, getMetrics, onResetMetrics
                   {metrics.healthyKeys === metrics.totalKeys && parseFloat(metrics.successRate) > 95 && (
                     <p>• All metrics normal, system running well!</p>
                   )}
+                </div>
+              </div>
+
+              {/* Settings */}
+              <div className="bg-gray-50 border rounded-lg p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Settings</h3>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium text-gray-900">Reset stats on app startup</p>
+                      <p className="text-sm text-gray-500">
+                        Automatically clear all performance statistics when the application starts
+                      </p>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={resetOnStartup}
+                        onChange={(e) => handleResetOnStartupChange(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                  </div>
                 </div>
               </div>
 

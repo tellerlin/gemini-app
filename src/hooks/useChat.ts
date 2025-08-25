@@ -939,6 +939,17 @@ export function useChat() {
     geminiService.resetStats();
   }, []);
 
+  const testApiKeys = useCallback(async () => {
+    return await geminiService.batchValidateApiKeys();
+  }, []);
+
+  const removeInvalidKeys = useCallback(async (removeType: 'permanent_only' | 'temporary_only' | 'all_invalid') => {
+    // First validate to get current results
+    const validationResults = await geminiService.batchValidateApiKeys();
+    // Then remove based on validation results
+    return geminiService.removeInvalidApiKeys(validationResults, removeType);
+  }, []);
+
   return {
     conversations,
     currentConversation,
@@ -961,6 +972,8 @@ export function useChat() {
     updateConversationConfig,
     getPerformanceMetrics,
     resetPerformanceMetrics,
+    testApiKeys,
+    removeInvalidKeys,
     // Context management
     contextConfig,
     updateContextConfig,

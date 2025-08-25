@@ -1,9 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { X, Settings, Brain, Sliders, Image, Search, Link, Globe } from 'lucide-react';
+import { X, Settings, Brain, Sliders, Image, Search, Link, Globe, Loader } from 'lucide-react';
 import { Button } from './ui/Button';
 import { Input } from './ui/Input';
 import { Select } from './ui/Select';
 import type { ConversationConfig, ThinkingConfig, GenerationConfig, ImageGenerationConfig, GroundingConfig, UrlContextConfig } from '../types/chat';
+
+interface TestResult {
+  url: string;
+  status: 'pending' | 'success' | 'error';
+  statusCode?: number;
+  responseTime?: number;
+  error?: string;
+  timestamp: Date;
+}
 
 interface AdvancedSettingsModalProps {
   isOpen: boolean;
@@ -25,11 +34,80 @@ export function AdvancedSettingsModal({
   const [activeTab, setActiveTab] = useState<'connection' | 'thinking' | 'generation' | 'image' | 'grounding' | 'urlcontext' | 'system' | 'interface'>('connection');
   const [localConfig, setLocalConfig] = useState<ConversationConfig>(conversationConfig);
   const [localImageConfig, setLocalImageConfig] = useState<ImageGenerationConfig>(imageConfig);
+  
+  // Connection test state
+  const [testResults, setTestResults] = useState<TestResult[]>([]);
+  const [isTestRunning, setIsTestRunning] = useState(false);
 
   useEffect(() => {
     setLocalConfig(conversationConfig);
     setLocalImageConfig(imageConfig);
+    // Clear test results when modal opens/closes
+    if (!isOpen) {
+      setTestResults([]);
+      setIsTestRunning(false);
+    }
   }, [conversationConfig, imageConfig, isOpen]);
+
+  // Connection test function
+  const runConnectionTest = async () => {
+    setIsTestRunning(true);
+    setTestResults([]);
+
+    const testUrls = [
+      'https://geminiproxyworker.xuexiao.eu.org/v1beta/models',
+      `${window.location.origin}/api/gemini/v1beta/models`,
+      'https://generativelanguage.googleapis.com/v1beta/models' // Direct API (should fail from browser)
+    ];
+
+    for (const url of testUrls) {
+      const testResult: TestResult = {
+        url,
+        status: 'pending',
+        timestamp: new Date()
+      };
+      
+      setTestResults(prev => [...prev, testResult]);
+
+      const startTime = performance.now();
+      
+      try {
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          signal: AbortSignal.timeout(10000) // 10 second timeout
+        });
+
+        const endTime = performance.now();
+        
+        setTestResults(prev => prev.map(result => 
+          result.url === url ? {
+            ...result,
+            status: response.ok ? 'success' : 'error',
+            statusCode: response.status,
+            responseTime: endTime - startTime,
+            error: response.ok ? undefined : `HTTP ${response.status}: ${response.statusText}`
+          } : result
+        ));
+
+      } catch (error) {
+        const endTime = performance.now();
+        
+        setTestResults(prev => prev.map(result => 
+          result.url === url ? {
+            ...result,
+            status: 'error',
+            responseTime: endTime - startTime,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          } : result
+        ));
+      }
+    }
+
+    setIsTestRunning(false);
+  };
 
   if (!isOpen) return null;
 
@@ -300,32 +378,99 @@ export function AdvancedSettingsModal({
                   </div>
 
                   {/* Enhanced Connection Test */}
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <h4 className="font-medium text-gray-900 mb-3">🔍 Connection Test</h4>
-                    <p className="text-sm text-gray-600 mb-3">
-                      Test your current configuration to ensure proper connectivity to Gemini API
-                    </p>
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full sm:w-auto"
-                        onClick={() => {
-                          // This will trigger the test in the existing ProxyTester component
-                          const event = new CustomEvent('testConnection');
-                          window.dispatchEvent(event);
-                        }}
-                      >
-                        🧪 Test Connection
-                      </Button>
-                      <div className="text-xs text-gray-500">
-                        <div className="mb-1">Tests performed:</div>
-                        <ul className="space-y-1">
-                          <li>• Direct Google API connectivity</li>
-                          <li>• Proxy worker functionality</li>
-                          <li>• API key validation</li>
-                          <li>• Network latency measurement</li>
-                        </ul>
+                  <div className="bg-gray-50 border border-gray-200 p-4 rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 h-6 rounded-full bg-gray-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        {isTestRunning ? (
+                          <Loader className="w-3 h-3 text-white animate-spin" />
+                        ) : (
+                          <span className="text-white text-xs font-bold">T</span>
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-medium text-gray-900 mb-2 flex items-center gap-2">
+                          🔍 Connection Test
+                        </h4>
+                        <p className="text-sm text-gray-600 mb-3">
+                          Test your current configuration to ensure proper connectivity to Gemini API
+                        </p>
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-4">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full sm:w-auto min-w-[120px]"
+                            onClick={runConnectionTest}
+                            disabled={isTestRunning}
+                          >
+                            {isTestRunning ? (
+                              <>
+                                <Loader className="w-4 h-4 mr-2 animate-spin" />
+                                Testing...
+                              </>
+                            ) : (
+                              <>
+                                🧪 Test Connection
+                              </>
+                            )}
+                          </Button>
+                          <div className="text-xs text-gray-500">
+                            <div className="mb-1">Tests performed:</div>
+                            <ul className="space-y-1">
+                              <li>• Proxy worker connectivity</li>
+                              <li>• Local API route</li>
+                              <li>• Direct Google API (expected to fail)</li>
+                            </ul>
+                          </div>
+                        </div>
+                        
+                        {/* Test Results */}
+                        {testResults.length > 0 && (
+                          <div className="border-t border-gray-200 pt-4">
+                            <h5 className="text-sm font-medium text-gray-900 mb-3">Test Results:</h5>
+                            <div className="space-y-2">
+                              {testResults.map((result, index) => (
+                                <div key={index} className={`p-3 rounded-lg border text-xs ${
+                                  result.status === 'success' ? 'bg-green-50 border-green-200' :
+                                  result.status === 'error' ? 'bg-red-50 border-red-200' :
+                                  'bg-yellow-50 border-yellow-200'
+                                }`}>
+                                  <div className="flex items-center justify-between mb-2">
+                                    <div className="flex items-center gap-2">
+                                      {result.status === 'pending' && <span className="text-yellow-600">⏳</span>}
+                                      {result.status === 'success' && <span className="text-green-600">✅</span>}
+                                      {result.status === 'error' && <span className="text-red-600">❌</span>}
+                                      <span className={`font-medium ${
+                                        result.status === 'success' ? 'text-green-800' :
+                                        result.status === 'error' ? 'text-red-800' :
+                                        'text-yellow-800'
+                                      }`}>
+                                        {result.status.toUpperCase()}
+                                      </span>
+                                      {result.statusCode && (
+                                        <span className="text-gray-600">
+                                          {result.statusCode}
+                                        </span>
+                                      )}
+                                      {result.responseTime && (
+                                        <span className="text-gray-600">
+                                          {Math.round(result.responseTime)}ms
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="text-gray-700 font-mono text-xs mb-1 break-all">
+                                    {result.url}
+                                  </div>
+                                  {result.error && (
+                                    <div className="text-red-700 text-xs italic">
+                                      {result.error}
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
